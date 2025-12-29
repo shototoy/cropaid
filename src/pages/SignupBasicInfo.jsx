@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Camera } from 'lucide-react';
+import { User } from 'lucide-react';
+import Header from '../components/Header';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 export default function SignupBasicInfo() {
     const navigate = useNavigate();
@@ -29,147 +32,88 @@ export default function SignupBasicInfo() {
         navigate('/signup/farm-info', { state: formData });
     };
 
-    const labelStyle = {
-        fontWeight: 'bold',
-        fontSize: '14px',
-        marginBottom: '2px',
-        display: 'block',
-        textTransform: 'uppercase'
-    };
-
-    const inputStyle = {
-        width: '100%',
-        padding: '8px 12px',
-        marginBottom: '8px',
-        border: 'none',
-        borderRadius: '8px',
-        backgroundColor: '#E0E0E0',
-        fontSize: '14px'
-    };
-
-    const checkboxGroupStyle = {
-        display: 'flex',
-        gap: '16px',
-        marginBottom: '12px',
-        alignItems: 'center'
-    };
-
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-            <div style={{
-                backgroundColor: '#DCEDC8',
-                padding: '20px',
-                textAlign: 'center',
-                borderBottom: '1px solid #C5E1A5'
-            }}>
-                <h1 style={{
-                    fontSize: '20px',
-                    fontWeight: 'bold',
-                    color: 'black',
-                    margin: 0
-                }}>Sign Up – Basic Information</h1>
+        <div className="flex flex-col h-screen overflow-hidden bg-white">
+            <Header title="Sign Up – Basic Information" showBack />
+
+            <div className="flex-1 px-6 pt-2 pb-20 flex flex-col justify-center overflow-y-auto">
+                <div className="flex flex-col justify-center h-full">
+                    <div>
+                        <div className="flex gap-3 mb-2">
+                            <div className="w-[35%] flex flex-col items-center justify-center p-1">
+                                <div className="w-full aspect-square rounded-full border-2 border-black flex justify-center items-center bg-white shadow-sm overflow-hidden text-center p-2">
+                                    <User className="w-full h-full text-black opacity-80" />
+                                </div>
+                            </div>
+
+                            {/* Right Column: Name Fields */}
+                            <div className="w-[65%] flex flex-col gap-1.5 justify-center">
+                                <Input className="grid-layout" placeholder="LAST NAME" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
+                                <Input className="grid-layout" placeholder="FIRST NAME" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
+                                <Input className="grid-layout" placeholder="MIDDLE NAME" value={formData.middleName} onChange={(e) => setFormData({ ...formData, middleName: e.target.value })} />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                            <Input className="grid-layout" label="Farmer ID #" value={formData.farmerId} onChange={(e) => setFormData({ ...formData, farmerId: e.target.value })} />
+                            <Input className="grid-layout" label="Tribe" value={formData.tribe} onChange={(e) => setFormData({ ...formData, tribe: e.target.value })} />
+                            <Input className="grid-layout" label="Street/Sitio" value={formData.streetSitio} onChange={(e) => setFormData({ ...formData, streetSitio: e.target.value })} />
+                            <Input className="grid-layout" label="Barangay" value={formData.barangay} onChange={(e) => setFormData({ ...formData, barangay: e.target.value })} />
+                            <Input className="grid-layout" label="Province" value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value })} />
+                            <Input className="grid-layout" label="Cellphone #" type="tel" value={formData.cellphone} onChange={(e) => setFormData({ ...formData, cellphone: e.target.value })} />
+                        </div>
+
+                        <div className="flex items-center mb-2 mt-2">
+                            <label className="w-[35%] font-bold text-xs uppercase mr-2">SEX:</label>
+                            <div className="flex gap-4">
+                                {['Male', 'Female'].map(option => (
+                                    <label key={option} className="flex items-center text-xs font-bold cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.sex === option}
+                                            onChange={() => setFormData({ ...formData, sex: option })}
+                                            className="mr-1.5 border-black h-3 w-3 rounded-none accent-black" // Visual tweak to match mockup checkboxes
+                                        />
+                                        {option.toUpperCase()}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center mb-2">
+                            <label className="w-[35%] font-bold text-xs uppercase mr-2">DATE OF BIRTH:</label>
+                            <div className="flex gap-2 flex-1">
+                                <input className="w-full p-1.5 bg-gray-200 rounded-sm text-xs text-center border-none font-bold" placeholder="MM" value={formData.dobMonth} onChange={(e) => setFormData({ ...formData, dobMonth: e.target.value })} />
+                                <input className="w-full p-1.5 bg-gray-200 rounded-sm text-xs text-center border-none font-bold" placeholder="DD" value={formData.dobDay} onChange={(e) => setFormData({ ...formData, dobDay: e.target.value })} />
+                                <input className="w-full p-1.5 bg-gray-200 rounded-sm text-xs text-center border-none font-bold" placeholder="YYYY" value={formData.dobYear} onChange={(e) => setFormData({ ...formData, dobYear: e.target.value })} />
+                            </div>
+                        </div>
+
+                        <div className="flex items-start mb-2">
+                            <label className="w-[35%] font-bold text-xs uppercase mr-2 mt-1">CIVIL STATUS:</label>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                                {['SINGLE', 'MARRIED', 'WIDOW/ER', 'SEPARATED'].map((status) => (
+                                    <label key={status} className="flex items-center text-[10px] font-bold cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.civilStatus === status}
+                                            onChange={() => setFormData({ ...formData, civilStatus: status })}
+                                            className="mr-1.5 border-black h-3 w-3 rounded-none accent-black"
+                                        />
+                                        {status}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div style={{ padding: '20px', flex: 1 }}>
-
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
-                    <div style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '50%',
-                        border: '2px solid black',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        marginBottom: '4px',
-                        backgroundColor: 'white'
-                    }}>
-                        <User size={48} color="black" />
-                    </div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Add Photo</span>
-                </div>
-
-                <label style={labelStyle}>Last Name:</label>
-                <input type="text" style={inputStyle} value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
-
-                <label style={labelStyle}>First Name:</label>
-                <input type="text" style={inputStyle} value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
-
-                <label style={labelStyle}>Middle Name:</label>
-                <input type="text" style={inputStyle} value={formData.middleName} onChange={(e) => setFormData({ ...formData, middleName: e.target.value })} />
-
-                <label style={labelStyle}>Farmer ID #:</label>
-                <input type="text" style={inputStyle} value={formData.farmerId} onChange={(e) => setFormData({ ...formData, farmerId: e.target.value })} />
-
-                <label style={labelStyle}>Tribe:</label>
-                <input type="text" style={inputStyle} value={formData.tribe} onChange={(e) => setFormData({ ...formData, tribe: e.target.value })} />
-
-                <label style={labelStyle}>Street/Sitio:</label>
-                <input type="text" style={inputStyle} value={formData.streetSitio} onChange={(e) => setFormData({ ...formData, streetSitio: e.target.value })} />
-
-                <label style={labelStyle}>Barangay:</label>
-                <input type="text" style={inputStyle} value={formData.barangay} onChange={(e) => setFormData({ ...formData, barangay: e.target.value })} />
-
-                <label style={labelStyle}>Province:</label>
-                <input type="text" style={inputStyle} value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value })} />
-
-                <label style={labelStyle}>Cellphone #:</label>
-                <input type="tel" style={inputStyle} value={formData.cellphone} onChange={(e) => setFormData({ ...formData, cellphone: e.target.value })} />
-
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                    <label style={{ ...labelStyle, marginRight: '10px', marginBottom: 0 }}>SEX:</label>
-                    <div style={checkboxGroupStyle}>
-                        <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: 'bold' }}>
-                            <input type="radio" name="sex" value="Male" checked={formData.sex === 'Male'} onChange={(e) => setFormData({ ...formData, sex: e.target.value })} style={{ marginRight: '4px' }} /> MALE
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', fontWeight: 'bold' }}>
-                            <input type="radio" name="sex" value="Female" checked={formData.sex === 'Female'} onChange={(e) => setFormData({ ...formData, sex: e.target.value })} style={{ marginRight: '4px' }} /> FEMALE
-                        </label>
-                    </div>
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                    <label style={labelStyle}>DATE OF BIRTH:</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <div style={{ flex: 1 }}>
-                            <input type="text" placeholder="MM" style={{ ...inputStyle, textAlign: 'center' }} value={formData.dobMonth} onChange={(e) => setFormData({ ...formData, dobMonth: e.target.value })} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <input type="text" placeholder="DD" style={{ ...inputStyle, textAlign: 'center' }} value={formData.dobDay} onChange={(e) => setFormData({ ...formData, dobDay: e.target.value })} />
-                        </div>
-                        <div style={{ flex: 2 }}>
-                            <input type="text" placeholder="YYYY" style={{ ...inputStyle, textAlign: 'center' }} value={formData.dobYear} onChange={(e) => setFormData({ ...formData, dobYear: e.target.value })} />
-                        </div>
-                    </div>
-                </div>
-
-                <label style={labelStyle}>CIVIL STATUS:</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    {['SINGLE', 'MARRIED', 'WIDOW/ER', 'SEPARATED'].map((status) => (
-                        <label key={status} style={{ display: 'flex', alignItems: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-                            <input type="radio" name="civilStatus" value={status} checked={formData.civilStatus === status} onChange={(e) => setFormData({ ...formData, civilStatus: e.target.value })} style={{ marginRight: '4px' }} /> {status}
-                        </label>
-                    ))}
-                </div>
-
-                <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                    <button
-                        onClick={handleNext}
-                        style={{
-                            backgroundColor: '#DCEDC8',
-                            color: 'black',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '10px 40px',
-                            fontWeight: 'bold',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                    >
-                        NEXT
-                    </button>
-                </div>
+            <div className="fixed bottom-0 left-0 right-0 z-20 w-full">
+                <Button variant="secondary" onClick={handleNext} className="w-full py-4 text-black font-bold uppercase text-lg bg-primary-bg border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary-bg/90 m-0">
+                    NEXT
+                </Button>
             </div>
         </div>
     );

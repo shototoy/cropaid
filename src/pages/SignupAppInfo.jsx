@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Header from '../components/Header';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 export default function SignupAppInfo() {
     const navigate = useNavigate();
@@ -24,83 +27,21 @@ export default function SignupAppInfo() {
         navigate('/login');
     };
 
-    const labelStyle = {
-        fontWeight: 'bold',
-        fontSize: '14px',
-        marginBottom: '2px',
-        display: 'block',
-        textTransform: 'uppercase'
-    };
-
-    const inputStyle = {
-        width: '100%',
-        padding: '8px 12px',
-        marginBottom: '16px',
-        border: 'none',
-        borderRadius: '8px',
-        backgroundColor: '#E0E0E0',
-        fontSize: '14px'
-    };
-
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-            <div style={{
-                backgroundColor: '#DCEDC8',
-                padding: '20px',
-                textAlign: 'center',
-                borderBottom: '1px solid #C5E1A5'
-            }}>
-                <h1 style={{
-                    fontSize: '20px',
-                    fontWeight: 'bold',
-                    color: 'black',
-                    margin: 0
-                }}>Sign Up – APP INFORMATION</h1>
-            </div>
+        <div className="flex flex-col min-h-screen bg-white">
+            <Header title="Sign Up – App Information" showBack />
 
-            <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div className="flex-1 p-5 flex flex-col justify-center">
+                <div className="flex flex-col gap-4 mb-8">
+                    <Input label="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                    <Input label="RSBSA Number" value={formData.rsbsa} onChange={(e) => setFormData({ ...formData, rsbsa: e.target.value })} />
+                    <Input label="Password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                </div>
 
-                <label style={labelStyle}>E-MAIL:</label>
-                <input
-                    type="email"
-                    style={inputStyle}
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-
-                <label style={labelStyle}>RSBSA NO.:</label>
-                <input
-                    type="text"
-                    style={inputStyle}
-                    value={formData.rsbsa}
-                    onChange={(e) => setFormData({ ...formData, rsbsa: e.target.value })}
-                />
-
-                <label style={labelStyle}>PASSWORD:</label>
-                <input
-                    type="password"
-                    style={inputStyle}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-
-                <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                    <button
-                        onClick={handleSignIn}
-                        style={{
-                            backgroundColor: '#DCEDC8',
-                            color: 'black',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '10px 40px',
-                            fontWeight: 'bold',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                    >
+                <div className="text-center">
+                    <Button variant="secondary" onClick={handleSignIn} className="w-auto px-10 mx-auto shadow-md text-black">
                         SIGN-IN
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
