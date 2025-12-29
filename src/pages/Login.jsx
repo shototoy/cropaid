@@ -26,7 +26,7 @@ export default function Login() {
     };
 
     return (
-        <Layout className="justify-center items-center h-screen overflow-hidden p-0 bg-farm bg-cover bg-center">
+        <Layout className="justify-center items-center h-full overflow-hidden p-0 bg-farm bg-cover bg-center">
             <div className="flex-1 flex flex-col justify-center items-center mb-6">
                 <img src={logo} alt="Norala Logo" className="w-[150px] h-[150px] object-contain mb-5 drop-shadow-md" />
                 <h1 className="text-4xl font-bold text-primary drop-shadow-sm tracking-tight m-0">CropAid</h1>

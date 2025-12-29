@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Activity, Home, User, LogOut, X, Map, Bell, Newspaper, LayoutGrid, Sun } from 'lucide-react';
 import Layout from '../components/Layout';
+import BottomNavbar from '../components/BottomNavbar';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function FarmerDashboard() {
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
-        <Layout className="bg-bg-surface p-0 pb-24 font-sans text-text-main">
+        <>
             {/* Header / Top Bar */}
             <div className="bg-primary text-white p-5 pt-8 rounded-b-3xl shadow-md relative z-10">
                 <div className="flex justify-between items-center mb-6">
@@ -83,15 +84,18 @@ export default function FarmerDashboard() {
             </div>
 
             {/* Sidebar (Full Screen Overlay) */}
-            <div className={`fixed inset-0 z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <div className={`fixed top-0 left-0 w-full h-full z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                 {/* Backdrop */}
-                <div className="absolute inset-0 bg-primary opacity-95" onClick={toggleSidebar}></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-primary" onClick={toggleSidebar}></div>
 
                 {/* Sidebar Content */}
-                <div className="absolute inset-0 flex flex-col p-6 text-white">
-                    <button onClick={toggleSidebar} className="self-end p-2 bg-white/10 rounded-full mb-8 hover:bg-white/20">
-                        <X size={24} />
-                    </button>
+                <div className="absolute top-0 left-0 w-full h-full flex flex-col p-6 text-white">
+                    {/* Close Button (Top Left - matching profile button) */}
+                    <div className="flex justify-between items-center mb-6 mt-8"> {/* Added mt-8 to match header pt-8 */}
+                        <button onClick={toggleSidebar} className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                            <X size={24} className="text-white" />
+                        </button>
+                    </div>
 
                     <div className="flex flex-col items-center mb-8">
                         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 text-primary shadow-lg border-4 border-white/20">
@@ -123,28 +127,6 @@ export default function FarmerDashboard() {
                     </button>
                 </div>
             </div>
-
-            {/* Bottom Floating Navbar (GCash Style) */}
-            <div className="fixed bottom-0 w-full max-w-[480px] bg-white border-t border-gray-100 flex justify-between items-end px-6 pb-2 pt-2 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-40 h-[70px]">
-                {/* Left: Report */}
-                <div className="flex-1 flex flex-col items-center justify-end h-full py-1 cursor-pointer text-gray-400 hover:text-primary transition-colors" onClick={() => navigate('/report')}>
-                    <FileText size={24} className="mb-1" />
-                    <span className="text-[10px] font-medium">Report</span>
-                </div>
-
-                {/* Center: Home (Raised) */}
-                <div className="relative -top-6">
-                    <div className="w-16 h-16 bg-primary rounded-full border-4 border-bg-surface flex items-center justify-center shadow-lg cursor-pointer transform hover:scale-105 transition-transform" onClick={() => { }}>
-                        <Home size={28} className="text-white" />
-                    </div>
-                </div>
-
-                {/* Right: Status */}
-                <div className="flex-1 flex flex-col items-center justify-end h-full py-1 cursor-pointer text-gray-400 hover:text-primary transition-colors" onClick={() => navigate('/status')}>
-                    <Activity size={24} className="mb-1" />
-                    <span className="text-[10px] font-medium">Status</span>
-                </div>
-            </div>
-        </Layout>
+        </>
     );
 }

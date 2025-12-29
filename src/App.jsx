@@ -1,5 +1,6 @@
 
 import React from 'react';
+import FarmerLayout from './components/FarmerLayout';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
@@ -31,12 +32,18 @@ function App() {
         <Route path="/signup/farm-info" element={<SignupFarmInfo />} />
         <Route path="/signup/app-info" element={<SignupAppInfo />} />
         <Route path="/signup/summary" element={<SignupSummary />} />
-        <Route path="/dashboard" element={<FarmerDashboard />} />
+        <Route path="/signup/summary" element={<SignupSummary />} />
+
+        {/* Farmer Routes with Persistent Navbar */}
+        <Route element={<FarmerLayout />}>
+          <Route path="/dashboard" element={<FarmerDashboard />} />
+          <Route path="/report" element={<UnifiedReport />} />
+          <Route path="/status" element={<ReportStatus />} />
+        </Route>
+
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/report" element={<UnifiedReport />} />
         <Route path="/report/pest" element={<PestReport />} />
         <Route path="/report/flood" element={<FloodReport />} />
-        <Route path="/status" element={<ReportStatus />} />
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/report-confirmation" element={<ReportConfirmation />} />
         <Route path="/admin/farm-reports" element={<AdminFarmReports />} />

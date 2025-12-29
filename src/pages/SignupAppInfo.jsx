@@ -26,7 +26,7 @@ export default function SignupAppInfo() {
     };
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-white">
+        <div className="flex flex-col h-full overflow-hidden bg-white">
             <Header title="Sign Up – App Information" showBack />
 
             <div className="flex-1 px-6 pt-2 pb-20 flex flex-col justify-center overflow-y-auto">

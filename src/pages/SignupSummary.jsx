@@ -23,7 +23,7 @@ export default function SignupSummary() {
 
     if (isSuccess) {
         return (
-            <div className="flex flex-col h-screen items-center justify-center bg-primary-bg animate-fade-in relative z-50">
+            <div className="flex flex-col h-full items-center justify-center bg-primary-bg animate-fade-in relative z-50">
                 <div className="bg-white p-8 rounded-full shadow-lg mb-6">
                     <Check size={64} className="text-primary stroke-[4]" />
                 </div>
@@ -52,7 +52,7 @@ export default function SignupSummary() {
     );
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-white">
+        <div className="flex flex-col h-full overflow-hidden bg-white">
             <Header title="Sign Up – Review" showBack />
 
             <div className="flex-1 px-6 pt-4 pb-24 overflow-y-auto">

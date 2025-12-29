@@ -1,68 +1,29 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
+import BottomNavbar from '../components/BottomNavbar';
 
 export default function ReportStatus() {
     const navigate = useNavigate();
 
-    const itemStyle = {
-        padding: '12px',
-        backgroundColor: '#FFFFFF',
-        marginBottom: '10px',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: '4px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-    };
-
     return (
-        <div style={{
-            padding: '16px',
-            minHeight: '100vh',
-            backgroundColor: '#F5F5F5'
-        }}>
-            <div style={{ padding: '16px' }}>
-                <h1 style={{
-                    fontSize: '20px',
-                    fontWeight: 'bold',
-                    color: '#2E7D32',
-                    marginBottom: '16px'
-                }}>Report Status</h1>
+        <div className="p-4">
+            <h1 className="text-xl font-bold text-primary mb-4">Report Status</h1>
 
+            <div className="bg-white p-3 mb-3 rounded shadow-sm shadow-gray-200">
+                <span className="block font-bold">Flood Report</span>
+                <span className="text-orange-500">Status: Under Review</span>
+            </div>
 
-                <div style={itemStyle}>
-                    <span style={{ fontWeight: 'bold' }}>Flood Report</span>
-                    <span style={{ color: '#FF9800' }}>Status: Under Review</span>
-                </div>
+            <div className="bg-white p-3 mb-3 rounded shadow-sm shadow-gray-200">
+                <span className="block font-bold">Pest Infestation Report</span>
+                <span className="text-blue-500">Status: Submitted</span>
+            </div>
 
-
-                <div style={itemStyle}>
-                    <span style={{ fontWeight: 'bold' }}>Pest Infestation Report</span>
-                    <span style={{ color: '#2196F3' }}>Status: Submitted</span>
-                </div>
-
-
-                <div style={itemStyle}>
-                    <span style={{ fontWeight: 'bold' }}>Drought Report</span>
-                    <span style={{ color: '#4CAF50' }}>Status: Resolved</span>
-                </div>
-
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    style={{
-                        width: '100%',
-                        padding: '12px',
-                        marginTop: '20px',
-                        backgroundColor: '#E0E0E0',
-                        color: 'black',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    Back to Dashboard
-                </button>
+            <div className="bg-white p-3 mb-3 rounded shadow-sm shadow-gray-200">
+                <span className="block font-bold">Drought Report</span>
+                <span className="text-green-500">Status: Resolved</span>
             </div>
         </div>
     );

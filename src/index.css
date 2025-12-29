@@ -3,7 +3,50 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
+  body,
+  #root {
+    @apply h-full w-full overflow-hidden m-0 p-0 overscroll-none;
+    height: 100%;
+    /* Fallback for browsers */
+    width: 100%;
+  }
+
   body {
-    @apply bg-bg-app text-text-main font-sans antialiased m-0;
+    @apply bg-bg-app text-text-main font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  @keyframes slideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    will-change: transform, opacity;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 }
