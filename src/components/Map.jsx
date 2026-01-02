@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
-import { noralaBarangays, noralaBoundary } from '../data/noralaBarangays';
 
 const Map = ({ reports = [], onReportClick }) => {
     const mapRef = useRef(null);
@@ -25,39 +24,109 @@ const Map = ({ reports = [], onReportClick }) => {
             maxZoom: 19,
         }).addTo(map);
 
-        L.polygon(noralaBoundary, {
-            color: '#10b981',
-            weight: 3,
-            fillOpacity: 0,
-            dashArray: '10, 5'
-        }).addTo(map).bindTooltip('Norala Municipal Boundary', {
-            permanent: false,
-            direction: 'center'
-        });
+        const loadNoralaHighlight = async () => {
+            const overpassQuery = `
+                [out:json][timeout:10];
+                relation["name"="Norala"]["admin_level"="6"]["boundary"="administrative"];
+                out geom;
+            `;
 
-        noralaBarangays.forEach(barangay => {
-            const polygon = L.polygon(barangay.coordinates, {
-                color: barangay.color,
-                weight: 2,
-                fillColor: barangay.color,
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                const response = await fetch('https://overpass-api.de/api/interpreter', {
+                    method: 'POST',
+                    body: overpassQuery,
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.elements && data.elements.length > 0) {
+                        const relation = data.elements[0];
+                        const outerWays = relation.members?.filter(m => m.type === 'way' && m.role === 'outer') || [];
+
+                        if (outerWays.length > 0) {
+                            const allCoords = [];
+                            const ways = outerWays.map(w => w.geometry?.map(n => [n.lat, n.lon]) || []).filter(w => w.length > 0);
+
+                            if (ways.length > 0) {
+                                let currentWay = ways[0];
+                                allCoords.push(...currentWay);
+                                const remaining = ways.slice(1);
+
+                                while (remaining.length > 0) {
+                                    const lastPoint = allCoords[allCoords.length - 1];
+                                    const nextIndex = remaining.findIndex(way =>
+                                        (Math.abs(way[0][0] - lastPoint[0]) < 0.0001 && Math.abs(way[0][1] - lastPoint[1]) < 0.0001) ||
+                                        (Math.abs(way[way.length - 1][0] - lastPoint[0]) < 0.0001 && Math.abs(way[way.length - 1][1] - lastPoint[1]) < 0.0001)
+                                    );
+
+                                    if (nextIndex === -1) break;
+
+                                    const nextWay = remaining.splice(nextIndex, 1)[0];
+                                    if (Math.abs(nextWay[nextWay.length - 1][0] - lastPoint[0]) < 0.0001 &&
+                                        Math.abs(nextWay[nextWay.length - 1][1] - lastPoint[1]) < 0.0001) {
+                                        nextWay.reverse();
+                                    }
+                                    allCoords.push(...nextWay.slice(1));
+                                }
+
+                                if (allCoords.length > 0) {
+                                    if (Math.abs(allCoords[0][0] - allCoords[allCoords.length - 1][0]) > 0.0001 ||
+                                        Math.abs(allCoords[0][1] - allCoords[allCoords.length - 1][1]) > 0.0001) {
+                                        allCoords.push(allCoords[0]);
+                                    }
+
+                                    L.polygon(allCoords, {
+                                        color: '#10b981',
+                                        weight: 4,
+                                        fillColor: '#10b981',
+                                        fillOpacity: 0.12,
+                                        dashArray: '8, 4',
+                                        className: 'norala-boundary-highlight'
+                                    }).addTo(map).bindTooltip('<strong>Municipality of Norala</strong>', {
+                                        permanent: false,
+                                        direction: 'center',
+                                        className: 'municipality-tooltip'
+                                    });
+                                    console.log('✅ Norala outer boundary highlighted (' + allCoords.length + ' points)');
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ Using fallback boundary');
+            }
+
+            const fallbackBoundary = [
+                [6.5700, 124.6000],
+                [6.5700, 124.6900],
+                [6.4800, 124.6900],
+                [6.4800, 124.6000],
+                [6.5700, 124.6000]
+            ];
+
+            L.polygon(fallbackBoundary, {
+                color: '#10b981',
+                weight: 4,
+                fillColor: '#10b981',
                 fillOpacity: 0.08,
-                className: 'barangay-polygon'
-            }).addTo(map);
-
-            polygon.bindTooltip(`<strong>${barangay.name}</strong>`, {
+                dashArray: '8, 4',
+                className: 'norala-boundary-highlight'
+            }).addTo(map).bindTooltip('<strong>Municipality of Norala</strong>', {
                 permanent: false,
                 direction: 'center',
-                className: 'barangay-tooltip'
+                className: 'municipality-tooltip'
             });
+        };
 
-            polygon.on('mouseover', function () {
-                this.setStyle({ fillOpacity: 0.2 });
-            });
-
-            polygon.on('mouseout', function () {
-                this.setStyle({ fillOpacity: 0.08 });
-            });
-        });
+        loadNoralaHighlight();
 
         const pestIcon = L.divIcon({
             className: 'custom-marker pest-marker',
@@ -148,7 +217,7 @@ const Map = ({ reports = [], onReportClick }) => {
                 this.setStyle({ fillOpacity: 0.25 });
             });
 
-            const statusRing = L.circle([report.latitude, report.longitude], {
+            L.circle([report.latitude, report.longitude], {
                 color: statusColor,
                 fillColor: statusColor,
                 fillOpacity: 0.15,
