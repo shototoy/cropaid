@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Map from '../components/Map';
+import { mockReports } from '../data/mockReports';
 import './ReportsMap.css';
 
 const ReportsMap = () => {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchReports();
@@ -14,76 +17,29 @@ const ReportsMap = () => {
     const fetchReports = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3000/api/admin/reports', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            if (token) {
+                const response = await fetch('http://localhost:3000/api/admin/reports', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setReports(data);
+                    setLoading(false);
+                    return;
                 }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setReports(data);
-            } else {
-                setReports(getMockReports());
             }
         } catch (error) {
-            setReports(getMockReports());
-        } finally {
-            setLoading(false);
+            console.log('Using mock data');
         }
+        setReports(mockReports);
+        setLoading(false);
     };
 
-    const getMockReports = () => [
-        {
-            id: '1',
-            type: 'pest',
-            status: 'pending',
-            location: 'Barangay San Jose',
-            details: { description: 'Black bug infestation in rice fields', severity: 'High' },
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-            latitude: 6.5019,
-            longitude: 124.8019
-        },
-        {
-            id: '2',
-            type: 'flood',
-            status: 'verified',
-            location: 'Barangay Liberty',
-            details: { description: 'River overflow affecting corn crops', severity: 'Critical' },
-            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-            latitude: 6.4950,
-            longitude: 124.8100
-        },
-        {
-            id: '3',
-            type: 'drought',
-            status: 'resolved',
-            location: 'Barangay Poblacion',
-            details: { description: 'Water shortage in irrigation system', severity: 'Medium' },
-            created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-            latitude: 6.5080,
-            longitude: 124.7950
-        },
-        {
-            id: '4',
-            type: 'pest',
-            status: 'verified',
-            location: 'Barangay Esperanza',
-            details: { description: 'Armyworm outbreak in corn fields', severity: 'High' },
-            created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-            latitude: 6.5100,
-            longitude: 124.8080
-        },
-        {
-            id: '5',
-            type: 'flood',
-            status: 'pending',
-            location: 'Barangay Matapol',
-            details: { description: 'Heavy rainfall causing waterlogging', severity: 'Medium' },
-            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-            latitude: 6.4980,
-            longitude: 124.7980
-        }
-    ];
+    const handleReportClick = (reportId) => {
+        navigate(`/admin/reports?highlight=${reportId}`);
+    };
 
     const filteredReports = filter === 'all'
         ? reports
@@ -95,12 +51,17 @@ const ReportsMap = () => {
         flood: reports.filter(r => r.type === 'flood').length,
         drought: reports.filter(r => r.type === 'drought').length,
         pending: reports.filter(r => r.status === 'pending').length,
+        verified: reports.filter(r => r.status === 'verified').length,
+        resolved: reports.filter(r => r.status === 'resolved').length,
     };
 
     if (loading) {
         return (
             <div className="reports-map-page">
-                <div className="loading">Loading map...</div>
+                <div className="loading">
+                    <div className="loading-spinner"></div>
+                    <p>Loading map data...</p>
+                </div>
             </div>
         );
     }
@@ -111,15 +72,27 @@ const ReportsMap = () => {
                 <div className="header-content">
                     <h1>Reports Map</h1>
                     <p>Norala, South Cotabato, Philippines</p>
+                    <div className="header-info">
+                        <span className="info-badge">📍 {reports.length} Active Locations</span>
+                        <span className="info-badge">🗺️ 5 Barangays</span>
+                    </div>
                 </div>
                 <div className="map-stats">
-                    <div className="stat-card">
+                    <div className="stat-card total">
                         <span className="stat-value">{stats.total}</span>
                         <span className="stat-label">Total Reports</span>
                     </div>
-                    <div className="stat-card">
+                    <div className="stat-card pending">
                         <span className="stat-value">{stats.pending}</span>
                         <span className="stat-label">Pending</span>
+                    </div>
+                    <div className="stat-card verified">
+                        <span className="stat-value">{stats.verified}</span>
+                        <span className="stat-label">Verified</span>
+                    </div>
+                    <div className="stat-card resolved">
+                        <span className="stat-value">{stats.resolved}</span>
+                        <span className="stat-label">Resolved</span>
                     </div>
                 </div>
             </div>
@@ -128,28 +101,34 @@ const ReportsMap = () => {
                     className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
                     onClick={() => setFilter('all')}
                 >
-                    All ({stats.total})
+                    All Reports ({stats.total})
                 </button>
                 <button
-                    className={filter === 'pest' ? 'filter-btn active' : 'filter-btn'}
+                    className={filter === 'pest' ? 'filter-btn active pest' : 'filter-btn pest'}
                     onClick={() => setFilter('pest')}
                 >
                     🐛 Pest ({stats.pest})
                 </button>
                 <button
-                    className={filter === 'flood' ? 'filter-btn active' : 'filter-btn'}
+                    className={filter === 'flood' ? 'filter-btn active flood' : 'filter-btn flood'}
                     onClick={() => setFilter('flood')}
                 >
                     🌊 Flood ({stats.flood})
                 </button>
                 <button
-                    className={filter === 'drought' ? 'filter-btn active' : 'filter-btn'}
+                    className={filter === 'drought' ? 'filter-btn active drought' : 'filter-btn drought'}
                     onClick={() => setFilter('drought')}
                 >
                     ☀️ Drought ({stats.drought})
                 </button>
             </div>
-            <Map reports={filteredReports} />
+            <Map reports={filteredReports} onReportClick={handleReportClick} />
+            <div className="map-footer">
+                <div className="footer-info">
+                    <p>💡 <strong>Tip:</strong> Click on any marker to zoom in and view details</p>
+                    <p>🔍 Hover over barangay boundaries to see names</p>
+                </div>
+            </div>
         </div>
     );
 };
