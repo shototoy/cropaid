@@ -40,7 +40,7 @@ const Map = ({ reports = [], onReportClick }) => {
                 color: barangay.color,
                 weight: 2,
                 fillColor: barangay.color,
-                fillOpacity: 0.1,
+                fillOpacity: 0.08,
                 className: 'barangay-polygon'
             }).addTo(map);
 
@@ -51,31 +51,31 @@ const Map = ({ reports = [], onReportClick }) => {
             });
 
             polygon.on('mouseover', function () {
-                this.setStyle({ fillOpacity: 0.3 });
+                this.setStyle({ fillOpacity: 0.2 });
             });
 
             polygon.on('mouseout', function () {
-                this.setStyle({ fillOpacity: 0.1 });
+                this.setStyle({ fillOpacity: 0.08 });
             });
         });
 
         const pestIcon = L.divIcon({
             className: 'custom-marker pest-marker',
-            html: '<div class="marker-inner">🐛</div>',
+            html: '<div class="marker-inner"><div class="marker-pulse"></div>🐛</div>',
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         });
 
         const floodIcon = L.divIcon({
             className: 'custom-marker flood-marker',
-            html: '<div class="marker-inner">🌊</div>',
+            html: '<div class="marker-inner"><div class="marker-pulse"></div>🌊</div>',
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         });
 
         const droughtIcon = L.divIcon({
             className: 'custom-marker drought-marker',
-            html: '<div class="marker-inner">☀️</div>',
+            html: '<div class="marker-inner"><div class="marker-pulse"></div>☀️</div>',
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         });
@@ -99,15 +99,63 @@ const Map = ({ reports = [], onReportClick }) => {
             }
         };
 
+        const getTypeColor = (type) => {
+            switch (type) {
+                case 'pest': return '#ef4444';
+                case 'flood': return '#3b82f6';
+                case 'drought': return '#f59e0b';
+                default: return '#6b7280';
+            }
+        };
+
+        const getSeverityRadius = (severity) => {
+            switch (severity?.toLowerCase()) {
+                case 'critical': return 400;
+                case 'high': return 300;
+                case 'medium': return 200;
+                case 'low': return 150;
+                default: return 200;
+            }
+        };
+
         reports.forEach((report) => {
             const marker = L.marker([report.latitude, report.longitude], {
                 icon: getIcon(report.type)
             }).addTo(map);
 
             const statusColor = getStatusColor(report.status);
+            const typeColor = getTypeColor(report.type);
             const details = typeof report.details === 'string'
                 ? JSON.parse(report.details)
                 : report.details || {};
+
+            const severity = details.severity || 'Medium';
+            const radius = getSeverityRadius(severity);
+
+            const heatCircle = L.circle([report.latitude, report.longitude], {
+                color: 'transparent',
+                fillColor: typeColor,
+                fillOpacity: 0.25,
+                radius: radius,
+                className: 'heat-circle'
+            }).addTo(map);
+
+            heatCircle.on('mouseover', function () {
+                this.setStyle({ fillOpacity: 0.4 });
+            });
+
+            heatCircle.on('mouseout', function () {
+                this.setStyle({ fillOpacity: 0.25 });
+            });
+
+            const statusRing = L.circle([report.latitude, report.longitude], {
+                color: statusColor,
+                fillColor: statusColor,
+                fillOpacity: 0.15,
+                weight: 3,
+                radius: radius * 0.4,
+                className: 'status-ring'
+            }).addTo(map);
 
             const popupContent = `
         <div class="map-popup">
@@ -120,7 +168,7 @@ const Map = ({ reports = [], onReportClick }) => {
             <p><strong>RSBSA:</strong> ${report.rsbsa_id || 'N/A'}</p>
             <p><strong>Location:</strong> ${report.location || 'Norala'}</p>
             ${details.crop ? `<p><strong>Crop:</strong> ${details.crop}</p>` : ''}
-            ${details.severity ? `<p><strong>Severity:</strong> ${details.severity}</p>` : ''}
+            ${details.severity ? `<p><strong>Severity:</strong> <span class="severity-badge ${details.severity.toLowerCase()}">${details.severity}</span></p>` : ''}
             ${details.description ? `<p><strong>Details:</strong> ${details.description}</p>` : ''}
             <p class="popup-date">${new Date(report.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -135,7 +183,7 @@ const Map = ({ reports = [], onReportClick }) => {
       `;
 
             marker.bindPopup(popupContent, {
-                maxWidth: 300,
+                maxWidth: 320,
                 className: 'custom-popup'
             });
 
@@ -152,13 +200,6 @@ const Map = ({ reports = [], onReportClick }) => {
                     btn.onclick = () => onReportClick(report.id);
                 }
             });
-
-            L.circle([report.latitude, report.longitude], {
-                color: statusColor,
-                fillColor: statusColor,
-                fillOpacity: 0.2,
-                radius: 150,
-            }).addTo(map);
         });
 
         mapInstanceRef.current = map;
@@ -212,8 +253,24 @@ const Map = ({ reports = [], onReportClick }) => {
                     </div>
                 </div>
                 <div className="legend-divider"></div>
+                <div className="legend-section">
+                    <div className="legend-subtitle">Intensity</div>
+                    <div className="legend-item">
+                        <div className="intensity-indicator large"></div>
+                        <span>High/Critical</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="intensity-indicator medium"></div>
+                        <span>Medium</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="intensity-indicator small"></div>
+                        <span>Low</span>
+                    </div>
+                </div>
+                <div className="legend-divider"></div>
                 <div className="legend-note">
-                    Click markers to zoom in
+                    💡 Larger clouds = Higher severity
                 </div>
             </div>
         </div>
