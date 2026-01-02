@@ -25,6 +25,7 @@ import ReportConfirmation from './pages/ReportConfirmation';
 import AdminFarmReports from './pages/AdminFarmReports';
 import AdminDailySummary from './pages/AdminDailySummary';
 import AdminOrganizedReport from './pages/AdminOrganizedReport';
+import ReportsMap from './pages/ReportsMap';
 
 function App() {
   return (
@@ -53,7 +54,7 @@ function App() {
             <Route path="/admin/farmers" element={<AdminFarmers />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             {/* Placeholders for now */}
-            <Route path="/admin/map" element={<div className="p-8 font-bold">Map View (Coming Soon)</div>} />
+            <Route path="/admin/map" element={<ReportsMap />} />
             <Route path="/admin/settings" element={<div className="p-8 font-bold">Settings (Coming Soon)</div>} />
           </Route>
 
