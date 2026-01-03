@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Activity, Home, User, LogOut, X, Map, Bell, Newspaper, LayoutGrid, Sun } from 'lucide-react';
+import { FileText, Activity, Home, User, LogOut, X, Map, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning } from 'lucide-react';
 import Layout from '../components/Layout';
 import BottomNavbar from '../components/BottomNavbar';
 import { API_URL, useAuth } from '../context/AuthContext';
 import { MOCK_DATA } from '../config/mockData';
+import { fetchWeather, getCurrentPosition } from '../services/api';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
@@ -14,8 +15,50 @@ export default function FarmerDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [liveWeather, setLiveWeather] = useState(null);
+    const [weatherLoading, setWeatherLoading] = useState(true);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    // Fetch live weather data
+    useEffect(() => {
+        const getWeather = async () => {
+            try {
+                let lat = 6.5294; // Default: Norala, South Cotabato, Philippines
+                let lon = 124.6647;
+
+                try {
+                    const coords = await getCurrentPosition();
+                    lat = coords.latitude;
+                    lon = coords.longitude;
+                } catch (err) {
+                    console.log('Using default location for weather');
+                }
+
+                const weatherData = await fetchWeather(lat, lon);
+                setLiveWeather(weatherData);
+            } catch (err) {
+                console.error('Weather fetch error:', err);
+            } finally {
+                setWeatherLoading(false);
+            }
+        };
+
+        getWeather();
+        // Refresh every 15 minutes
+        const interval = setInterval(getWeather, 15 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Get weather icon component
+    const getWeatherIcon = (condition) => {
+        if (!condition) return <Sun size={24} className="text-yellow-500" />;
+        const cond = condition.toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle')) return <CloudRain size={24} className="text-blue-500" />;
+        if (cond.includes('thunder') || cond.includes('storm')) return <CloudLightning size={24} className="text-purple-500" />;
+        if (cond.includes('cloud') || cond.includes('overcast')) return <Cloud size={24} className="text-gray-500" />;
+        return <Sun size={24} className="text-yellow-500" />;
+    };
 
     useEffect(() => {
         // Wait for auth initialization
@@ -77,10 +120,16 @@ export default function FarmerDashboard() {
                     <div className="flex flex-col">
                         <span className="text-xs text-text-muted font-bold uppercase tracking-wider">Current Weather</span>
                         <div className="flex items-center gap-2 mt-1">
-                            <Sun size={24} className="text-yellow-500" />
-                            <span className="text-2xl font-bold">{weather?.temp || 32}°C</span>
+                            {weatherLoading ? (
+                                <div className="w-6 h-6 animate-pulse bg-gray-200 rounded-full"></div>
+                            ) : (
+                                getWeatherIcon(liveWeather?.condition)
+                            )}
+                            <span className="text-2xl font-bold">{liveWeather?.temperature || weather?.temp || 32}°C</span>
                         </div>
-                        <span className="text-[10px] text-text-muted">{weather?.condition || 'Sunny'}, {weather?.location || 'Norala'}</span>
+                        <span className="text-[10px] text-text-muted">
+                            {liveWeather?.condition || weather?.condition || 'Sunny'}, {liveWeather?.humidity ? `${liveWeather.humidity}% humidity` : profile?.barangay || 'Norala'}
+                        </span>
                     </div>
                     <div className="h-10 w-[1px] bg-gray-200"></div>
                     <div className="flex flex-col items-end">
@@ -96,19 +145,19 @@ export default function FarmerDashboard() {
                 {/* Quick Actions Grid (Updated) */}
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-map')}>
                         <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm cursor-pointer hover:bg-orange-200 transition-colors">
                             <Map size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">Farm<br />Map</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
                         <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors">
                             <Bell size={24} />
                         </div>
-                        <span className="text-[10px] font-medium text-center leading-tight">Advisories</span>
+                        <span className="text-[10px] font-medium text-center leading-tight">Notifications</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/news')}>
                         <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm cursor-pointer hover:bg-blue-200 transition-colors">
                             <Newspaper size={24} />
                         </div>
@@ -152,13 +201,17 @@ export default function FarmerDashboard() {
 
                             <div className="flex-1">
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-white/10 rounded-lg flex items-center gap-3">
+                                    <div onClick={() => { toggleSidebar(); navigate('/profile'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
                                         <User size={20} />
                                         <span className="font-medium">My Profile</span>
                                     </div>
-                                    <div className="p-4 bg-white/10 rounded-lg flex items-center gap-3">
+                                    <div onClick={() => { toggleSidebar(); navigate('/status'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
                                         <Activity size={20} />
-                                        <span className="font-medium">History</span>
+                                        <span className="font-medium">Report History</span>
+                                    </div>
+                                    <div onClick={() => { toggleSidebar(); navigate('/notifications'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
+                                        <Bell size={20} />
+                                        <span className="font-medium">Notifications</span>
                                     </div>
                                 </div>
                             </div>

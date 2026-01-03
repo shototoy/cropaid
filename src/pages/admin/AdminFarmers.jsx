@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, MapPin, Phone } from 'lucide-react';
+import { Search, Filter, MoreVertical, MapPin, Phone, Eye } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { useOutletContext } from 'react-router-dom';
 import { MOCK_DATA } from '../../config/mockData';
+import FarmerDetailModal from '../../components/FarmerDetailModal';
+import AddFarmerModal from '../../components/AddFarmerModal';
 
 export default function AdminFarmers() {
     const { token, isMockMode } = useAuth();
@@ -11,16 +13,25 @@ export default function AdminFarmers() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
+    const [selectedFarmer, setSelectedFarmer] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Inject "Add New Farmer" button into header
     useEffect(() => {
         setHeaderAction(
-            <button className="bg-primary text-white px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap">
+            <button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-primary text-white px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap"
+            >
                 + Add New Farmer
             </button>
         );
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
+
+    const handleAddSuccess = (newFarmer) => {
+        setFarmers(prev => [newFarmer, ...prev]);
+    };
 
     useEffect(() => {
         const fetchFarmers = async () => {
@@ -45,7 +56,19 @@ export default function AdminFarmers() {
                     throw new Error(errorData.message || 'Failed to fetch farmers');
                 }
                 const data = await response.json();
-                setFarmers(data);
+                // Backend returns { farmers: [...] }
+                const farmersArray = data.farmers || data;
+                // Normalize field names
+                const normalizedFarmers = farmersArray.map(f => ({
+                    ...f,
+                    first_name: f.full_name?.split(' ')[0] || f.full_name || 'Unknown',
+                    last_name: f.full_name?.split(' ').slice(1).join(' ') || '',
+                    name: f.full_name,
+                    rsbsa: f.rsbsa_number,
+                    rsbsa_id: f.rsbsa_number,
+                    address_barangay: f.barangay
+                }));
+                setFarmers(normalizedFarmers);
             } catch (err) {
                 console.error(err);
                 setError(err.message || 'Failed to load farmers');
@@ -54,8 +77,14 @@ export default function AdminFarmers() {
             }
         };
 
-        if (token) fetchFarmers();
+        if (token || isMockMode) fetchFarmers();
     }, [token, isMockMode]);
+
+    const handleStatusUpdate = (farmerId, newStatus) => {
+        setFarmers(prev => prev.map(f => 
+            f.id === farmerId ? { ...f, is_active: newStatus } : f
+        ));
+    };
 
     const filteredFarmers = farmers.filter(f => {
         const term = searchTerm.toLowerCase();
@@ -150,6 +179,13 @@ export default function AdminFarmers() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
+                                        <button 
+                                            onClick={() => setSelectedFarmer(farmer)}
+                                            className="text-primary hover:text-primary/80 p-1.5 rounded-md hover:bg-primary/10 transition-colors mr-1"
+                                            title="View Details"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
                                         <button className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors">
                                             <MoreVertical size={16} />
                                         </button>
@@ -169,6 +205,23 @@ export default function AdminFarmers() {
                     </div>
                 </div>
             </div>
+
+            {/* Farmer Detail Modal */}
+            {selectedFarmer && (
+                <FarmerDetailModal 
+                    farmer={selectedFarmer} 
+                    onClose={() => setSelectedFarmer(null)}
+                    onStatusUpdate={handleStatusUpdate}
+                />
+            )}
+
+            {/* Add Farmer Modal */}
+            {showAddModal && (
+                <AddFarmerModal 
+                    onClose={() => setShowAddModal(false)}
+                    onSuccess={handleAddSuccess}
+                />
+            )}
         </div>
     );
 }
