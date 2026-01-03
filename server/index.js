@@ -130,8 +130,6 @@ app.post('/api/auth/register', async (req, res) => {
         const data = RegisterSchema.parse(req.body);
         const hashedPassword = await bcrypt.hash(data.password, 10);
         const userId = randomUUID();
-        const farmerId = randomUUID();
-        const farmId = randomUUID();
 
         let dob = null;
         if (data.dobYear && data.dobMonth && data.dobDay) {
@@ -147,27 +145,29 @@ app.post('/api/auth/register', async (req, res) => {
             [userId, data.email, data.username, hashedPassword]
         );
 
-        await connection.execute(
+        const [farmerResult] = await connection.execute(
             `INSERT INTO farmers (
-                id, user_id, rsbsa_id, first_name, middle_name, last_name, 
+                user_id, rsbsa_id, first_name, middle_name, last_name, 
                 tribe, address_sitio, address_barangay, address_municipality, address_province, 
                 cellphone, sex, date_of_birth, civil_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                farmerId, userId, data.rsbsaId, data.firstName, data.middleName || null, data.lastName,
+                userId, data.rsbsaId, data.firstName, data.middleName || null, data.lastName,
                 data.tribe || null, data.streetSitio || null, data.barangay || null, 
                 data.municipality || 'Norala', data.province || 'South Cotabato',
                 data.cellphone || null, data.sex || null, dob, data.civilStatus || null
             ]
         );
 
+        const farmerId = farmerResult.insertId;
+
         await connection.execute(
             `INSERT INTO farms (
-                id, farmer_id, location_sitio, location_barangay, location_municipality, location_province,
+                farmer_id, location_sitio, location_barangay, location_municipality, location_province,
                 latitude, longitude, farm_size_hectares
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                farmId, farmerId, data.farmSitio || null, data.farmBarangay || null, 
+                farmerId, data.farmSitio || null, data.farmBarangay || null, 
                 data.farmMunicipality || 'Norala', data.farmProvince || 'South Cotabato',
                 data.farmLatitude || null, data.farmLongitude || null,
                 data.farmSize ? parseFloat(data.farmSize) : null
@@ -446,13 +446,12 @@ app.patch('/api/farmer/profile', authenticateToken, async (req, res) => {
 app.post('/api/reports', authenticateToken, async (req, res) => {
     try {
         const data = ReportSchema.parse(req.body);
-        const reportId = randomUUID();
 
-        await pool.execute(
-            `INSERT INTO reports (id, user_id, type, details, location, latitude, longitude, photo_base64)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        const [result] = await pool.execute(
+            `INSERT INTO reports (user_id, type, details, location, latitude, longitude, photo_base64)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
-                reportId, req.user.id, data.type, 
+                req.user.id, data.type, 
                 JSON.stringify(data.details || {}), 
                 data.location || null,
                 data.latitude || null,
@@ -461,13 +460,14 @@ app.post('/api/reports', authenticateToken, async (req, res) => {
             ]
         );
 
-        const notifId = randomUUID();
+        const reportId = result.insertId;
+
         try {
             await pool.execute(
-                `INSERT INTO notifications (id, user_id, type, title, message, reference_id)
-                 SELECT ?, id, 'new_report', ?, ?, ?
+                `INSERT INTO notifications (user_id, type, title, message, reference_id)
+                 SELECT id, 'new_report', ?, ?, ?
                  FROM users WHERE role = 'admin'`,
-                [notifId, `New ${data.type} report`, `A new ${data.type} report has been submitted`, reportId]
+                [`New ${data.type} report`, `A new ${data.type} report has been submitted`, reportId.toString()]
             );
         } catch (e) { /* notifications table might not exist */ }
 
@@ -695,21 +695,21 @@ app.post('/api/admin/farmers', authenticateToken, requireAdmin, async (req, res)
         );
 
         // Create farmer profile
-        const farmerId = randomUUID();
-        await pool.execute(
-            `INSERT INTO farmers (id, user_id, rsbsa_id, first_name, last_name, middle_name, cellphone, address_barangay, address_municipality, address_province)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [farmerId, userId, rsbsaId, firstName, lastName, middleName || null, cellphone || null, 
+        const [farmerResult] = await pool.execute(
+            `INSERT INTO farmers (user_id, rsbsa_id, first_name, last_name, middle_name, cellphone, address_barangay, address_municipality, address_province)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, rsbsaId, firstName, lastName, middleName || null, cellphone || null, 
              barangay || 'Unspecified', municipality || 'Norala', province || 'South Cotabato']
         );
 
+        const farmerId = farmerResult.insertId;
+
         // Create farm record if farm info provided
         if (farmBarangay || farmSize) {
-            const farmId = randomUUID();
             await pool.execute(
-                `INSERT INTO farms (id, farmer_id, location_barangay, farm_size_hectares)
-                 VALUES (?, ?, ?, ?)`,
-                [farmId, farmerId, farmBarangay || barangay || 'Unspecified', parseFloat(farmSize) || 0]
+                `INSERT INTO farms (farmer_id, location_barangay, farm_size_hectares)
+                 VALUES (?, ?, ?)`,
+                [farmerId, farmBarangay || barangay || 'Unspecified', parseFloat(farmSize) || 0]
             );
         }
 
@@ -981,11 +981,10 @@ app.patch('/api/admin/reports/:id/status', authenticateToken, requireAdmin, asyn
         try {
             const [report] = await pool.execute('SELECT user_id, type FROM reports WHERE id = ?', [req.params.id]);
             if (report[0]) {
-                const notifId = randomUUID();
                 await pool.execute(
-                    `INSERT INTO notifications (id, user_id, type, title, message, reference_id)
-                     VALUES (?, ?, 'status_change', ?, ?, ?)`,
-                    [notifId, report[0].user_id, `Report ${status}`, `Your ${report[0].type} report has been ${status}`, req.params.id]
+                    `INSERT INTO notifications (user_id, type, title, message, reference_id)
+                     VALUES (?, 'status_change', ?, ?, ?)`,
+                    [report[0].user_id, `Report ${status}`, `Your ${report[0].type} report has been ${status}`, req.params.id.toString()]
                 );
             }
         } catch (e) { /* notifications table might not exist */ }
@@ -1081,12 +1080,11 @@ app.get('/api/admin/pest-categories', authenticateToken, requireAdmin, async (re
 app.post('/api/admin/pest-categories', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, description, severityLevel, affectedCrops } = req.body;
-        const id = randomUUID();
-        await pool.execute(
-            `INSERT INTO pest_categories (id, name, description, severity_level, affected_crops) VALUES (?, ?, ?, ?, ?)`,
-            [id, name, description, severityLevel || 'medium', affectedCrops]
+        const [result] = await pool.execute(
+            `INSERT INTO pest_categories (name, description, severity_level, affected_crops) VALUES (?, ?, ?, ?)`,
+            [name, description, severityLevel || 'medium', affectedCrops]
         );
-        res.status(201).json({ id, message: 'Pest category created' });
+        res.status(201).json({ id: result.insertId, message: 'Pest category created' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
@@ -1126,9 +1124,8 @@ app.get('/api/admin/crop-types', authenticateToken, requireAdmin, async (req, re
 app.post('/api/admin/crop-types', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, description, season } = req.body;
-        const id = randomUUID();
-        await pool.execute(`INSERT INTO crop_types (id, name, description, season) VALUES (?, ?, ?, ?)`, [id, name, description, season]);
-        res.status(201).json({ id, message: 'Crop type created' });
+        const [result] = await pool.execute(`INSERT INTO crop_types (name, description, season) VALUES (?, ?, ?)`, [name, description, season]);
+        res.status(201).json({ id: result.insertId, message: 'Crop type created' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
@@ -1165,12 +1162,11 @@ app.get('/api/admin/barangays', authenticateToken, requireAdmin, async (req, res
 app.post('/api/admin/barangays', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { name, municipality, province, latitude, longitude } = req.body;
-        const id = randomUUID();
-        await pool.execute(
-            `INSERT INTO barangays (id, name, municipality, province, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)`,
-            [id, name, municipality || 'Norala', province || 'South Cotabato', latitude, longitude]
+        const [result] = await pool.execute(
+            `INSERT INTO barangays (name, municipality, province, latitude, longitude) VALUES (?, ?, ?, ?, ?)`,
+            [name, municipality || 'Norala', province || 'South Cotabato', latitude, longitude]
         );
-        res.status(201).json({ id, message: 'Barangay created' });
+        res.status(201).json({ id: result.insertId, message: 'Barangay created' });
     } catch (err) {
         res.status(500).json({ error: 'Server error' });
     }
@@ -1192,8 +1188,8 @@ app.put('/api/admin/settings', authenticateToken, requireAdmin, async (req, res)
         const settings = req.body;
         for (const [key, value] of Object.entries(settings)) {
             await pool.execute(
-                `INSERT INTO system_settings (id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
-                [randomUUID(), key, value, value]
+                `INSERT INTO system_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
+                [key, value, value]
             );
         }
         res.json({ message: 'Settings updated' });

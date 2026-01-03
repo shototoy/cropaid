@@ -121,7 +121,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900 capitalize">{report.type} Report</h2>
-                                <p className="text-sm text-gray-500">ID: {report.id?.slice(0, 8) || 'N/A'}</p>
+                                <p className="text-sm text-gray-500">ID: #{report.id || 'N/A'}</p>
                             </div>
                         </div>
                         <button 
