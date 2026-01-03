@@ -539,6 +539,71 @@ app.get('/api/admin/farmers', authenticateToken, requireAdmin, async (req, res) 
     }
 });
 
+// Add new farmer (admin)
+app.post('/api/admin/farmers', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const {
+            firstName, lastName, middleName, email, cellphone,
+            rsbsaId, barangay, municipality, province,
+            farmBarangay, farmSize
+        } = req.body;
+
+        // Validate required fields
+        if (!firstName || !lastName || !rsbsaId) {
+            return res.status(400).json({ error: 'First name, last name, and RSBSA ID are required' });
+        }
+
+        // Check if RSBSA ID already exists
+        const [existing] = await pool.execute('SELECT id FROM farmers WHERE rsbsa_id = ?', [rsbsaId]);
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'RSBSA ID already registered' });
+        }
+
+        // Create user account with default password
+        const userId = randomUUID();
+        const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/\s/g, '');
+        const defaultPassword = await bcrypt.hash('cropaid123', 10);
+
+        await pool.execute(
+            `INSERT INTO users (id, email, username, password_hash, role, is_active)
+             VALUES (?, ?, ?, ?, 'farmer', TRUE)`,
+            [userId, email || `${username}@cropaid.local`, username, defaultPassword]
+        );
+
+        // Create farmer profile
+        const farmerId = randomUUID();
+        await pool.execute(
+            `INSERT INTO farmers (id, user_id, rsbsa_id, first_name, last_name, middle_name, cellphone, address_barangay, address_municipality, address_province)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [farmerId, userId, rsbsaId, firstName, lastName, middleName || null, cellphone || null, 
+             barangay || 'Unspecified', municipality || 'Norala', province || 'South Cotabato']
+        );
+
+        // Create farm record if farm info provided
+        if (farmBarangay || farmSize) {
+            const farmId = randomUUID();
+            await pool.execute(
+                `INSERT INTO farms (id, farmer_id, location_barangay, farm_size_hectares)
+                 VALUES (?, ?, ?, ?)`,
+                [farmId, farmerId, farmBarangay || barangay || 'Unspecified', parseFloat(farmSize) || 0]
+            );
+        }
+
+        res.status(201).json({ 
+            message: 'Farmer created successfully',
+            farmerId,
+            username,
+            defaultPassword: 'cropaid123'
+        });
+    } catch (err) {
+        console.error(err);
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: 'Email or username already exists' });
+        }
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.patch('/api/admin/farmers/:id/status', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { isActive } = req.body;

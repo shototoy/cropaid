@@ -1,0 +1,19 @@
+{
+  "appId": "com.cropaid.app",
+  "appName": "CropAid",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#2E7D32",
+      "showSpinner": false
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#2E7D32"
+  }
+}

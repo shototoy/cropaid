@@ -80,44 +80,49 @@ export default function AdminMapPage() {
 
     return (
         <>
-            <div className="h-[calc(100vh-120px)] flex gap-4 relative z-0">
+            <div className="h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4 relative z-0">
                 {/* Main Map Area */}
-                <div className={`flex-1 bg-white rounded-xl shadow-sm overflow-hidden transition-all relative z-0 ${selectedReport ? 'w-2/3' : 'w-full'}`}>
+                <div className={`flex-1 bg-white rounded-xl shadow-sm overflow-hidden transition-all relative z-0 ${selectedReport ? 'md:w-2/3' : 'w-full'} min-h-[300px] md:min-h-0`}>
                     <AdminMap onReportClick={handleReportClick} />
                 </div>
 
-                {/* Detail Panel */}
+                {/* Detail Panel - Sidebar on Desktop, Modal on Mobile */}
                 {selectedReport && (
-                    <div className="w-1/3 min-w-[320px] bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-                        {/* Header */}
-                        <div className="bg-primary text-white p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl">{getTypeIcon(selectedReport.report_type)}</span>
-                                <div>
-                                    <h3 className="font-bold capitalize">{selectedReport.report_type} Report</h3>
-                                    <p className="text-sm opacity-80">ID: #{selectedReport.id}</p>
+                    <>
+                        {/* Mobile Overlay */}
+                        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={closeDetailPanel} />
+                        
+                        {/* Panel */}
+                        <div className="fixed inset-x-0 bottom-0 md:relative md:inset-auto md:w-1/3 md:min-w-[320px] bg-white rounded-t-2xl md:rounded-xl shadow-lg md:shadow-sm overflow-hidden flex flex-col z-50 md:z-0 max-h-[80vh] md:max-h-none">
+                            {/* Header */}
+                            <div className="bg-primary text-white p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl">{getTypeIcon(selectedReport.report_type)}</span>
+                                    <div>
+                                        <h3 className="font-bold capitalize">{selectedReport.report_type} Report</h3>
+                                        <p className="text-sm opacity-80">ID: #{selectedReport.id}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <button 
-                                onClick={closeDetailPanel}
-                                className="p-1 hover:bg-white/20 rounded transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                            {/* Status Badge */}
-                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(selectedReport.status)}`}>
-                                {selectedReport.status === 'verified' && <CheckCircle size={16} />}
-                                {selectedReport.status === 'pending' && <AlertTriangle size={16} />}
-                                {selectedReport.status?.toUpperCase()}
+                                <button 
+                                    onClick={closeDetailPanel}
+                                    className="p-1 hover:bg-white/20 rounded transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            {/* Farmer Info */}
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                {/* Status Badge */}
+                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(selectedReport.status)}`}>
+                                    {selectedReport.status === 'verified' && <CheckCircle size={16} />}
+                                    {selectedReport.status === 'pending' && <AlertTriangle size={16} />}
+                                    {selectedReport.status?.toUpperCase()}
+                                </div>
+
+                                {/* Farmer Info */}
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
                                     <User size={16} />
                                     <span className="text-sm font-medium">Farmer Information</span>
                                 </div>
@@ -193,6 +198,7 @@ export default function AdminMapPage() {
                             </button>
                         </div>
                     </div>
+                    </>
                 )}
             </div>
 

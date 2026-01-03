@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Header from '../components/Header';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { MOCK_DATA } from '../config/mockData';
 import { MapPin, Bug, CloudRain, Sun, Clock, CheckCircle, Home, Crosshair } from 'lucide-react';
+import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
 
 // Fix for default marker icons in React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -210,6 +211,18 @@ export default function FarmerMapPage() {
                         <TileLayer
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             attribution='&copy; OpenStreetMap contributors'
+                        />
+
+                        {/* Norala Municipality Boundary */}
+                        <Polygon
+                            positions={noralaBoundaryCoordinates}
+                            pathOptions={{
+                                color: '#1B5E20',
+                                weight: 6,
+                                opacity: 1,
+                                fillColor: '#4CAF50',
+                                fillOpacity: 0.3
+                            }}
                         />
 
                         <LocationMarker 

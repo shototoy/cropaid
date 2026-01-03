@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth, API_URL } from '../context/AuthContext';
+import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
 
 // Fix for default marker icons in React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -162,67 +163,69 @@ export default function AdminMap({ onReportClick }) {
 
     return (
         <div className="h-full flex flex-col">
-            {/* Filter Bar */}
-            <div className="bg-white p-4 rounded-t-lg border-b flex flex-wrap gap-4 items-center">
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-600">Type:</label>
-                    <select
-                        value={filter.type}
-                        onChange={(e) => setFilter({ ...filter, type: e.target.value })}
-                        className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                        <option value="">All Types</option>
-                        <option value="pest">🐛 Pest</option>
-                        <option value="flood">🌊 Flood</option>
-                        <option value="drought">☀️ Drought</option>
-                    </select>
-                </div>
+            {/* Filter Bar - Stack on mobile */}
+            <div className="bg-white p-3 md:p-4 rounded-t-lg border-b">
+                <div className="flex flex-wrap gap-2 md:gap-4 items-center">
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <label className="text-xs md:text-sm font-medium text-gray-600 hidden sm:inline">Type:</label>
+                        <select
+                            value={filter.type}
+                            onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+                            className="border rounded-lg px-2 md:px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="">All Types</option>
+                            <option value="pest">🐛 Pest</option>
+                            <option value="flood">🌊 Flood</option>
+                            <option value="drought">☀️ Drought</option>
+                        </select>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-600">Status:</label>
-                    <select
-                        value={filter.status}
-                        onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-                        className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <label className="text-xs md:text-sm font-medium text-gray-600 hidden sm:inline">Status:</label>
+                        <select
+                            value={filter.status}
+                            onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+                            className="border rounded-lg px-2 md:px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="verified">Verified</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-600">Barangay:</label>
-                    <select
-                        value={filter.barangay}
-                        onChange={(e) => setFilter({ ...filter, barangay: e.target.value })}
-                        className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                        <option value="">All Barangays</option>
-                        {barangays.map((b) => (
-                            <option key={b.id} value={b.name}>{b.name}</option>
-                        ))}
-                    </select>
-                </div>
+                    <div className="flex items-center gap-1 md:gap-2">
+                        <label className="text-xs md:text-sm font-medium text-gray-600 hidden sm:inline">Barangay:</label>
+                        <select
+                            value={filter.barangay}
+                            onChange={(e) => setFilter({ ...filter, barangay: e.target.value })}
+                            className="border rounded-lg px-2 md:px-3 py-1.5 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="">All Barangays</option>
+                            {barangays.map((b) => (
+                                <option key={b.id} value={b.name}>{b.name}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                <div className="ml-auto text-sm text-gray-500">
-                    <span className="font-medium text-gray-700">{reports.length}</span> reports with location data
+                    <div className="ml-auto text-xs md:text-sm text-gray-500">
+                        <span className="font-medium text-gray-700">{reports.length}</span> <span className="hidden sm:inline">reports with location data</span><span className="sm:hidden">reports</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Legend */}
-            <div className="bg-white px-4 py-2 flex gap-6 border-b text-sm">
-                <span className="font-medium text-gray-600">Legend:</span>
-                <span className="flex items-center gap-1">
-                    <span className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center text-xs">🐛</span> Pest
+            {/* Legend - Scrollable on mobile */}
+            <div className="bg-white px-3 md:px-4 py-2 flex gap-3 md:gap-6 border-b text-xs md:text-sm overflow-x-auto">
+                <span className="font-medium text-gray-600 flex-shrink-0">Legend:</span>
+                <span className="flex items-center gap-1 flex-shrink-0">
+                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-red-500 flex items-center justify-center text-[10px] md:text-xs">🐛</span> Pest
                 </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs">🌊</span> Flood
+                <span className="flex items-center gap-1 flex-shrink-0">
+                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] md:text-xs">🌊</span> Flood
                 </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-xs">☀️</span> Drought
+                <span className="flex items-center gap-1 flex-shrink-0">
+                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-orange-500 flex items-center justify-center text-[10px] md:text-xs">☀️</span> Drought
                 </span>
             </div>
 
@@ -238,8 +241,18 @@ export default function AdminMap({ onReportClick }) {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    
-                    <MapBoundsUpdater reports={reports} />
+
+                    {/* Norala Municipality Boundary */}
+                    <Polygon
+                        positions={noralaBoundaryCoordinates}
+                        pathOptions={{
+                            color: '#1B5E20',
+                            weight: 6,
+                            opacity: 1,
+                            fillColor: '#4CAF50',
+                            fillOpacity: 0.3
+                        }}
+                    />
 
                     {reports.map((report) => {
                         // Parse details if it's a string

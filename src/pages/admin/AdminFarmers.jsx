@@ -58,17 +58,7 @@ export default function AdminFarmers() {
                 const data = await response.json();
                 // Backend returns { farmers: [...] }
                 const farmersArray = data.farmers || data;
-                // Normalize field names
-                const normalizedFarmers = farmersArray.map(f => ({
-                    ...f,
-                    first_name: f.full_name?.split(' ')[0] || f.full_name || 'Unknown',
-                    last_name: f.full_name?.split(' ').slice(1).join(' ') || '',
-                    name: f.full_name,
-                    rsbsa: f.rsbsa_number,
-                    rsbsa_id: f.rsbsa_number,
-                    address_barangay: f.barangay
-                }));
-                setFarmers(normalizedFarmers);
+                setFarmers(farmersArray);
             } catch (err) {
                 console.error(err);
                 setError(err.message || 'Failed to load farmers');
@@ -123,8 +113,8 @@ export default function AdminFarmers() {
                 </button>
             </div>
 
-            {/* Data Table */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            {/* Data Table - Desktop */}
+            <div className="hidden md:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -204,6 +194,42 @@ export default function AdminFarmers() {
                         <button className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50" disabled={true}>Next</button>
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+                {loading && <p className="text-center py-8 text-gray-500">Loading farmers...</p>}
+                {!loading && error && <p className="text-center py-8 text-red-500">{error}</p>}
+                {!loading && !error && filteredFarmers.length === 0 && (
+                    <p className="text-center py-8 text-gray-500">No farmers found.</p>
+                )}
+                {!loading && !error && filteredFarmers.map((farmer) => (
+                    <div 
+                        key={farmer.id} 
+                        className="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
+                        onClick={() => setSelectedFarmer(farmer)}
+                    >
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                                    {farmer.first_name ? farmer.first_name.charAt(0) : ''}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-900">{farmer.first_name} {farmer.last_name}</p>
+                                    <p className="text-xs text-gray-400 font-mono">{farmer.rsbsa_id || 'No RSBSA'}</p>
+                                </div>
+                            </div>
+                            <Eye size={18} className="text-primary" />
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-sm text-gray-500">
+                            <MapPin size={14} />
+                            <span>{farmer.address_barangay || farmer.location_barangay || 'No location'}</span>
+                        </div>
+                    </div>
+                ))}
+                <p className="text-center text-xs text-gray-400 py-2">
+                    Showing {filteredFarmers.length} of {farmers.length} farmers
+                </p>
             </div>
 
             {/* Farmer Detail Modal */}
