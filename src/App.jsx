@@ -2,7 +2,6 @@
 import React from 'react';
 import FarmerLayout from './components/FarmerLayout';
 import { AuthProvider } from './context/AuthContext';
-import MockModeOverlay from './components/MockModeOverlay';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
@@ -37,7 +36,6 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
-        <MockModeOverlay />
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/login" element={<Login />} />
