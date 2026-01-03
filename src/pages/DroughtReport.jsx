@@ -6,7 +6,7 @@ import Input from '../components/Input';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
-export default function FloodReport() {
+export default function DroughtReport() {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -21,6 +21,8 @@ export default function FloodReport() {
         affectedArea: '',
         crop: '',
         cropStage: '',
+        waterSource: '',
+        daysSinceRain: '',
         description: '',
         latitude: null,
         longitude: null,
@@ -77,13 +79,15 @@ export default function FloodReport() {
 
         try {
             const payload = {
-                type: 'flood',
+                type: 'drought',
                 location: formData.location,
                 details: {
                     cropType: formData.crop,
                     cropStage: formData.cropStage,
                     affectedArea: formData.affectedArea,
                     farmArea: formData.farmArea,
+                    waterSource: formData.waterSource,
+                    daysSinceRain: formData.daysSinceRain,
                     description: formData.description
                 },
                 latitude: formData.latitude,
@@ -116,7 +120,7 @@ export default function FloodReport() {
 
     return (
         <div className="flex flex-col h-full bg-white">
-            <Header title="Report Flood Damage" showBack onBack={() => navigate(-1)} />
+            <Header title="Report Drought Damage" showBack onBack={() => navigate(-1)} />
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -165,7 +169,7 @@ export default function FloodReport() {
 
                     <Input
                         label="Location/Farm Area"
-                        placeholder="e.g. Purok 5, Lowland Field"
+                        placeholder="e.g. Purok 3, Upland Field"
                         value={formData.location}
                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                         required
@@ -207,10 +211,33 @@ export default function FloodReport() {
                     />
 
                     <div>
+                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Water Source Status</label>
+                        <select
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            value={formData.waterSource}
+                            onChange={(e) => setFormData({ ...formData, waterSource: e.target.value })}
+                        >
+                            <option value="">Select Status</option>
+                            <option value="Normal">Normal - Adequate water supply</option>
+                            <option value="Low">Low - Reduced water availability</option>
+                            <option value="Critical">Critical - Severely depleted</option>
+                            <option value="Dry">Dry - No water source available</option>
+                        </select>
+                    </div>
+
+                    <Input
+                        label="Days Since Last Rain"
+                        type="number"
+                        placeholder="e.g. 14"
+                        value={formData.daysSinceRain}
+                        onChange={(e) => setFormData({ ...formData, daysSinceRain: e.target.value })}
+                    />
+
+                    <div>
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Description / Notes</label>
                         <textarea
                             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px]"
-                            placeholder="Describe the flood extent and damage..."
+                            placeholder="Describe the drought conditions and crop damage..."
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />

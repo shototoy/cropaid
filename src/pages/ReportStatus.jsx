@@ -41,7 +41,9 @@ export default function ReportStatus() {
                 if (!response.ok) throw new Error('Failed to fetch reports');
 
                 const data = await response.json();
-                setReports(data);
+                // Handle both array and object with reports property
+                const reportsArray = Array.isArray(data) ? data : (data.reports || data.history || []);
+                setReports(reportsArray);
             } catch (err) {
                 console.error(err);
                 setError('Failed to load report history');
@@ -97,27 +99,31 @@ export default function ReportStatus() {
 
                 <div className="space-y-3">
                     {reports.map((report) => {
-                        const style = getStatusInfo(report.status);
-
+                        const style = getStatusInfo(report.status?.toLowerCase());
+                        const reportType = report.report_type || report.type || 'Unknown';
+                        
+                        // Parse details if it's a JSON string
                         let details = {};
-                        if (report.details) {
-                            try {
-                                details = typeof report.details === 'string' ? JSON.parse(report.details) : report.details;
-                            } catch (e) {
-                                // Fallback for plain string details
-                                details = { description: report.details };
-                            }
+                        try {
+                            details = typeof report.details === 'string' && report.details.startsWith('{') 
+                                ? JSON.parse(report.details) 
+                                : (typeof report.details === 'object' ? report.details : {});
+                        } catch (e) {
+                            details = {};
                         }
-                        // Ensure details is an object to prevent crashes
-                        if (!details || typeof details !== 'object') details = {};
-
+                        
+                        // Get description from details if not directly on report
+                        const description = report.description || details.description || details.notes || 
+                            (typeof report.details === 'string' && !report.details.startsWith('{') ? report.details : '');
+                        const cropPlanted = report.crop_planted || details.cropType || details.crop_type;
+                        const affectedArea = report.affected_area || details.affectedArea || details.affected_area;
 
                         return (
                             <div key={report.id} className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h3 className="font-bold text-gray-900 capitalize text-base">{report.type} Report</h3>
-                                        <p className="text-xs text-gray-400">{formatDate(report.created_at)}</p>
+                                        <h3 className="font-bold text-gray-900 capitalize text-base">{reportType} Report</h3>
+                                        <p className="text-xs text-gray-400">{formatDate(report.created_at || report.date)}</p>
                                     </div>
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 border ${style.color}`}>
                                         <style.icon size={12} />
@@ -126,13 +132,14 @@ export default function ReportStatus() {
                                 </div>
 
                                 <div className="text-sm text-gray-600 mb-2">
-                                    <p><span className="font-bold text-gray-400 text-xs uppercase">Location:</span> {report.location}</p>
-                                    {details.crop && <p><span className="font-bold text-gray-400 text-xs uppercase">Crop:</span> {details.crop}</p>}
+                                    <p><span className="font-bold text-gray-400 text-xs uppercase">Location:</span> {report.location || 'Not specified'}</p>
+                                    {cropPlanted && <p><span className="font-bold text-gray-400 text-xs uppercase">Crop:</span> {cropPlanted}</p>}
+                                    {affectedArea && <p><span className="font-bold text-gray-400 text-xs uppercase">Affected Area:</span> {affectedArea} ha</p>}
                                 </div>
 
-                                {details.description && (
+                                {description && (
                                     <p className="text-xs text-gray-500 bg-gray-50 p-2 rounded italic">
-                                        "{details.description}"
+                                        "{description}"
                                     </p>
                                 )}
                             </div>

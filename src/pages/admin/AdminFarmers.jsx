@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, MapPin, Phone } from 'lucide-react';
+import { Search, Filter, MoreVertical, MapPin, Phone, Eye } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { useOutletContext } from 'react-router-dom';
 import { MOCK_DATA } from '../../config/mockData';
+import FarmerDetailModal from '../../components/FarmerDetailModal';
+import AddFarmerModal from '../../components/AddFarmerModal';
 
 export default function AdminFarmers() {
     const { token, isMockMode } = useAuth();
@@ -11,16 +13,25 @@ export default function AdminFarmers() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
+    const [selectedFarmer, setSelectedFarmer] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Inject "Add New Farmer" button into header
     useEffect(() => {
         setHeaderAction(
-            <button className="bg-primary text-white px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap">
+            <button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-primary text-white px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap"
+            >
                 + Add New Farmer
             </button>
         );
         return () => setHeaderAction(null);
     }, [setHeaderAction]);
+
+    const handleAddSuccess = (newFarmer) => {
+        setFarmers(prev => [newFarmer, ...prev]);
+    };
 
     useEffect(() => {
         const fetchFarmers = async () => {
@@ -45,7 +56,9 @@ export default function AdminFarmers() {
                     throw new Error(errorData.message || 'Failed to fetch farmers');
                 }
                 const data = await response.json();
-                setFarmers(data);
+                // Backend returns { farmers: [...] }
+                const farmersArray = data.farmers || data;
+                setFarmers(farmersArray);
             } catch (err) {
                 console.error(err);
                 setError(err.message || 'Failed to load farmers');
@@ -54,8 +67,20 @@ export default function AdminFarmers() {
             }
         };
 
-        if (token) fetchFarmers();
+        if (token || isMockMode) fetchFarmers();
     }, [token, isMockMode]);
+
+    const handleStatusUpdate = (farmerId, newStatus) => {
+        setFarmers(prev => prev.map(f => 
+            (f.id === farmerId || f.user_id === farmerId) ? { ...f, is_active: newStatus } : f
+        ));
+    };
+
+    const handleDeleteFarmer = (farmerId) => {
+        // Filter by both id and user_id to handle both integer and UUID
+        setFarmers(prev => prev.filter(f => f.id !== farmerId && f.user_id !== farmerId));
+        setSelectedFarmer(null);
+    };
 
     const filteredFarmers = farmers.filter(f => {
         const term = searchTerm.toLowerCase();
@@ -94,8 +119,8 @@ export default function AdminFarmers() {
                 </button>
             </div>
 
-            {/* Data Table */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            {/* Data Table - Desktop */}
+            <div className="hidden md:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -150,6 +175,13 @@ export default function AdminFarmers() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
+                                        <button 
+                                            onClick={() => setSelectedFarmer(farmer)}
+                                            className="text-primary hover:text-primary/80 p-1.5 rounded-md hover:bg-primary/10 transition-colors mr-1"
+                                            title="View Details"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
                                         <button className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors">
                                             <MoreVertical size={16} />
                                         </button>
@@ -169,6 +201,60 @@ export default function AdminFarmers() {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+                {loading && <p className="text-center py-8 text-gray-500">Loading farmers...</p>}
+                {!loading && error && <p className="text-center py-8 text-red-500">{error}</p>}
+                {!loading && !error && filteredFarmers.length === 0 && (
+                    <p className="text-center py-8 text-gray-500">No farmers found.</p>
+                )}
+                {!loading && !error && filteredFarmers.map((farmer) => (
+                    <div 
+                        key={farmer.id} 
+                        className="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
+                        onClick={() => setSelectedFarmer(farmer)}
+                    >
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                                    {farmer.first_name ? farmer.first_name.charAt(0) : ''}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-900">{farmer.first_name} {farmer.last_name}</p>
+                                    <p className="text-xs text-gray-400 font-mono">{farmer.rsbsa_id || 'No RSBSA'}</p>
+                                </div>
+                            </div>
+                            <Eye size={18} className="text-primary" />
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-sm text-gray-500">
+                            <MapPin size={14} />
+                            <span>{farmer.address_barangay || farmer.location_barangay || 'No location'}</span>
+                        </div>
+                    </div>
+                ))}
+                <p className="text-center text-xs text-gray-400 py-2">
+                    Showing {filteredFarmers.length} of {farmers.length} farmers
+                </p>
+            </div>
+
+            {/* Farmer Detail Modal */}
+            {selectedFarmer && (
+                <FarmerDetailModal 
+                    farmer={selectedFarmer} 
+                    onClose={() => setSelectedFarmer(null)}
+                    onStatusUpdate={handleStatusUpdate}
+                    onDelete={handleDeleteFarmer}
+                />
+            )}
+
+            {/* Add Farmer Modal */}
+            {showAddModal && (
+                <AddFarmerModal 
+                    onClose={() => setShowAddModal(false)}
+                    onSuccess={handleAddSuccess}
+                />
+            )}
         </div>
     );
 }

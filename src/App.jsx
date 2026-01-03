@@ -2,7 +2,6 @@
 import React from 'react';
 import FarmerLayout from './components/FarmerLayout';
 import { AuthProvider } from './context/AuthContext';
-import MockModeOverlay from './components/MockModeOverlay';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
@@ -20,17 +19,23 @@ import UnifiedReport from './pages/UnifiedReport';
 import ReportStatus from './pages/ReportStatus';
 import PestReport from './pages/PestReport';
 import FloodReport from './pages/FloodReport';
+import DroughtReport from './pages/DroughtReport';
 import Confirmation from './pages/Confirmation';
 import ReportConfirmation from './pages/ReportConfirmation';
+import FarmerProfile from './pages/FarmerProfile';
+import NotificationsPage from './pages/NotificationsPage';
+import FarmerMapPage from './pages/FarmerMapPage';
+import NewsPage from './pages/NewsPage';
 import AdminFarmReports from './pages/AdminFarmReports';
 import AdminDailySummary from './pages/AdminDailySummary';
 import AdminOrganizedReport from './pages/AdminOrganizedReport';
+import AdminMapPage from './pages/admin/AdminMapPage';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
-        <MockModeOverlay />
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/login" element={<Login />} />
@@ -45,6 +50,10 @@ function App() {
             <Route path="/dashboard" element={<FarmerDashboard />} />
             <Route path="/report" element={<UnifiedReport />} />
             <Route path="/status" element={<ReportStatus />} />
+            <Route path="/profile" element={<FarmerProfile />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/my-map" element={<FarmerMapPage />} />
+            <Route path="/news" element={<NewsPage />} />
           </Route>
 
           {/* Admin Routes with Sidebar Layout */}
@@ -53,12 +62,13 @@ function App() {
             <Route path="/admin/farmers" element={<AdminFarmers />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             {/* Placeholders for now */}
-            <Route path="/admin/map" element={<div className="p-8 font-bold">Map View (Coming Soon)</div>} />
-            <Route path="/admin/settings" element={<div className="p-8 font-bold">Settings (Coming Soon)</div>} />
+            <Route path="/admin/map" element={<AdminMapPage />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="/report/pest" element={<PestReport />} />
           <Route path="/report/flood" element={<FloodReport />} />
+          <Route path="/report/drought" element={<DroughtReport />} />
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/report-confirmation" element={<ReportConfirmation />} />
           {/* Legacy or specific standalone admin pages if needed, can keep or remove later */}

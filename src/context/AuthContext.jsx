@@ -4,7 +4,8 @@ import { MOCK_CREDENTIALS } from '../config/mockData';
 
 const AuthContext = createContext(null);
 
-export const API_URL = 'http://localhost:3000/api';
+// Use environment variable for API URL, fallback to localhost for development
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);

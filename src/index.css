@@ -1,6 +1,65 @@
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom marker styles */
+.custom-marker {
+  background: transparent;
+  border: none;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  margin: 12px;
+}
+
+/* Fix Leaflet z-index to not overlay modals */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  z-index: 1 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 2 !important;
+}
+
+.leaflet-shadow-pane {
+  z-index: 3 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 4 !important;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 5 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 6 !important;
+}
+
+.leaflet-control {
+  z-index: 10 !important;
+}
+
+/* Map container should stay behind modals */
+.leaflet-container {
+  z-index: 0 !important;
+}
 
 @layer base {
 
