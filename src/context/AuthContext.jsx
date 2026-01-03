@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_CREDENTIALS } from '../config/mockData';
+import { setApiMockMode } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -23,15 +24,18 @@ export const AuthProvider = ({ children }) => {
                 // Only consider it "connected" if we get a successful response
                 if (response.ok) {
                     setIsMockMode(false);
+                    setApiMockMode(false);
                 } else {
                     // Backend exists but API not ready (404, 500, etc.)
                     console.warn('Backend API not ready. Switching to Mock Mode.');
                     setIsMockMode(true);
+                    setApiMockMode(true);
                 }
             } catch (err) {
                 // Network error - backend unreachable
                 console.warn('Backend Unreachable. Switching to Mock Mode.', err);
                 setIsMockMode(true);
+                setApiMockMode(true);
             } finally {
                 // Hydrate user
                 const storedUser = localStorage.getItem('user');

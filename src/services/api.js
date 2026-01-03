@@ -1,6 +1,15 @@
 // API Service with geolocation, photo upload, and real-time notifications
 
+import { MOCK_DATA, MOCK_DB } from '../config/mockData';
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+let isGloballyMockMode = false;
+
+export const setApiMockMode = (mode) => {
+    isGloballyMockMode = mode;
+    console.log(`API Mock Mode set to: ${mode}`);
+};
 
 // ============ GEOLOCATION ============
 
@@ -48,7 +57,7 @@ export const getCurrentPosition = () => {
 // Process a file from an existing input element
 export const processFileInput = async (file) => {
     if (!file) return null;
-    
+
     try {
         // Compress if needed
         const compressedFile = await compressImage(file);
@@ -176,6 +185,14 @@ const compressImage = (file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) =
 // ============ WEATHER API ============
 
 export const fetchWeather = async (lat, lon) => {
+    if (isGloballyMockMode) {
+        return {
+            temperature: 29,
+            condition: 'Partly Cloudy',
+            humidity: 65,
+            location: 'Mock Location'
+        };
+    }
     try {
         const response = await fetch(`${API_BASE_URL}/weather?lat=${lat}&lon=${lon}`);
         if (!response.ok) throw new Error('Weather fetch failed');
@@ -198,6 +215,10 @@ let notificationPollInterval = null;
 let lastNotificationCheck = null;
 
 export const startNotificationPolling = (token, onNewNotifications, intervalMs = 30000) => {
+    if (isGloballyMockMode) {
+        return () => { };
+    }
+
     if (notificationPollInterval) {
         clearInterval(notificationPollInterval);
     }
@@ -246,6 +267,8 @@ export const stopNotificationPolling = () => {
 };
 
 export const fetchNotifications = async (token) => {
+    if (isGloballyMockMode) return { notifications: [], unreadCount: 0 };
+
     try {
         const response = await fetch(`${API_BASE_URL}/notifications`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -259,6 +282,7 @@ export const fetchNotifications = async (token) => {
 };
 
 export const markNotificationRead = async (token, notificationId) => {
+    if (isGloballyMockMode) return;
     try {
         await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
             method: 'PATCH',
@@ -270,6 +294,7 @@ export const markNotificationRead = async (token, notificationId) => {
 };
 
 export const markAllNotificationsRead = async (token) => {
+    if (isGloballyMockMode) return;
     try {
         await fetch(`${API_BASE_URL}/notifications/read-all`, {
             method: 'PATCH',
@@ -283,6 +308,9 @@ export const markAllNotificationsRead = async (token) => {
 // ============ REPORTS API ============
 
 export const submitReport = async (token, reportData) => {
+    if (isGloballyMockMode) {
+        return { success: true, message: 'Report submitted (Mock)' };
+    }
     const response = await fetch(`${API_BASE_URL}/reports`, {
         method: 'POST',
         headers: {
@@ -301,6 +329,8 @@ export const submitReport = async (token, reportData) => {
 };
 
 export const fetchReportHistory = async (token, params = {}) => {
+    if (isGloballyMockMode) return MOCK_DB.reports;
+
     const queryParams = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/reports/history${queryParams ? `?${queryParams}` : ''}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -313,6 +343,8 @@ export const fetchReportHistory = async (token, params = {}) => {
 // ============ ADMIN API ============
 
 export const fetchAdminStats = async (token) => {
+    if (isGloballyMockMode) return MOCK_DATA.admin.Stats;
+
     const response = await fetch(`${API_BASE_URL}/admin/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -321,6 +353,8 @@ export const fetchAdminStats = async (token) => {
 };
 
 export const fetchAdminReports = async (token, params = {}) => {
+    if (isGloballyMockMode) return MOCK_DATA.admin.Reports;
+
     const queryParams = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/admin/reports${queryParams ? `?${queryParams}` : ''}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -330,6 +364,8 @@ export const fetchAdminReports = async (token, params = {}) => {
 };
 
 export const fetchMapReports = async (token, params = {}) => {
+    if (isGloballyMockMode) return MOCK_DATA.admin.Reports;
+
     const queryParams = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/admin/reports/map${queryParams ? `?${queryParams}` : ''}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -339,6 +375,8 @@ export const fetchMapReports = async (token, params = {}) => {
 };
 
 export const updateReportStatus = async (token, reportId, status, adminNotes = '') => {
+    if (isGloballyMockMode) return { success: true };
+
     const response = await fetch(`${API_BASE_URL}/admin/reports/${reportId}/status`, {
         method: 'PATCH',
         headers: {
@@ -352,6 +390,8 @@ export const updateReportStatus = async (token, reportId, status, adminNotes = '
 };
 
 export const fetchReportPhoto = async (token, reportId) => {
+    if (isGloballyMockMode) return null;
+
     const response = await fetch(`${API_BASE_URL}/admin/reports/${reportId}/photo`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -363,6 +403,7 @@ export const fetchReportPhoto = async (token, reportId) => {
 // ============ SETTINGS API ============
 
 export const fetchPestCategories = async (token) => {
+    if (isGloballyMockMode) return [];
     const response = await fetch(`${API_BASE_URL}/admin/pest-categories`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -370,6 +411,7 @@ export const fetchPestCategories = async (token) => {
 };
 
 export const fetchCropTypes = async (token) => {
+    if (isGloballyMockMode) return ['Rice', 'Corn', 'Vegetables'];
     const response = await fetch(`${API_BASE_URL}/admin/crop-types`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -377,16 +419,19 @@ export const fetchCropTypes = async (token) => {
 };
 
 export const fetchBarangays = async () => {
+    if (isGloballyMockMode) return ['San Jose', 'Liberty', 'Esperanza', 'Caniogan'];
     const response = await fetch(`${API_BASE_URL}/barangays`);
     return await response.json();
 };
 
 export const fetchPestTypes = async () => {
+    if (isGloballyMockMode) return ['Rice Black Bug', 'Army Worm', 'Rodents'];
     const response = await fetch(`${API_BASE_URL}/pest-types`);
     return await response.json();
 };
 
 export const fetchCropTypesList = async () => {
+    if (isGloballyMockMode) return ['Rice', 'Corn', 'Vegetables'];
     const response = await fetch(`${API_BASE_URL}/crop-types`);
     return await response.json();
 };

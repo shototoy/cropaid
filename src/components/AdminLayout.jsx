@@ -3,11 +3,21 @@ import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import NotificationBell from './NotificationBell';
 import { Menu, Search } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [headerAction, setHeaderAction] = useState(null);
     const location = useLocation();
+    const { loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     // Determine page title based on path
     const getPageHeader = () => {
