@@ -6,14 +6,14 @@ import { MOCK_DATA } from '../../config/mockData';
 // Simple Bar Chart Component
 function SimpleBarChart({ data, title }) {
     const maxValue = Math.max(...data.map(d => d.value), 1);
-    
+
     return (
         <div className="space-y-3">
             {data.map((item, index) => (
                 <div key={index} className="flex items-center gap-3">
                     <span className="text-xs text-gray-500 w-16 truncate">{item.label}</span>
                     <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
-                        <div 
+                        <div
                             className={`h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2 ${item.color || 'bg-primary'}`}
                             style={{ width: `${Math.max((item.value / maxValue) * 100, 10)}%` }}
                         >
@@ -30,13 +30,13 @@ function SimpleBarChart({ data, title }) {
 function DonutChart({ data, centerLabel, centerValue }) {
     const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
     let cumulativePercent = 0;
-    
+
     const getCoordinatesForPercent = (percent) => {
         const x = Math.cos(2 * Math.PI * percent);
         const y = Math.sin(2 * Math.PI * percent);
         return [x, y];
     };
-    
+
     return (
         <div className="flex items-center justify-center gap-6">
             <div className="relative">
@@ -48,7 +48,7 @@ function DonutChart({ data, centerLabel, centerValue }) {
                         const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
                         const largeArcFlag = percent > 0.5 ? 1 : 0;
                         const pathData = `M ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} L 0 0`;
-                        
+
                         return (
                             <path
                                 key={i}
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const reportsData = await reportsRes.json();
-                
+
                 const reportsArray = reportsData.reports || reportsData;
                 const normalizedReports = reportsArray.map(r => ({
                     ...r,
@@ -237,10 +237,10 @@ export default function AdminDashboard() {
                     {loading ? (
                         <div className="h-40 flex items-center justify-center text-gray-400">Loading...</div>
                     ) : statusDonutData.length > 0 ? (
-                        <DonutChart 
-                            data={statusDonutData} 
-                            centerLabel="Total" 
-                            centerValue={stats.totalReports || stats.pendingReports + stats.resolvedReports + stats.verifiedReports + stats.rejectedReports} 
+                        <DonutChart
+                            data={statusDonutData}
+                            centerLabel="Total"
+                            centerValue={stats.totalReports || stats.pendingReports + stats.resolvedReports + stats.verifiedReports + stats.rejectedReports}
                         />
                     ) : (
                         <div className="h-40 flex items-center justify-center text-gray-400">No data</div>
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
                                         report.type?.toLowerCase() === 'flood' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}
                                 >
                                     {report.type?.toLowerCase() === 'pest' ? <Bug size={18} /> :
-                                     report.type?.toLowerCase() === 'flood' ? <Droplets size={18} /> : <Sun size={18} />}
+                                        report.type?.toLowerCase() === 'flood' ? <Droplets size={18} /> : <Sun size={18} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm text-gray-800 truncate">
@@ -288,12 +288,11 @@ export default function AdminDashboard() {
                                     <p className="text-xs text-gray-400">{report.location || 'Unknown location'}</p>
                                 </div>
                                 <div className="text-right flex-shrink-0">
-                                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                                        report.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                        report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
-                                        report.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                                        'bg-gray-100 text-gray-700'
-                                    }`}>
+                                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${report.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                            report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
+                                                report.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                                                    'bg-gray-100 text-gray-700'
+                                        }`}>
                                         {report.status}
                                     </span>
                                     <p className="text-xs text-gray-400 mt-1">{formatDate(report.created_at)}</p>

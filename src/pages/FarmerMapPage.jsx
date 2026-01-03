@@ -17,33 +17,75 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom marker icons
-const createIcon = (emoji, bgColor) => {
+const createIcon = (iconSvg, bgColor) => {
     return new L.DivIcon({
         className: 'custom-marker',
         html: `<div style="
             background-color: ${bgColor};
             width: 36px;
             height: 36px;
-            border-radius: 50%;
-            border: 3px solid white;
+            border-radius: 12px;
+            border: 2px solid white;
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-        ">${emoji}</div>`,
+            color: white;
+        ">${iconSvg}</div>`,
         iconSize: [36, 36],
         iconAnchor: [18, 18],
         popupAnchor: [0, -18]
     });
 };
 
-const farmIcon = createIcon('🏠', '#22c55e');
+const farmIcon = createIcon(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>`, '#22c55e'); // Green with Home icon
+
 const reportIcons = {
-    pest: createIcon('🐛', '#ef4444'),
-    flood: createIcon('🌊', '#3b82f6'),
-    drought: createIcon('☀️', '#f59e0b'),
-    default: createIcon('📍', '#6b7280')
+    pest: createIcon(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="8" height="14" x="8" y="6" rx="4"></rect>
+        <path d="m25 19-3-3"></path>
+        <path d="m19 8 3-3"></path>
+        <path d="m2 19 3-3"></path>
+        <path d="m2 8 3-3"></path>
+        <path d="m2 13 3 0"></path>
+        <path d="m19 13 3 0"></path>
+    </svg>
+    `, '#ef4444'), // Red with Bug icon (simplified)
+
+    flood: createIcon(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+        <path d="M16 14v6"></path>
+        <path d="M8 14v6"></path>
+        <path d="M12 16v6"></path>
+    </svg>
+    `, '#3b82f6'), // Blue with CloudRain icon
+
+    drought: createIcon(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2"></path>
+        <path d="M12 20v2"></path>
+        <path d="m4.93 4.93 1.41 1.41"></path>
+        <path d="m17.66 17.66 1.41 1.41"></path>
+        <path d="M2 12h2"></path>
+        <path d="M20 12h2"></path>
+        <path d="m6.34 17.66-1.41 1.41"></path>
+        <path d="m19.07 4.93-1.41 1.41"></path>
+    </svg>
+    `, '#f59e0b'), // Orange with Sun icon
+
+    default: createIcon(`
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+    `, '#6b7280')
 };
 
 // Component to center map on user location
@@ -66,9 +108,9 @@ function LocationMarker({ farmLocation, setUserLocation }) {
     }, [farmLocation, map]);
 
     return position ? (
-        <Circle 
-            center={position} 
-            radius={50} 
+        <Circle
+            center={position}
+            radius={50}
             pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.3 }}
         />
     ) : null;
@@ -91,7 +133,7 @@ export default function FarmerMapPage() {
             if (isMockMode) {
                 const username = user?.username || 'james';
                 const data = MOCK_DATA.getFarmerDashboard(username);
-                
+
                 // Mock farm location
                 setFarmData({
                     name: data.profile?.name || 'My Farm',
@@ -166,12 +208,12 @@ export default function FarmerMapPage() {
         });
     };
 
-    const filteredReports = filter === 'all' 
-        ? reports 
+    const filteredReports = filter === 'all'
+        ? reports
         : reports.filter(r => r.type === filter || r.report_type === filter);
 
-    const mapCenter = farmData 
-        ? [farmData.lat, farmData.lng] 
+    const mapCenter = farmData
+        ? [farmData.lat, farmData.lng]
         : defaultCenter;
 
     return (
@@ -184,11 +226,10 @@ export default function FarmerMapPage() {
                     <button
                         key={type}
                         onClick={() => setFilter(type)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                            filter === type
-                                ? 'bg-primary text-white'
-                                : 'bg-white text-gray-600 border border-gray-200'
-                        }`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${filter === type
+                            ? 'bg-primary text-white'
+                            : 'bg-white text-gray-600 border border-gray-200'
+                            }`}
                     >
                         {type === 'all' ? 'All Reports' : type.charAt(0).toUpperCase() + type.slice(1)}
                     </button>
@@ -225,15 +266,15 @@ export default function FarmerMapPage() {
                             }}
                         />
 
-                        <LocationMarker 
+                        <LocationMarker
                             farmLocation={farmData ? { lat: farmData.lat, lng: farmData.lng } : null}
                             setUserLocation={setUserLocation}
                         />
 
                         {/* Farm Location Marker */}
                         {farmData && (
-                            <Marker 
-                                position={[farmData.lat, farmData.lng]} 
+                            <Marker
+                                position={[farmData.lat, farmData.lng]}
                                 icon={farmIcon}
                             >
                                 <Popup>
@@ -275,19 +316,27 @@ export default function FarmerMapPage() {
                     <p className="text-xs font-bold text-gray-500 mb-2">LEGEND</p>
                     <div className="space-y-1.5 text-xs">
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">🏠</span>
+                            <div className="w-5 h-5 rounded-md bg-green-500 text-white flex items-center justify-center">
+                                <Home size={12} />
+                            </div>
                             <span>My Farm</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">🐛</span>
+                            <div className="w-5 h-5 rounded-md bg-red-500 text-white flex items-center justify-center">
+                                <Bug size={12} />
+                            </div>
                             <span>Pest Report</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">🌊</span>
+                            <div className="w-5 h-5 rounded-md bg-blue-500 text-white flex items-center justify-center">
+                                <CloudRain size={12} />
+                            </div>
                             <span>Flood Report</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-lg">☀️</span>
+                            <div className="w-5 h-5 rounded-md bg-orange-500 text-white flex items-center justify-center">
+                                <Sun size={12} />
+                            </div>
                             <span>Drought Report</span>
                         </div>
                     </div>
@@ -326,7 +375,7 @@ export default function FarmerMapPage() {
                             </h3>
                             <p className="text-xs text-gray-400">{formatDate(selectedReport.created_at)}</p>
                         </div>
-                        <button 
+                        <button
                             onClick={() => setSelectedReport(null)}
                             className="p-1 hover:bg-gray-100 rounded-full"
                         >
