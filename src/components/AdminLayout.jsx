@@ -27,6 +27,7 @@ export default function AdminLayout() {
         if (path.includes('reports')) return { title: 'Incident Reports', subtitle: 'Track and manage farm incidents and claims.' };
         if (path.includes('map')) return { title: 'Farm Map', subtitle: 'Geospatial view of registered farms and reports.' };
         if (path.includes('settings')) return { title: 'System Settings', subtitle: 'Manage application preferences and configurations.' };
+        if (path.includes('news')) return { title: 'News & Advisories', subtitle: 'Manage announcements, weather alerts, and farmer advisories.' };
         return { title: 'Admin Panel', subtitle: 'CropAid Administration' };
     };
 

@@ -51,58 +51,75 @@ export default function FarmerDashboard() {
         return () => clearInterval(interval);
     }, []);
 
-    // Mock news data for Latest Advisory (same as NewsPage)
+    // Mock news data (Fallback / Mock Mode)
     const MOCK_NEWS = [
-        { id: 1, title: 'Pest Alert: Black Bug Infestation Warning', summary: 'Monitor your rice fields closely for black bug activity.', type: 'alert', priority: 'high', date: new Date(Date.now() - 86400000).toISOString() },
-        { id: 2, title: 'Weather Advisory: Dry Season Preparations', summary: 'Prepare water conservation strategies for your crops.', type: 'advisory', priority: 'medium', date: new Date(Date.now() - 172800000).toISOString() },
-        { id: 3, title: 'New Seed Distribution Program', summary: 'Free high-yield rice seeds available for registered farmers.', type: 'news', priority: 'low', date: new Date(Date.now() - 259200000).toISOString() }
+        { id: 1, title: 'Pest Alert: Black Bug Infestation Warning', summary: 'The Municipal Agriculture Office has detected increased black bug activity in several barangays. Farmers are advised to monitor their rice fields closely.', type: 'alert', priority: 'high', date: new Date(Date.now() - 86400000).toISOString() },
+        { id: 2, title: 'Weather Advisory: Dry Season Preparations', summary: 'With the dry season approaching, farmers should begin preparing water conservation strategies for their crops.', type: 'advisory', priority: 'medium', date: new Date(Date.now() - 172800000).toISOString() },
+        { id: 3, title: 'New Seed Distribution Program', summary: 'The DA is distributing free high-yield rice seeds to registered farmers this month.', type: 'news', priority: 'low', date: new Date(Date.now() - 259200000).toISOString() }
     ];
 
-    // Fetch latest advisory (news within last 3 days)
+    // Fetch latest advisory (news within last 7 days)
     useEffect(() => {
         const fetchLatestAdvisory = async () => {
-            const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-            
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
             if (isMockMode) {
-                // Filter news from last 3 days, prioritize alerts/advisories
+                // Filter news from last 7 days, prioritize alerts/advisories
                 const recentNews = MOCK_NEWS
-                    .filter(n => new Date(n.date) >= threeDaysAgo)
+                    .filter(n => new Date(n.date) >= sevenDaysAgo)
                     .sort((a, b) => {
                         // Priority: alert > advisory > news
                         const priorityOrder = { alert: 0, advisory: 1, news: 2 };
                         return (priorityOrder[a.type] || 2) - (priorityOrder[b.type] || 2);
                     });
-                
+
                 if (recentNews.length > 0) {
                     setLatestAdvisory({ title: recentNews[0].title, message: recentNews[0].summary });
                 } else {
-                    setLatestAdvisory(null); // No recent news
+                    setLatestAdvisory(null);
                 }
                 return;
             }
 
             try {
-                const response = await fetch(`${API_URL}/advisories`, {
+                const response = await fetch(`${API_URL}/news`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
                 if (response.ok) {
                     const data = await response.json();
-                    const advisories = data.advisories || data || [];
-                    
-                    // Filter to last 3 days and sort by priority
-                    const recentNews = advisories
-                        .filter(n => new Date(n.date) >= threeDaysAgo)
+                    const newsItems = Array.isArray(data) ? data : data.news || [];
+
+                    // Normalize and Filter
+                    const recentNews = newsItems
+                        .map(n => ({
+                            ...n,
+                            date: n.created_at || n.date,
+                            summary: n.content ? (n.content.substring(0, 100) + '...') : n.summary
+                        }))
+                        .filter(n => new Date(n.date) >= sevenDaysAgo)
                         .sort((a, b) => {
-                            const priorityOrder = { alert: 0, advisory: 1, news: 2 };
-                            return (priorityOrder[a.type] || 2) - (priorityOrder[b.type] || 2);
+                            // Find critical ones first
+                            const priorityScore = (p) => {
+                                if (p === 'critical' || p === 'high') return 3;
+                                if (p === 'normal' || p === 'medium') return 2;
+                                return 1;
+                            };
+                            return priorityScore(b.priority) - priorityScore(a.priority) || new Date(b.date) - new Date(a.date);
                         });
-                    
+
                     if (recentNews.length > 0) {
-                        setLatestAdvisory({ title: recentNews[0].title, message: recentNews[0].summary || recentNews[0].content?.slice(0, 100) });
+                        setLatestAdvisory({
+                            title: recentNews[0].title,
+                            message: recentNews[0].summary
+                        });
+                    } else {
+                        setLatestAdvisory(null);
                     }
                 }
             } catch (err) {
-                // Silent fail - will show "No Critical Alerts"
+                console.error("Failed to fetch advisories:", err);
+                // Fallback to mock if fetch fails? Or just empty.
             }
         };
 

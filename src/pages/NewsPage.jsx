@@ -83,15 +83,15 @@ export default function NewsPage() {
                     { type: 'pest', location: 'Liberty', status: 'verified' },
                     { type: 'flood', location: 'Poblacion', status: 'verified' },
                 ];
-                
+
                 // Generate auto-news from mock reports
                 const autoNews = generateNewsFromReports(mockReports);
-                
+
                 // Combine with static mock news
-                const allNews = [...autoNews, ...MOCK_NEWS].sort((a, b) => 
+                const allNews = [...autoNews, ...MOCK_NEWS].sort((a, b) =>
                     new Date(b.date) - new Date(a.date)
                 );
-                
+
                 setTimeout(() => {
                     setNews(allNews);
                     setLoading(false);
@@ -101,27 +101,30 @@ export default function NewsPage() {
 
             try {
                 // Fetch from backend - it handles both manual advisories and auto-generated ones
-                const response = await fetch(`${API_URL}/advisories`, {
+                const response = await fetch(`${API_URL}/news`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    const advisories = data.advisories || [];
-                    
+                    // Backend returns array directly or { news: [...] }
+                    const newsItems = Array.isArray(data) ? data : data.news || [];
+
                     // Normalize the data format
-                    const normalizedNews = advisories.map(a => ({
+                    const normalizedNews = newsItems.map(a => ({
                         ...a,
-                        date: a.date || a.created_at,
-                        summary: a.summary || a.content?.substring(0, 150) + '...'
+                        date: a.created_at || a.date,
+                        summary: a.content ? (a.content.substring(0, 100) + '...') : '',
+                        category: a.type // Map type to category for icon logic if category is missing
                     }));
-                    
-                    setNews(normalizedNews.length > 0 ? normalizedNews : MOCK_NEWS);
+
+                    setNews(normalizedNews);
                 } else {
-                    setNews(MOCK_NEWS);
+                    setNews([]);
                 }
             } catch (err) {
-                setNews(MOCK_NEWS);
+                console.error("News fetch error:", err);
+                setNews([]);
             } finally {
                 setLoading(false);
             }
@@ -133,7 +136,7 @@ export default function NewsPage() {
     // Generate news from verified reports (for mock mode)
     const generateNewsFromReports = (reports) => {
         if (!reports || reports.length === 0) return [];
-        
+
         const grouped = reports.reduce((acc, report) => {
             const type = report.type || report.report_type;
             if (!acc[type]) acc[type] = { count: 0, locations: new Set() };
@@ -171,7 +174,7 @@ export default function NewsPage() {
 
     const getTypeStyle = (type, priority) => {
         if (type === 'alert') {
-            return priority === 'high' 
+            return priority === 'high'
                 ? 'bg-red-50 border-l-4 border-red-500'
                 : 'bg-amber-50 border-l-4 border-amber-500';
         }
@@ -195,15 +198,15 @@ export default function NewsPage() {
         const now = new Date();
         const diffMs = now - date;
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays === 0) return 'Today';
         if (diffDays === 1) return 'Yesterday';
         if (diffDays < 7) return `${diffDays} days ago`;
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
-    const filteredNews = filter === 'all' 
-        ? news 
+    const filteredNews = filter === 'all'
+        ? news
         : news.filter(item => item.type === filter);
 
     return (
@@ -221,11 +224,10 @@ export default function NewsPage() {
                     <button
                         key={tab.key}
                         onClick={() => setFilter(tab.key)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                            filter === tab.key
-                                ? 'bg-primary text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${filter === tab.key
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
                     >
                         <tab.icon size={14} />
                         {tab.label}
@@ -274,19 +276,18 @@ export default function NewsPage() {
 
             {/* Article Detail Modal */}
             {selectedArticle && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
                     onClick={() => setSelectedArticle(null)}
                 >
-                    <div 
+                    <div
                         className="bg-white rounded-t-2xl w-full max-w-[480px] max-h-[80vh] overflow-hidden animate-slide-up"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className={`p-4 ${
-                            selectedArticle.type === 'alert' ? 'bg-red-500' :
+                        <div className={`p-4 ${selectedArticle.type === 'alert' ? 'bg-red-500' :
                             selectedArticle.type === 'advisory' ? 'bg-blue-500' : 'bg-primary'
-                        } text-white`}>
+                            } text-white`}>
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-white/20">
                                     {selectedArticle.type}

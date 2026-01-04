@@ -16,6 +16,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminDashboardNew from './pages/admin/AdminDashboard';
 import AdminFarmers from './pages/admin/AdminFarmers';
 import AdminReports from './pages/admin/AdminReports';
+import AdminNews from './pages/admin/AdminNews';
 import UnifiedReport from './pages/UnifiedReport';
 import ReportStatus from './pages/ReportStatus';
 import PestReport from './pages/PestReport';
@@ -62,6 +63,7 @@ function App() {
             <Route path="/admin-dashboard" element={<AdminDashboardNew />} />
             <Route path="/admin/farmers" element={<AdminFarmers />} />
             <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/news" element={<AdminNews />} />
             {/* Placeholders for now */}
             <Route path="/admin/map" element={<AdminMapPage />} />
             <Route path="/admin/settings" element={<AdminSettings />} />

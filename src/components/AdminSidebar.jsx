@@ -17,6 +17,7 @@ export default function AdminSidebar({ isOpen, toggle }) {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin-dashboard' },
         { icon: Users, label: 'Farmers', path: '/admin/farmers' },
         { icon: FileText, label: 'Reports', path: '/admin/reports' },
+        { icon: Bell, label: 'News & Alerts', path: '/admin/news' },
         { icon: Map, label: 'Farm Map', path: '/admin/map' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];

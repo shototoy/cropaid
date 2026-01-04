@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Users, AlertTriangle, CheckCircle, CloudRain, ArrowUp, ArrowDown, Bug, Droplets, Sun, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, AlertTriangle, CheckCircle, CloudRain, ArrowUp, ArrowDown, Bug, Droplets, Sun, TrendingUp, Cloud, CloudLightning } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
+import { fetchWeather } from '../../services/api';
 
 // Simple Bar Chart Component
 function SimpleBarChart({ data, title }) {
@@ -101,6 +103,7 @@ function DonutChart({ data, centerLabel, centerValue }) {
 }
 
 export default function AdminDashboard() {
+    const navigate = useNavigate();
     const { token, isMockMode } = useAuth();
     const [stats, setStats] = useState({
         totalFarmers: 0,
@@ -191,6 +194,25 @@ export default function AdminDashboard() {
         if (token || isMockMode) fetchData();
     }, [token, isMockMode]);
 
+    // Fetch Weather Logic
+    const [weather, setWeather] = useState(null);
+    useEffect(() => {
+        const loadWeather = async () => {
+            const weatherData = await fetchWeather(6.5294, 124.6647); // Norala coords
+            setWeather(weatherData);
+        };
+        loadWeather();
+    }, []);
+
+    const getWeatherIcon = (condition) => {
+        if (!condition) return <Sun size={20} className="text-yellow-500" />;
+        const cond = condition.toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle')) return <CloudRain size={20} className="text-blue-500" />;
+        if (cond.includes('thunder') || cond.includes('storm')) return <CloudLightning size={20} className="text-purple-500" />;
+        if (cond.includes('cloud') || cond.includes('overcast')) return <Cloud size={20} className="text-gray-500" />;
+        return <Sun size={20} className="text-yellow-500" />;
+    };
+
     const statCards = [
         { label: 'Total Farmers', value: stats.totalFarmers, icon: Users, color: 'bg-blue-500' },
         { label: 'Pending Reports', value: stats.pendingReports, icon: AlertTriangle, color: 'bg-amber-500' },
@@ -228,25 +250,66 @@ export default function AdminDashboard() {
         color: 'bg-primary'
     }));
 
+    const handleCardClick = (stat) => {
+        if (stat.label === 'Total Farmers') {
+            navigate('/admin/farmers');
+        } else if (stat.label === 'Pending Reports') {
+            navigate('/admin/reports?status=pending');
+        } else if (stat.label === 'Resolved Issues') {
+            navigate('/admin/reports?status=resolved');
+        } else if (stat.label === 'Weather Alerts') {
+            navigate('/admin/news');
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards.map((stat, index) => (
-                    <div key={index} className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                                <h3 className="text-2xl font-bold text-gray-900 mt-1">{loading ? '-' : stat.value}</h3>
+                {statCards.map((stat, index) => {
+                    if (stat.label === 'Weather Alerts') {
+                        return (
+                            <div
+                                key={index}
+                                onClick={() => handleCardClick(stat)}
+                                className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm transition-all cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-95 flex flex-col justify-between"
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Weather</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            {getWeatherIcon(weather?.condition)}
+                                            <span className="text-2xl font-bold text-gray-900">{weather?.temperature || 32}°C</span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mt-1">
+                                            {weather?.condition || 'Sunny'}, Norala
+                                        </p>
+                                    </div>
+                                    <div className="bg-blue-50 p-2 rounded-full">
+                                        <CloudRain size={20} className="text-blue-500" />
+                                    </div>
+                                </div>
                             </div>
-                            <div className={`${stat.color} p-2 rounded-md text-white shadow-sm opacity-90`}>
-                                <stat.icon size={20} />
+                        );
+                    }
+                    return (
+                        <div
+                            key={index}
+                            onClick={() => handleCardClick(stat)}
+                            className={`bg-white p-5 rounded-lg border border-gray-100 shadow-sm transition-all cursor-pointer hover:shadow-md hover:scale-[1.02] active:scale-95`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+                                    <h3 className="text-2xl font-bold text-gray-900 mt-1">{loading ? '-' : stat.value}</h3>
+                                </div>
+                                <div className={`${stat.color} p-2 rounded-md text-white shadow-sm opacity-90`}>
+                                    <stat.icon size={20} />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

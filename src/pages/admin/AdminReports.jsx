@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
@@ -6,12 +7,25 @@ import ReportDetailModal from '../../components/ReportDetailModal';
 
 export default function AdminReports() {
     const { token, isMockMode } = useAuth();
+    const [searchParams] = useSearchParams();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
+
+    // Initialize Active Tab from URL param
+    useEffect(() => {
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            // Capitalize first letter to match tab names (e.g. 'pending' -> 'Pending')
+            const tabName = statusParam.charAt(0).toUpperCase() + statusParam.slice(1);
+            if (['All', 'Pending', 'Verified', 'Resolved'].includes(tabName)) {
+                setActiveTab(tabName);
+            }
+        }
+    }, [searchParams]);
 
     const fetchReports = async () => {
         setLoading(true);
@@ -237,8 +251,8 @@ export default function AdminReports() {
 
             {/* Report Detail Modal */}
             {selectedReport && (
-                <ReportDetailModal 
-                    report={selectedReport} 
+                <ReportDetailModal
+                    report={selectedReport}
                     onClose={() => setSelectedReport(null)}
                     onStatusUpdate={(id, newStatus) => {
                         handleStatusUpdate(id, newStatus);
