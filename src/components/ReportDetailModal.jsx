@@ -228,11 +228,11 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             </div>
                         )}
 
-                        {/* Photo */}
-                        {(report.has_photo || photoData) && (
-                            <div className="mb-6">
-                                <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Photo Evidence</h3>
-                                {photoLoading ? (
+                        {/* Photo Evidence Section */}
+                        <div className="mb-6">
+                            <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Photo Evidence</h3>
+                            {(report.has_photo || photoData) ? (
+                                photoLoading ? (
                                     <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                     </div>
@@ -246,11 +246,17 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                                 ) : (
                                     <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
                                         <Image size={24} className="mr-2" />
-                                        Photo available - click to load
+                                        Photo failed to load
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                )
+                            ) : (
+                                <div className="h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                                    <Image size={32} className="mb-2 opacity-50" />
+                                    <span className="text-sm">No photo attached</span>
+                                    <span className="text-xs mt-1">Farmer did not upload photo evidence</span>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Admin Notes */}
                         <div className="mb-6">
