@@ -28,7 +28,26 @@ function SimpleBarChart({ data, title }) {
 
 // Donut Chart Component
 function DonutChart({ data, centerLabel, centerValue }) {
-    const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
+    // Handle empty data
+    if (!data || data.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-40 text-gray-400">
+                No data available
+            </div>
+        );
+    }
+
+    const total = data.reduce((sum, d) => sum + (d.value || 0), 0);
+    
+    // If all values are 0, show empty state
+    if (total === 0) {
+        return (
+            <div className="flex items-center justify-center h-40 text-gray-400">
+                No reports yet
+            </div>
+        );
+    }
+
     let cumulativePercent = 0;
 
     const getCoordinatesForPercent = (percent) => {
@@ -42,6 +61,8 @@ function DonutChart({ data, centerLabel, centerValue }) {
             <div className="relative">
                 <svg viewBox="-1.2 -1.2 2.4 2.4" width="140" height="140" className="transform -rotate-90">
                     {data.map((slice, i) => {
+                        if (!slice.value || slice.value <= 0) return null;
+                        
                         const percent = slice.value / total;
                         const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
                         cumulativePercent += percent;
@@ -54,8 +75,10 @@ function DonutChart({ data, centerLabel, centerValue }) {
                                 key={i}
                                 d={pathData}
                                 fill={slice.color}
-                                className="transition-all duration-300 hover:opacity-80"
-                            />
+                                className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+                            >
+                                <title>{slice.label}: {slice.value} ({Math.round(percent * 100)}%)</title>
+                            </path>
                         );
                     })}
                     <circle cx="0" cy="0" r="0.6" fill="white" />
@@ -66,7 +89,7 @@ function DonutChart({ data, centerLabel, centerValue }) {
                 </div>
             </div>
             <div className="space-y-2">
-                {data.map((item, i) => (
+                {data.filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                         <span className="text-xs text-gray-600">{item.label}: {item.value}</span>
@@ -98,21 +121,28 @@ export default function AdminDashboard() {
             setLoading(true);
 
             if (isMockMode) {
-                // Enhanced Mock Data
-                setStats({
-                    ...MOCK_DATA.admin.Stats,
-                    verifiedReports: 2,
+                // Enhanced Mock Data with realistic values
+                const mockStats = {
+                    totalFarmers: MOCK_DATA.admin.Stats?.totalFarmers || 45,
+                    pendingReports: 4,
+                    verifiedReports: 3,
+                    resolvedReports: 5,
                     rejectedReports: 1,
-                    totalReports: 6
-                });
+                    totalReports: 13,
+                    weatherAlerts: 2
+                };
+                setStats(mockStats);
                 setReportsByType([
-                    { type: 'pest', count: 3 },
-                    { type: 'flood', count: 2 },
-                    { type: 'drought', count: 1 }
+                    { type: 'pest', count: 6 },
+                    { type: 'flood', count: 4 },
+                    { type: 'drought', count: 3 }
                 ]);
                 setReportsByBarangay([
-                    { barangay: 'San Jose', count: 3 },
-                    { barangay: 'Liberty', count: 3 }
+                    { barangay: 'San Jose', count: 4 },
+                    { barangay: 'Liberty', count: 3 },
+                    { barangay: 'Poblacion', count: 3 },
+                    { barangay: 'Benigno Aquino', count: 2 },
+                    { barangay: 'San Miguel', count: 1 }
                 ]);
                 setRecentReports(MOCK_DATA.admin.Reports.slice(0, 5));
                 setLoading(false);
@@ -180,12 +210,17 @@ export default function AdminDashboard() {
         { label: 'Drought', value: reportsByType.find(r => r.type === 'drought')?.count || 0, color: 'bg-orange-500' }
     ];
 
+    // Status donut chart - show all statuses for the chart (filter 0s in component)
     const statusDonutData = [
-        { label: 'Pending', value: stats.pendingReports, color: '#f59e0b' },
-        { label: 'Verified', value: stats.verifiedReports, color: '#3b82f6' },
-        { label: 'Resolved', value: stats.resolvedReports, color: '#10b981' },
-        { label: 'Rejected', value: stats.rejectedReports, color: '#ef4444' }
-    ].filter(d => d.value > 0);
+        { label: 'Pending', value: stats.pendingReports || 0, color: '#f59e0b' },
+        { label: 'Verified', value: stats.verifiedReports || 0, color: '#3b82f6' },
+        { label: 'Resolved', value: stats.resolvedReports || 0, color: '#10b981' },
+        { label: 'Rejected', value: stats.rejectedReports || 0, color: '#ef4444' }
+    ];
+
+    // Calculate total for center display
+    const totalReportsCount = stats.totalReports || 
+        (stats.pendingReports + stats.verifiedReports + stats.resolvedReports + stats.rejectedReports);
 
     const barangayChartData = reportsByBarangay.slice(0, 5).map(b => ({
         label: b.barangay || 'Unknown',
@@ -236,14 +271,12 @@ export default function AdminDashboard() {
                     </div>
                     {loading ? (
                         <div className="h-40 flex items-center justify-center text-gray-400">Loading...</div>
-                    ) : statusDonutData.length > 0 ? (
-                        <DonutChart
-                            data={statusDonutData}
-                            centerLabel="Total"
-                            centerValue={stats.totalReports || stats.pendingReports + stats.resolvedReports + stats.verifiedReports + stats.rejectedReports}
-                        />
                     ) : (
-                        <div className="h-40 flex items-center justify-center text-gray-400">No data</div>
+                        <DonutChart 
+                            data={statusDonutData} 
+                            centerLabel="Total" 
+                            centerValue={totalReportsCount} 
+                        />
                     )}
                 </div>
 

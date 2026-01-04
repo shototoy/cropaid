@@ -27,13 +27,11 @@ export const AuthProvider = ({ children }) => {
                     setApiMockMode(false);
                 } else {
                     // Backend exists but API not ready (404, 500, etc.)
-                    console.warn('Backend API not ready. Switching to Mock Mode.');
                     setIsMockMode(true);
                     setApiMockMode(true);
                 }
             } catch (err) {
-                // Network error - backend unreachable
-                console.warn('Backend Unreachable. Switching to Mock Mode.', err);
+                // Network error - backend unreachable, use mock mode silently
                 setIsMockMode(true);
                 setApiMockMode(true);
             } finally {
@@ -50,7 +48,6 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (identifier, password) => {
         if (isMockMode) {
-            console.log('Attempting Mock Login for:', identifier);
             return new Promise((resolve) => {
                 setTimeout(() => {
                     const mockUser = MOCK_CREDENTIALS.users.find(
