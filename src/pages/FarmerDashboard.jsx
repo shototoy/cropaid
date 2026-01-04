@@ -11,141 +11,50 @@ import { fetchWeather, getCurrentPosition } from '../services/api';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
-    const { user, token, logout, isMockMode, loading: authLoading } = useAuth();
+    const { profile, logout, token, isMockMode } = useAuth(); // Changed from user, authLoading
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dashboardData, setDashboardData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [weather, setWeather] = useState(null); // New state for weather data (from dashboardData)
     const [liveWeather, setLiveWeather] = useState(null);
-    const [weatherLoading, setWeatherLoading] = useState(true);
-    const [latestAdvisory, setLatestAdvisory] = useState(null);
-
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const [activeSlide, setActiveSlide] = useState(0); // New state for carousel
+    const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]); // New state for carousel
+    const [stats, setStats] = useState({ active_reports: 0 }); // New state for stats (from dashboardData)
 
     // Fetch live weather data
-    useEffect(() => {
-        const getWeather = async () => {
+    const getWeather = async () => {
+        try {
+            let lat = 6.5294; // Default: Norala, South Cotabato, Philippines
+            let lon = 124.6647;
+
             try {
-                let lat = 6.5294; // Default: Norala, South Cotabato, Philippines
-                let lon = 124.6647;
-
-                try {
-                    const coords = await getCurrentPosition();
-                    lat = coords.latitude;
-                    lon = coords.longitude;
-                } catch (err) {
-                    // Use default Norala coordinates if GPS unavailable
-                }
-
-                const weatherData = await fetchWeather(lat, lon);
-                setLiveWeather(weatherData);
+                const coords = await getCurrentPosition();
+                lat = coords.latitude;
+                lon = coords.longitude;
             } catch (err) {
-                // Weather fetch failed silently - will use fallback data
-            } finally {
-                setWeatherLoading(false);
+                // Use default Norala coordinates if GPS unavailable
             }
-        };
 
+            const weatherData = await fetchWeather(lat, lon);
+            setLiveWeather(weatherData);
+        } catch (err) {
+            // Weather fetch failed silently - will use fallback data
+        }
+    };
+
+    useEffect(() => {
         getWeather();
         // Refresh every 15 minutes
         const interval = setInterval(getWeather, 15 * 60 * 1000);
         return () => clearInterval(interval);
     }, []);
 
-    // Mock news data (Fallback / Mock Mode)
-    const MOCK_NEWS = [
-        { id: 1, title: 'Pest Alert: Black Bug Infestation Warning', summary: 'The Municipal Agriculture Office has detected increased black bug activity in several barangays. Farmers are advised to monitor their rice fields closely.', type: 'alert', priority: 'high', date: new Date(Date.now() - 86400000).toISOString() },
-        { id: 2, title: 'Weather Advisory: Dry Season Preparations', summary: 'With the dry season approaching, farmers should begin preparing water conservation strategies for their crops.', type: 'advisory', priority: 'medium', date: new Date(Date.now() - 172800000).toISOString() },
-        { id: 3, title: 'New Seed Distribution Program', summary: 'The DA is distributing free high-yield rice seeds to registered farmers this month.', type: 'news', priority: 'low', date: new Date(Date.now() - 259200000).toISOString() }
-    ];
-
-    // Fetch latest advisory (news within last 7 days)
+    // Fetch dashboard data (profile and stats)
     useEffect(() => {
-        const fetchLatestAdvisory = async () => {
-            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-            if (isMockMode) {
-                // Filter news from last 7 days, prioritize alerts/advisories
-                const recentNews = MOCK_NEWS
-                    .filter(n => new Date(n.date) >= sevenDaysAgo)
-                    .sort((a, b) => {
-                        // Priority: alert > advisory > news
-                        const priorityOrder = { alert: 0, advisory: 1, news: 2 };
-                        return (priorityOrder[a.type] || 2) - (priorityOrder[b.type] || 2);
-                    });
-
-                if (recentNews.length > 0) {
-                    setLatestAdvisory({ title: recentNews[0].title, message: recentNews[0].summary });
-                } else {
-                    setLatestAdvisory(null);
-                }
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/news`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const newsItems = Array.isArray(data) ? data : data.news || [];
-
-                    // Normalize and Filter
-                    const recentNews = newsItems
-                        .map(n => ({
-                            ...n,
-                            date: n.created_at || n.date,
-                            summary: n.content ? (n.content.substring(0, 100) + '...') : n.summary
-                        }))
-                        .filter(n => new Date(n.date) >= sevenDaysAgo)
-                        .sort((a, b) => {
-                            // Find critical ones first
-                            const priorityScore = (p) => {
-                                if (p === 'critical' || p === 'high') return 3;
-                                if (p === 'normal' || p === 'medium') return 2;
-                                return 1;
-                            };
-                            return priorityScore(b.priority) - priorityScore(a.priority) || new Date(b.date) - new Date(a.date);
-                        });
-
-                    if (recentNews.length > 0) {
-                        setLatestAdvisory({
-                            title: recentNews[0].title,
-                            message: recentNews[0].summary
-                        });
-                    } else {
-                        setLatestAdvisory(null);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to fetch advisories:", err);
-                // Fallback to mock if fetch fails? Or just empty.
-            }
-        };
-
-        if (token || isMockMode) fetchLatestAdvisory();
-    }, [token, isMockMode]);
-
-    // Get weather icon component
-    const getWeatherIcon = (condition) => {
-        if (!condition) return <Sun size={24} className="text-yellow-500" />;
-        const cond = condition.toLowerCase();
-        if (cond.includes('rain') || cond.includes('drizzle')) return <CloudRain size={24} className="text-blue-500" />;
-        if (cond.includes('thunder') || cond.includes('storm')) return <CloudLightning size={24} className="text-purple-500" />;
-        if (cond.includes('cloud') || cond.includes('overcast')) return <Cloud size={24} className="text-gray-500" />;
-        return <Sun size={24} className="text-yellow-500" />;
-    };
-
-    useEffect(() => {
-        // Wait for auth initialization
-        if (authLoading) return;
-
         const fetchDashboardData = async () => {
             if (isMockMode) {
-                // Mock Data - Dynamic based on logged in user
-                const username = user?.username || 'james'; // Default to james if generic
-                setDashboardData(MOCK_DATA.getFarmerDashboard(username));
-                setLoading(false);
+                const username = profile?.username || 'james';
+                const mockDashboard = MOCK_DATA.getFarmerDashboard(username);
+                setStats(mockDashboard.stats);
+                setWeather(mockDashboard.weather); // Set weather from mock dashboard
                 return;
             }
 
@@ -155,56 +64,141 @@ export default function FarmerDashboard() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setDashboardData(data);
+                    setStats(data.stats);
+                    setWeather(data.weather); // Set weather from API dashboard
                 }
             } catch (error) {
                 console.error("Failed to load dashboard", error);
-            } finally {
-                setLoading(false);
             }
         };
 
         if (token || isMockMode) fetchDashboardData();
-    }, [token, isMockMode, authLoading]);
+    }, [token, isMockMode, profile]); // Depend on profile for mock mode username
 
-    if (loading || authLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    // Fetch latest advisory (Carousel Logic)
+    useEffect(() => {
+        const fetchAdvisories = async () => {
+            const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+            let items = [];
 
-    const { profile, weather, stats } = dashboardData || {};
+            if (isMockMode) {
+                // Mock news data (Fallback / Mock Mode)
+                const MOCK_NEWS = [
+                    { id: 1, title: 'Pest Alert: Black Bug Infestation Warning', summary: 'The Municipal Agriculture Office has detected increased black bug activity in several barangays. Farmers are advised to monitor their rice fields closely.', type: 'alert', priority: 'high', date: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 2, title: 'Weather Advisory: Dry Season Preparations', summary: 'With the dry season approaching, farmers should begin preparing water conservation strategies for their crops.', type: 'advisory', priority: 'medium', date: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 3, title: 'New Seed Distribution Program', summary: 'The DA is distributing free high-yield rice seeds to registered farmers this month.', type: 'news', priority: 'low', date: new Date(Date.now() - 259200000).toISOString() }
+                ];
+                items = MOCK_NEWS;
+            } else {
+                try {
+                    const response = await fetch(`${API_URL}/news`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const newsList = Array.isArray(data) ? data : data.news || [];
+                        items = newsList;
+                    }
+                } catch (err) {
+                    // Fail silently, show default
+                }
+            }
+
+            // Carousel Logic:
+            // 1. Take Top 5 from raw list
+            const top5 = items.slice(0, 5);
+
+            // 2. Filter Top 5 for "Recent" (last 3 days)
+            const recentItems = top5.filter(item => {
+                const date = item.created_at || item.date;
+                return new Date(date) >= threeDaysAgo;
+            });
+
+            // 3. Normalize items for display
+            const normalizedItems = recentItems.map(item => ({
+                id: item.id,
+                title: item.title,
+                message: item.content ? (item.content.substring(0, 100) + '...') : item.summary,
+                type: item.type,
+                priority: item.priority,
+                date: item.created_at || item.date
+            }));
+
+            // 4. Append Default Card
+            setCarouselItems([...normalizedItems, { isDefault: true }]);
+        };
+
+        if (token || isMockMode) fetchAdvisories();
+    }, [token, isMockMode]);
+
+    // Carousel Auto-Play
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveSlide(prev => (prev + 1) % carouselItems.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [carouselItems.length]);
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    // Get weather icon component
+    const getWeatherIcon = (condition) => {
+        if (!condition) return <Sun size={24} className="text-yellow-500" />;
+        const cond = condition.toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle')) return <CloudRain size={24} className="text-blue-500" />;
+        if (cond.includes('cloud') || cond.includes('overcast')) return <Cloud size={24} className="text-gray-500" />;
+        return <Sun size={24} className="text-yellow-500" />;
+    };
+
+    // Styling Helpers matching NewsPage/AdminNews
+    const getCardStyle = (priority) => {
+        switch (priority) {
+            case 'critical': return 'bg-red-500 text-white';
+            case 'high': return 'bg-orange-500 text-white';
+            case 'medium': return 'bg-amber-500 text-white';
+            default: return 'bg-blue-500 text-white';
+        }
+    };
+
+    const getTypeIcon = (type, className = "text-white") => {
+        switch (type) {
+            case 'alert': return <AlertTriangle size={20} className={className} />;
+            case 'weather': return <CloudRain size={20} className={className} />;
+            case 'advisory': return <Megaphone size={20} className={className} />;
+            default: return <Newspaper size={20} className={className} />;
+        }
+    };
 
     return (
         <>
-            {/* Header / Top Bar */}
-            <div className="bg-primary text-white p-5 pt-8 rounded-b-3xl shadow-md relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                    <button onClick={toggleSidebar} className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                        <User size={24} className="text-white" />
-                    </button>
-                    <div className="text-right">
-                        <h1 className="text-xl font-bold m-0">Hello, {profile?.name?.split(' ')[0] || 'Farmer'}</h1>
-                        <p className="text-xs text-white/80 m-0">{profile?.barangay || 'Norala'}, South Cotabato</p>
+            {/* Header Area */}
+            <div className="bg-primary pb-20 pt-8 px-6 rounded-b-[2.5rem] relative shadow-lg">
+                <div className="flex justify-between items-center text-white mb-6">
+                    <div className="flex items-center gap-3" onClick={toggleSidebar}>
+                        <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center cursor-pointer backdrop-blur-sm">
+                            <Menu size={20} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs opacity-80 font-medium">Welcome back,</span>
+                            <span className="font-bold text-lg leading-tight">{profile?.name || 'Farmer'}</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Weather / Status Card */}
+                {/* Weather Card */}
                 <div className="bg-white text-text-main p-4 rounded-xl shadow-lg flex justify-between items-center mb-[-40px]">
                     <div className="flex flex-col">
                         <span className="text-xs text-text-muted font-bold uppercase tracking-wider">Current Weather</span>
                         <div className="flex items-center gap-2 mt-1">
-                            {weatherLoading ? (
-                                <div className="w-6 h-6 animate-pulse bg-gray-200 rounded-full"></div>
+                            {liveWeather ? (
+                                getWeatherIcon(liveWeather.condition)
                             ) : (
-                                getWeatherIcon(liveWeather?.condition)
+                                <div className="w-6 h-6 animate-pulse bg-gray-200 rounded-full"></div>
                             )}
                             <span className="text-2xl font-bold">{liveWeather?.temperature || weather?.temp || 32}°C</span>
                         </div>
                         <span className="text-[10px] text-text-muted">
-                            {liveWeather?.condition || weather?.condition || 'Sunny'}, {liveWeather?.humidity ? `${liveWeather.humidity}% humidity` : profile?.barangay || 'Norala'}
+                            {liveWeather?.condition || weather?.condition || 'Sunny'}, {profile?.barangay || 'Norala'}
                         </span>
                     </div>
                     <div className="h-10 w-[1px] bg-gray-200"></div>
@@ -218,7 +212,7 @@ export default function FarmerDashboard() {
 
             {/* Main Content Area */}
             <div className="mt-16 px-5 py-4">
-                {/* Quick Actions Grid (Updated) */}
+                {/* Quick Actions Grid */}
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
@@ -241,11 +235,69 @@ export default function FarmerDashboard() {
                     </div>
                 </div>
 
-                {/* Latest Advisory Section - Shows news from last 3 days or fallback message */}
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Latest Advisory</h3>
-                <div className={`p-4 rounded-xl shadow-md mb-4 ${latestAdvisory ? 'bg-gradient-to-r from-primary to-primary-light text-white' : 'bg-gray-100 text-gray-600'}`}>
-                    <h4 className="font-bold text-sm mb-1">{latestAdvisory?.title || 'No Critical Alerts'}</h4>
-                    <p className={`text-xs ${latestAdvisory ? 'opacity-90' : 'opacity-70'}`}>{latestAdvisory?.message || 'No new advisories in the last 3 days. Stay safe!'}</p>
+                {/* Latest Advisory Carousel */}
+                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex justify-between items-center">
+                    <span>Latest Advisory</span>
+                    {carouselItems.length > 1 && (
+                        <div className="flex gap-1">
+                            {carouselItems.map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSlide === idx ? 'bg-primary' : 'bg-gray-300'}`}
+                                ></div>
+                            ))}
+                        </div>
+                    )}
+                </h3>
+
+                <div className="relative overflow-hidden rounded-xl shadow-md min-h-[100px]">
+                    <div
+                        className="flex transition-transform duration-500 ease-in-out"
+                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                    >
+                        {carouselItems.map((item, index) => (
+                            <div key={index} className="w-full flex-shrink-0">
+                                {item.isDefault ? (
+                                    <div className="bg-emerald-50 text-emerald-800 p-4 h-full flex items-center gap-4">
+                                        <div className="bg-emerald-100 p-3 rounded-full">
+                                            <CheckCircle size={24} className="text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm">System Monitoring Active</h4>
+                                            <p className="text-xs opacity-80 mt-1">No other critical alerts at this time. Stay safe!</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={`${getCardStyle(item.priority)} p-4 h-full flex flex-col justify-center relative overflow-hidden`} onClick={() => navigate('/news')}>
+                                        {/* Background Decorative Icon */}
+                                        <div className="absolute -right-4 -bottom-4 opacity-10 transform rotate-12">
+                                            {getTypeIcon(item.type, "w-24 h-24")}
+                                        </div>
+
+                                        <div className="flex items-start justify-between relative z-10">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase backdrop-blur-sm">
+                                                        {item.type}
+                                                    </span>
+                                                    <span className="text-[10px] opacity-80 uppercase font-medium">
+                                                        {item.priority}
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-bold text-sm mb-1 line-clamp-1">{item.title}</h4>
+                                                <p className="text-xs opacity-90 line-clamp-2 leading-relaxed">
+                                                    {item.message}
+                                                </p>
+                                            </div>
+                                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                                {getTypeIcon(item.type)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 

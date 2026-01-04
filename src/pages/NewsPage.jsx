@@ -162,35 +162,33 @@ export default function NewsPage() {
         });
     };
 
-    const getCategoryIcon = (category) => {
-        switch (category) {
-            case 'pest': return <Bug size={16} className="text-red-500" />;
-            case 'flood': return <CloudRain size={16} className="text-blue-500" />;
-            case 'weather':
-            case 'drought': return <Sun size={16} className="text-orange-500" />;
-            default: return <Leaf size={16} className="text-green-500" />;
+    const getTypeIcon = (type) => {
+        switch (type) {
+            case 'advisory': return <Megaphone size={18} className="text-amber-500" />;
+            case 'weather': return <CloudRain size={18} className="text-blue-500" />;
+            case 'alert': return <AlertTriangle size={18} className="text-red-500" />;
+            default: return <Newspaper size={18} className="text-green-500" />;
         }
     };
 
-    const getTypeStyle = (type, priority) => {
-        if (type === 'alert') {
-            return priority === 'high'
-                ? 'bg-red-50 border-l-4 border-red-500'
-                : 'bg-amber-50 border-l-4 border-amber-500';
+    const getPriorityBadgeColor = (priority) => {
+        switch (priority) {
+            case 'critical': return 'bg-red-100 text-red-800 border border-red-200';
+            case 'high': return 'bg-orange-100 text-orange-800 border border-orange-200';
+            case 'medium': return 'bg-amber-100 text-amber-800 border border-amber-200';
+            case 'low': return 'bg-gray-100 text-gray-600 border border-gray-200';
+            default: return 'bg-blue-100 text-blue-800 border border-blue-200';
         }
-        if (type === 'advisory') {
-            return 'bg-blue-50 border-l-4 border-blue-500';
-        }
-        return 'bg-white border border-gray-200';
     };
 
-    const getTypeBadge = (type) => {
-        const styles = {
-            alert: 'bg-red-100 text-red-700',
-            advisory: 'bg-blue-100 text-blue-700',
-            news: 'bg-green-100 text-green-700'
-        };
-        return styles[type] || 'bg-gray-100 text-gray-700';
+    const getCardStyle = (priority) => {
+        switch (priority) {
+            case 'critical': return 'bg-red-50/50 border-l-4 border-red-500';
+            case 'high': return 'bg-orange-50/50 border-l-4 border-orange-500';
+            case 'medium': return 'bg-amber-50/50 border-l-4 border-amber-500';
+            case 'low': return 'bg-white border-l-4 border-gray-300';
+            default: return 'bg-blue-50/50 border-l-4 border-blue-500';
+        }
     };
 
     const formatDate = (dateString) => {
@@ -219,7 +217,8 @@ export default function NewsPage() {
                     { key: 'all', label: 'All', icon: Newspaper },
                     { key: 'alert', label: 'Alerts', icon: AlertTriangle },
                     { key: 'advisory', label: 'Advisories', icon: Bell },
-                    { key: 'news', label: 'News', icon: Leaf }
+                    { key: 'news', label: 'News', icon: Leaf },
+                    { key: 'weather', label: 'Weather', icon: CloudRain }
                 ].map(tab => (
                     <button
                         key={tab.key}
@@ -252,21 +251,26 @@ export default function NewsPage() {
                             <div
                                 key={item.id}
                                 onClick={() => setSelectedArticle(item)}
-                                className={`rounded-lg p-4 cursor-pointer hover:shadow-md transition-all ${getTypeStyle(item.type, item.priority)}`}
+                                className={`rounded-lg p-4 cursor-pointer hover:shadow-md transition-all shadow-sm ${getCardStyle(item.priority)}`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            {getCategoryIcon(item.category)}
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${getTypeBadge(item.type)}`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {getTypeIcon(item.type)}
+                                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wide ${getPriorityBadgeColor(item.priority)}`}>
+                                                {item.priority}
+                                            </span>
+                                            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
                                                 {item.type}
                                             </span>
-                                            <span className="text-[10px] text-gray-400">{formatDate(item.date)}</span>
                                         </div>
                                         <h3 className="font-bold text-sm text-gray-900 mb-1">{item.title}</h3>
-                                        <p className="text-xs text-gray-500 line-clamp-2">{item.summary}</p>
+                                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">{item.summary}</p>
+                                        <p className="text-[10px] text-gray-400 mt-2 font-medium">
+                                            {formatDate(item.date)}
+                                        </p>
                                     </div>
-                                    <ChevronRight size={18} className="text-gray-400 shrink-0" />
+                                    <ChevronRight size={18} className="text-gray-400 shrink-0 self-center" />
                                 </div>
                             </div>
                         ))}

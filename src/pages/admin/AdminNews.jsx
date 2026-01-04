@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Bell, Plus, Trash2, Megaphone, CloudRain, AlertTriangle, FileText } from 'lucide-react';
+import { Bell, Plus, Trash2, Megaphone, CloudRain, AlertTriangle, FileText, Info, Newspaper } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 
 export default function AdminNews() {
@@ -13,7 +13,7 @@ export default function AdminNews() {
         title: '',
         content: '',
         type: 'news', // news, advisory, weather, alert
-        priority: 'normal' // normal, high, critical
+        priority: 'normal' // low, normal, medium, high, critical
     });
 
     // Inject "Post Update" button into header
@@ -22,8 +22,8 @@ export default function AdminNews() {
             <button
                 onClick={() => setShowForm(prev => !prev)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm shadow-sm transition-colors whitespace-nowrap ${showForm
-                        ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        : 'bg-primary text-white hover:bg-primary/90'
+                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-primary text-white hover:bg-primary/90'
                     }`}
             >
                 {showForm ? 'Cancel' : <><Plus size={16} /> Post Update</>}
@@ -116,21 +116,32 @@ export default function AdminNews() {
 
     const getTypeIcon = (type) => {
         switch (type) {
-            case 'advisory': return <Megaphone size={18} className="text-amber-500" />;
-            case 'weather': return <CloudRain size={18} className="text-blue-500" />;
-            case 'alert': return <AlertTriangle size={18} className="text-red-500" />;
-            default: return <FileText size={18} className="text-green-500" />;
+            case 'advisory': return <Megaphone size={18} />;
+            case 'weather': return <CloudRain size={18} />;
+            case 'alert': return <AlertTriangle size={18} />;
+            default: return <Newspaper size={18} />;
         }
     };
 
-    const getTypeColor = (type) => {
-        switch (type) {
-            case 'advisory': return 'bg-amber-50 border-amber-200 text-amber-800';
-            case 'weather': return 'bg-blue-50 border-blue-200 text-blue-800';
-            case 'alert': return 'bg-red-50 border-red-200 text-red-800';
-            default: return 'bg-green-50 border-green-200 text-green-800';
+    const getPriorityColor = (priority) => {
+        switch (priority) {
+            case 'critical': return 'bg-red-100 text-red-800 border-red-200';
+            case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'medium': return 'bg-amber-100 text-amber-800 border-amber-200';
+            case 'low': return 'bg-gray-100 text-gray-600 border-gray-200';
+            default: return 'bg-blue-100 text-blue-800 border-blue-200'; // normal
         }
     };
+
+    const getIconColor = (priority) => {
+        switch (priority) {
+            case 'critical': return 'text-red-500 bg-red-50';
+            case 'high': return 'text-orange-500 bg-orange-50';
+            case 'medium': return 'text-amber-500 bg-amber-50';
+            case 'low': return 'text-gray-400 bg-gray-50';
+            default: return 'text-blue-500 bg-blue-50'; // normal
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -146,19 +157,8 @@ export default function AdminNews() {
                 <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-md animate-in fade-in slide-in-from-top-4">
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Create New Post</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                                    placeholder="e.g. Heavy Rain Warning"
-                                    value={formData.title}
-                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                                />
-                            </div>
-                            <div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-1">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                                 <select
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
@@ -170,6 +170,31 @@ export default function AdminNews() {
                                     <option value="weather">Weather Update</option>
                                     <option value="alert">Emergency Alert</option>
                                 </select>
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <select
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
+                                    value={formData.priority}
+                                    onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                                >
+                                    <option value="low">Low</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    placeholder="e.g. Heavy Rain Warning"
+                                    value={formData.title}
+                                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                />
                             </div>
                         </div>
                         <div>
@@ -213,16 +238,19 @@ export default function AdminNews() {
                 ) : (
                     news.map(item => (
                         <div key={item.id} className={`p-5 rounded-lg border flex items-start gap-4 transition-all hover:shadow-md bg-white border-gray-200`}>
-                            <div className={`p-3 rounded-full flex-shrink-0 ${getTypeColor(item.type).split(' ')[0]}`}>
+                            <div className={`p-3 rounded-full flex-shrink-0 ${getIconColor(item.priority)}`}>
                                 {getTypeIcon(item.type)}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${getTypeColor(item.type)}`}>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${getPriorityColor(item.priority)}`}>
+                                        {item.priority}
+                                    </span>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                         {item.type}
                                     </span>
                                     <span className="text-xs text-gray-400">
-                                        {new Date(item.created_at).toLocaleDateString()} • {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        • {new Date(item.created_at).toLocaleDateString()}
                                     </span>
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">{item.title}</h3>
