@@ -18,7 +18,7 @@ export default function WeatherWidget() {
                     lat = coords.latitude;
                     lon = coords.longitude;
                 } catch (geoErr) {
-                    console.log('Using default location for weather');
+                    // Silent fallback to default location
                 }
 
                 const data = await fetchWeather(lat, lon);
