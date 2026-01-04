@@ -10,14 +10,13 @@ export default function Splash() {
     const { loading } = useAuth();
 
     useEffect(() => {
-        const timer = new Promise(resolve => setTimeout(resolve, 2000));
+        if (loading) return;
 
-        Promise.all([timer, !loading]).then(() => {
-            // Once minimum time passed AND loading is done
-            if (!loading) {
-                navigate('/login');
-            }
-        });
+        const timer = setTimeout(() => {
+            navigate('/login');
+        }, 2000);
+
+        return () => clearTimeout(timer);
     }, [navigate, loading]);
 
     return (
