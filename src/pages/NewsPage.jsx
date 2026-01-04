@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { useAuth, API_URL } from '../context/AuthContext';
-import { Newspaper, AlertTriangle, Leaf, Bug, CloudRain, Sun, Calendar, ChevronRight, Bell } from 'lucide-react';
+import { Newspaper, AlertTriangle, Leaf, Bug, CloudRain, Sun, Calendar, ChevronRight, Bell, Megaphone } from 'lucide-react';
 
 // Mock news/advisory data
 const MOCK_NEWS = [

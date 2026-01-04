@@ -18,6 +18,7 @@ export default function FarmerDashboard() {
     const [activeSlide, setActiveSlide] = useState(0); // New state for carousel
     const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]); // New state for carousel
     const [stats, setStats] = useState({ active_reports: 0 }); // New state for stats (from dashboardData)
+    const [unreadCount, setUnreadCount] = useState(0);
 
     // Fetch live weather data
     const getWeather = async () => {
@@ -64,7 +65,10 @@ export default function FarmerDashboard() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setStats(data.stats);
+                    setStats({
+                        ...data.stats,
+                        active_reports: data.stats.pending
+                    });
                     setWeather(data.weather); // Set weather from API dashboard
                 }
             } catch (error) {
@@ -73,7 +77,35 @@ export default function FarmerDashboard() {
         };
 
         if (token || isMockMode) fetchDashboardData();
-    }, [token, isMockMode, profile]); // Depend on profile for mock mode username
+    }, [token, isMockMode, profile]);
+
+    // Live Polling for Notifications
+    useEffect(() => {
+        const pollNotifications = async () => {
+            if (isMockMode) {
+                setUnreadCount(prev => prev > 0 ? prev : 2); // Simulating 2 unread in mock
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/notifications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const notifs = Array.isArray(data) ? data : data.notifications || [];
+                    const count = notifs.filter(n => !n.is_read).length;
+                    setUnreadCount(count);
+                }
+            } catch (error) {
+                console.error("Notification polling error", error);
+            }
+        };
+
+        // Poll immediately and then every 30 seconds
+        pollNotifications();
+        const interval = setInterval(pollNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [token, isMockMode]);
 
     // Fetch latest advisory (Carousel Logic)
     useEffect(() => {
@@ -211,13 +243,18 @@ export default function FarmerDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="mt-16 px-5 py-4">
+            <div className="mt-2 px-5 py-4">
                 {/* Quick Actions Grid */}
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
-                        <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors relative">
                             <Bell size={24} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm scale-110 animate-pulse">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">Notifications</span>
                     </div>
