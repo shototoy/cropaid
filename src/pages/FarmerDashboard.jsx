@@ -11,14 +11,18 @@ import { fetchWeather, getCurrentPosition } from '../services/api';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
-    const { profile, logout, token, isMockMode } = useAuth(); // Changed from user, authLoading
+    const { user, logout, token, isMockMode } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [weather, setWeather] = useState(null); // New state for weather data (from dashboardData)
+    const [dashboardProfile, setDashboardProfile] = useState(null); // Local profile state from API
+    const [weather, setWeather] = useState(null);
     const [liveWeather, setLiveWeather] = useState(null);
-    const [activeSlide, setActiveSlide] = useState(0); // New state for carousel
-    const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]); // New state for carousel
-    const [stats, setStats] = useState({ active_reports: 0 }); // New state for stats (from dashboardData)
+    const [activeSlide, setActiveSlide] = useState(0);
+    const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]);
+    const [stats, setStats] = useState({ active_reports: 0 });
     const [unreadCount, setUnreadCount] = useState(0);
+
+    // Prioritize fresh dashboard data over auth context user
+    const profile = dashboardProfile || user;
 
     // Fetch live weather data
     const getWeather = async () => {
@@ -52,10 +56,10 @@ export default function FarmerDashboard() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (isMockMode) {
-                const username = profile?.username || 'james';
+                const username = user?.username || 'james';
                 const mockDashboard = MOCK_DATA.getFarmerDashboard(username);
                 setStats(mockDashboard.stats);
-                setWeather(mockDashboard.weather); // Set weather from mock dashboard
+                setWeather(mockDashboard.weather);
                 return;
             }
 
@@ -69,7 +73,8 @@ export default function FarmerDashboard() {
                         ...data.stats,
                         active_reports: data.stats.pending
                     });
-                    setWeather(data.weather); // Set weather from API dashboard
+                    setWeather(data.weather);
+                    if (data.profile) setDashboardProfile(data.profile);
                 }
             } catch (error) {
                 console.error("Failed to load dashboard", error);
@@ -77,7 +82,7 @@ export default function FarmerDashboard() {
         };
 
         if (token || isMockMode) fetchDashboardData();
-    }, [token, isMockMode, profile]);
+    }, [token, isMockMode, user]);
 
     // Live Polling for Notifications
     useEffect(() => {

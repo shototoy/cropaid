@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
@@ -14,6 +14,7 @@ export default function AdminReports() {
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
+    const location = useLocation();
 
     // Initialize Active Tab from URL param
     useEffect(() => {
@@ -26,6 +27,18 @@ export default function AdminReports() {
             }
         }
     }, [searchParams]);
+
+    // Auto-open modal if navigated from notification
+    useEffect(() => {
+        if (location.state?.openReportId && reports.length > 0) {
+            const reportToOpen = reports.find(r => r.id.toString() === location.state.openReportId.toString());
+            if (reportToOpen) {
+                setSelectedReport(reportToOpen);
+                // Clear state so it doesn't re-open on refresh/nav
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [reports, location.state]);
 
     const fetchReports = async () => {
         setLoading(true);

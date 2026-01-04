@@ -235,9 +235,8 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
             );
             if (response.ok) {
                 const data = await response.json();
-                if (data.count > 0) {
-                    onNewNotifications(data.count);
-                }
+                // Always update count to sync (e.g. if notifications were read elsewhere)
+                onNewNotifications({ unreadCount: data.count });
                 lastNotificationCheck = new Date().toISOString();
             }
         } catch (error) {

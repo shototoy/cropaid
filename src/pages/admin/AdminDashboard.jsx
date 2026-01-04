@@ -369,7 +369,11 @@ export default function AdminDashboard() {
 
                     <div className="grid gap-3">
                         {recentReports.map((report) => (
-                            <div key={report.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div
+                                key={report.id}
+                                onClick={() => navigate('/admin/reports', { state: { openReportId: report.id } })}
+                                className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 
                                     ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100 text-red-600' :
                                         report.type?.toLowerCase() === 'flood' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}

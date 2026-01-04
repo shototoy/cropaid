@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, MapPin, Calendar, User, Bug, CloudRain, Sun, Phone, FileText, CheckCircle, XCircle, Clock, Image } from 'lucide-react';
 import { useAuth, API_URL } from '../context/AuthContext';
 
@@ -18,13 +19,13 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
 
     const loadPhoto = async () => {
         if (!report?.id || isMockMode) return;
-        
+
         setPhotoLoading(true);
         try {
             const response = await fetch(`${API_URL}/admin/reports/${report.id}/photo`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             if (response.ok) {
                 const data = await response.json();
                 setPhotoData(data.photo);
@@ -38,7 +39,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
 
     const handleStatusUpdate = async (newStatus) => {
         setLoading(true);
-        
+
         if (isMockMode) {
             setTimeout(() => {
                 onStatusUpdate?.(report.id, newStatus, adminNotes);
@@ -58,7 +59,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
             });
 
             if (!response.ok) throw new Error('Failed to update status');
-            
+
             onStatusUpdate?.(report.id, newStatus, adminNotes);
         } catch (err) {
             alert('Error updating status: ' + err.message);
@@ -103,20 +104,19 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
 
     if (!report) return null;
 
-    return (
+    return createPortal(
         <>
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-                <div 
-                    className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+                <div
+                    className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                report.type?.toLowerCase() === 'pest' ? 'bg-red-100' :
-                                report.type?.toLowerCase() === 'flood' ? 'bg-blue-100' : 'bg-orange-100'
-                            }`}>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100' :
+                                    report.type?.toLowerCase() === 'flood' ? 'bg-blue-100' : 'bg-orange-100'
+                                }`}>
                                 {getTypeIcon(report.type)}
                             </div>
                             <div>
@@ -124,7 +124,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                                 <p className="text-sm text-gray-500">ID: #{report.id || 'N/A'}</p>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={onClose}
                             className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                         >
@@ -237,9 +237,9 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                     </div>
                                 ) : photoData ? (
-                                    <img 
-                                        src={photoData} 
-                                        alt="Report evidence" 
+                                    <img
+                                        src={photoData}
+                                        alt="Report evidence"
                                         className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                                         onClick={() => setShowPhotoModal(true)}
                                     />
@@ -309,23 +309,24 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
 
             {/* Photo Modal */}
             {showPhotoModal && photoData && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
                     onClick={() => setShowPhotoModal(false)}
                 >
-                    <button 
+                    <button
                         className="absolute top-4 right-4 text-white p-2 hover:bg-white/20 rounded-full"
                         onClick={() => setShowPhotoModal(false)}
                     >
                         <X size={24} />
                     </button>
-                    <img 
-                        src={photoData} 
-                        alt="Report evidence full view" 
+                    <img
+                        src={photoData}
+                        alt="Report evidence full view"
                         className="max-w-full max-h-full object-contain"
                     />
                 </div>
             )}
-        </>
+        </>,
+        document.body
     );
 }

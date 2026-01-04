@@ -116,7 +116,7 @@ export default function FarmerProfile() {
                 });
 
                 if (!response.ok) throw new Error('Failed to fetch profile');
-                
+
                 const data = await response.json();
                 setProfile({
                     firstName: data.first_name || '',
@@ -299,14 +299,14 @@ export default function FarmerProfile() {
                 {/* Profile Header */}
                 <div className="bg-primary text-white p-6 pb-16 relative">
                     <div className="flex items-center gap-4">
-                        <div 
+                        <div
                             className={`relative w-20 h-20 rounded-full border-4 border-white/30 overflow-hidden ${isEditing ? 'cursor-pointer' : ''}`}
                             onClick={handleProfilePictureClick}
                         >
                             {(isEditing ? editedProfile.profilePicture : profile.profilePicture) ? (
-                                <img 
-                                    src={isEditing ? editedProfile.profilePicture : profile.profilePicture} 
-                                    alt="Profile" 
+                                <img
+                                    src={isEditing ? editedProfile.profilePicture : profile.profilePicture}
+                                    alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
@@ -453,8 +453,8 @@ export default function FarmerProfile() {
                                             <p className="text-xs text-gray-400">Farm GPS Location</p>
                                             {(isEditing ? editedProfile.farmLatitude : profile.farmLatitude) ? (
                                                 <p className="text-xs text-green-600 font-medium">
-                                                    {(isEditing ? editedProfile.farmLatitude : profile.farmLatitude).toFixed(6)}, 
-                                                    {(isEditing ? editedProfile.farmLongitude : profile.farmLongitude).toFixed(6)}
+                                                    {Number(isEditing ? editedProfile.farmLatitude : profile.farmLatitude).toFixed(6)},
+                                                    {Number(isEditing ? editedProfile.farmLongitude : profile.farmLongitude).toFixed(6)}
                                                 </p>
                                             ) : (
                                                 <p className="text-sm text-gray-500">Not pinned</p>
@@ -470,7 +470,7 @@ export default function FarmerProfile() {
                                         </button>
                                     )}
                                 </div>
-                                
+
                                 {(isEditing ? editedProfile.farmLatitude : profile.farmLatitude) && (
                                     <div className="h-40">
                                         <MapContainer
@@ -485,12 +485,12 @@ export default function FarmerProfile() {
                                             zoomControl={false}
                                         >
                                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                            <Marker 
+                                            <Marker
                                                 position={[
                                                     isEditing ? editedProfile.farmLatitude : profile.farmLatitude,
                                                     isEditing ? editedProfile.farmLongitude : profile.farmLongitude
-                                                ]} 
-                                                icon={farmIcon} 
+                                                ]}
+                                                icon={farmIcon}
                                             />
                                         </MapContainer>
                                     </div>
@@ -519,7 +519,7 @@ export default function FarmerProfile() {
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div className="p-3 bg-blue-50 text-blue-800 text-xs">
                             Tap on the map to pin your farm location, or use the button below to get your current location.
                         </div>

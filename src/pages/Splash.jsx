@@ -7,17 +7,22 @@ import logo from '../assets/logo.png';
 export default function Splash() {
     const navigate = useNavigate();
 
-    const { loading } = useAuth();
+    const { loading, user } = useAuth();
 
     useEffect(() => {
         if (loading) return;
 
         const timer = setTimeout(() => {
-            navigate('/login');
+            if (user) {
+                if (user.role === 'admin') navigate('/admin-dashboard');
+                else navigate('/dashboard');
+            } else {
+                navigate('/login');
+            }
         }, 2000);
 
         return () => clearTimeout(timer);
-    }, [navigate, loading]);
+    }, [navigate, loading, user]);
 
     return (
         <div style={{

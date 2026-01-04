@@ -87,10 +87,13 @@ export const AuthProvider = ({ children }) => {
 
             const data = await response.json();
             setToken(data.token);
-            setUser(data.user);
+
+            // Critical: Backend returns role separate from user object, so we merge it
+            const userWithRole = { ...data.user, role: data.role };
+            setUser(userWithRole);
 
             localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('user', JSON.stringify(userWithRole));
 
             if (data.role === 'admin') navigate('/admin-dashboard');
             else navigate('/dashboard');

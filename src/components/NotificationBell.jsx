@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, AlertTriangle, FileText, User } from 'lucide-react';
+import { Bell, X, Check, AlertTriangle, FileText, User, Bug, CloudRain, Sun } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { startNotificationPolling, stopNotificationPolling, markNotificationRead } from '../services/api';
 
@@ -11,6 +12,7 @@ export default function NotificationBell() {
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
     const pollingRef = useRef(null);
+    const navigate = useNavigate();
 
     // Start polling on mount
     useEffect(() => {
@@ -57,7 +59,7 @@ export default function NotificationBell() {
             });
             if (response.ok) {
                 const data = await response.json();
-                setNotifications(data.notifications || []);
+                setNotifications(Array.isArray(data) ? data : data.notifications || []);
             }
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
@@ -76,7 +78,7 @@ export default function NotificationBell() {
     const handleMarkAsRead = async (notificationId) => {
         try {
             await markNotificationRead(token, notificationId);
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
@@ -100,12 +102,21 @@ export default function NotificationBell() {
         }
     };
 
-    const getNotificationIcon = (type) => {
-        switch (type?.toLowerCase()) {
-            case 'report': return <FileText size={16} className="text-blue-500" />;
-            case 'alert': return <AlertTriangle size={16} className="text-red-500" />;
-            case 'user': return <User size={16} className="text-green-500" />;
-            default: return <Bell size={16} className="text-gray-500" />;
+    const getNotificationIcon = (notification) => {
+        const type = notification.type?.toLowerCase();
+        const text = (notification.message || '').toLowerCase();
+
+        if (type === 'new_report' || text.includes('report')) {
+            if (text.includes('pest')) return <Bug size={18} className="text-red-500" />;
+            if (text.includes('flood')) return <CloudRain size={18} className="text-blue-500" />;
+            if (text.includes('drought')) return <Sun size={18} className="text-orange-500" />;
+            return <FileText size={18} className="text-green-500" />;
+        }
+
+        switch (type) {
+            case 'alert': return <AlertTriangle size={18} className="text-red-500" />;
+            case 'user': return <User size={18} className="text-green-500" />;
+            default: return <Bell size={18} className="text-gray-500" />;
         }
     };
 
@@ -132,7 +143,7 @@ export default function NotificationBell() {
                 className="relative p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
                 <Bell size={22} className="text-gray-600" />
-                
+
                 {/* Unread Badge */}
                 {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full animate-pulse">
@@ -172,24 +183,31 @@ export default function NotificationBell() {
                             notifications.map((notification) => (
                                 <div
                                     key={notification.id}
-                                    className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer ${
-                                        !notification.is_read ? 'bg-blue-50/50' : ''
-                                    }`}
-                                    onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                                    className={`px-4 py-3 border-b last:border-b-0 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-blue-50/50' : ''
+                                        }`}
+                                    onClick={() => {
+                                        if (!notification.is_read) handleMarkAsRead(notification.id);
+                                        if (notification.reference_id) {
+                                            navigate('/admin/reports', { state: { openReportId: notification.reference_id } });
+                                            setIsOpen(false);
+                                        }
+                                    }}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className="mt-0.5">
-                                            {getNotificationIcon(notification.type)}
+                                        <div className="flex flex-col items-center gap-1 min-w-[3rem]">
+                                            <div className="mt-0.5">
+                                                {getNotificationIcon(notification)}
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 text-center leading-tight">
+                                                {formatTime(notification.created_at)}
+                                            </p>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className={`text-sm ${!notification.is_read ? 'font-semibold text-gray-800' : 'text-gray-600'}`}>
+                                            <p className={`text-sm ${!notification.is_read ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
                                                 {notification.title}
                                             </p>
-                                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                                            <p className="text-xs text-gray-500 mt-0.5 leading-snug">
                                                 {notification.message}
-                                            </p>
-                                            <p className="text-[10px] text-gray-400 mt-1">
-                                                {formatTime(notification.created_at)}
                                             </p>
                                         </div>
                                         {!notification.is_read && (
