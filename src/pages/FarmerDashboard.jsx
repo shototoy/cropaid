@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Activity, Home, User, LogOut, X, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning } from 'lucide-react';
+import { FileText, Activity, Home, User, LogOut, X, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning, Menu, Megaphone, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react';
 import Layout from '../components/Layout';
 import BottomNavbar from '../components/BottomNavbar';
 import { API_URL, useAuth } from '../context/AuthContext';
