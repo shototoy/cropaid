@@ -7,10 +7,28 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
+build
 *.local
+
+# Environment files - NEVER commit these!
+.env
+.env.local
+.env.development
+.env.test
+.env.staging
+# Keep .env.production only if it has NO secrets (just public URLs)
+# .env.production
+
+# Server folder (backend is in separate repo)
+server/
 
 # Editor directories and files
 .vscode/*
@@ -23,8 +41,30 @@ dist-ssr
 *.sln
 *.sw?
 
-
+# Env files
 *.env
-*/server/
-/server/**/*
-/android
+.env.*
+
+# Server folder (in separate repo)
+server/
+
+# Testing
+coverage
+.nyc_output
+
+# Capacitor/Mobile
+android/
+ios/
+*.apk
+*.ipa
+
+# Misc
+*.pem
+*.key
+.cache
+.temp
+*.tmp
+Thumbs.db
+
+# Debug
+*.map
