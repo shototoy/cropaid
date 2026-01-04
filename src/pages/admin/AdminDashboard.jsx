@@ -37,8 +37,8 @@ function DonutChart({ data, centerLabel, centerValue }) {
         );
     }
 
-    const total = data.reduce((sum, d) => sum + (d.value || 0), 0);
-    
+    const total = data.reduce((sum, d) => sum + Number(d.value || 0), 0);
+
     // If all values are 0, show empty state
     if (total === 0) {
         return (
@@ -58,11 +58,11 @@ function DonutChart({ data, centerLabel, centerValue }) {
 
     return (
         <div className="flex items-center justify-center gap-6">
-            <div className="relative">
-                <svg viewBox="-1.2 -1.2 2.4 2.4" width="140" height="140" className="transform -rotate-90">
+            <div className="relative flex-shrink-0">
+                <svg viewBox="-1.2 -1.2 2.4 2.4" width="140" height="140" className="transform -rotate-90 block">
                     {data.map((slice, i) => {
                         if (!slice.value || slice.value <= 0) return null;
-                        
+
                         const percent = slice.value / total;
                         const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
                         cumulativePercent += percent;
@@ -170,12 +170,12 @@ export default function AdminDashboard() {
                 }));
 
                 setStats({
-                    totalFarmers: statsData.totalFarmers || 0,
-                    pendingReports: statsData.pendingReports || 0,
-                    resolvedReports: statsData.resolvedReports || 0,
-                    verifiedReports: statsData.verifiedReports || 0,
-                    rejectedReports: statsData.rejectedReports || 0,
-                    totalReports: statsData.totalReports || 0,
+                    totalFarmers: Number(statsData.totalFarmers) || 0,
+                    pendingReports: Number(statsData.pendingReports) || 0,
+                    resolvedReports: Number(statsData.resolvedReports) || 0,
+                    verifiedReports: Number(statsData.verifiedReports) || 0,
+                    rejectedReports: Number(statsData.rejectedReports) || 0,
+                    totalReports: Number(statsData.totalReports) || 0,
                     weatherAlerts: 1
                 });
                 setReportsByType(statsData.reportsByType || []);
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
     ];
 
     // Calculate total for center display
-    const totalReportsCount = stats.totalReports || 
+    const totalReportsCount = stats.totalReports ||
         (stats.pendingReports + stats.verifiedReports + stats.resolvedReports + stats.rejectedReports);
 
     const barangayChartData = reportsByBarangay.slice(0, 5).map(b => ({
@@ -272,10 +272,10 @@ export default function AdminDashboard() {
                     {loading ? (
                         <div className="h-40 flex items-center justify-center text-gray-400">Loading...</div>
                     ) : (
-                        <DonutChart 
-                            data={statusDonutData} 
-                            centerLabel="Total" 
-                            centerValue={totalReportsCount} 
+                        <DonutChart
+                            data={statusDonutData}
+                            centerLabel="Total"
+                            centerValue={totalReportsCount}
                         />
                     )}
                 </div>
@@ -322,9 +322,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="text-right flex-shrink-0">
                                     <span className={`text-xs px-2 py-1 rounded-full capitalize ${report.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                            report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
-                                                report.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                                                    'bg-gray-100 text-gray-700'
+                                        report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
+                                            report.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                                                'bg-gray-100 text-gray-700'
                                         }`}>
                                         {report.status}
                                     </span>
