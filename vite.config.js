@@ -65,5 +65,5 @@ export default defineConfig({
       }
     })
   ],
-  base: process.env.VITE_BASE_PATH || '/CropAid/0.5/',
+  base: process.env.VITE_BASE_PATH || '/CropAid/0.6/',
 })

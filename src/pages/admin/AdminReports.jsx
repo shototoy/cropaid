@@ -50,9 +50,10 @@ export default function AdminReports() {
             const normalizedReports = reportsArray.map(r => ({
                 ...r,
                 type: r.report_type || r.type,
-                first_name: r.farmer_name?.split(' ')[0] || 'Unknown',
-                last_name: r.farmer_name?.split(' ').slice(1).join(' ') || 'Farmer',
-                details: r.description ? { description: r.description } : {}
+                first_name: r.first_name || 'Unknown',
+                last_name: r.last_name || 'Farmer',
+                // details is already in r, only populate if missing but description exists (mock data legacy)
+                details: r.details || (r.description ? { description: r.description } : {})
             }));
             setReports(normalizedReports);
         } catch (err) {
@@ -111,6 +112,16 @@ export default function AdminReports() {
             case 'verified': return 'bg-blue-50 text-blue-700 border-blue-200';
             case 'resolved': return 'bg-green-50 text-green-700 border-green-200';
             case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
+            default: return 'bg-gray-50 text-gray-700 border-gray-200';
+        }
+    };
+
+    const getSeverityColor = (severity) => {
+        switch (severity?.toLowerCase()) {
+            case 'low': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+            case 'high': return 'bg-orange-50 text-orange-700 border-orange-200';
+            case 'critical': return 'bg-red-50 text-red-700 border-red-200';
             default: return 'bg-gray-50 text-gray-700 border-gray-200';
         }
     };
@@ -184,6 +195,11 @@ export default function AdminReports() {
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(report.status)} uppercase tracking-wide`}>
                                             {report.status}
                                         </span>
+                                        {details.severity && (
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getSeverityColor(details.severity)} uppercase tracking-wide`}>
+                                                {details.severity}
+                                            </span>
+                                        )}
                                         <span className="text-xs text-gray-400 font-medium">{formatDate(report.created_at)}</span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 capitalize">
