@@ -4,6 +4,7 @@ import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
 import ReportDetailModal from '../../components/ReportDetailModal';
+import { useDebounce } from '../../utils/debounce';
 
 export default function AdminReports() {
     const { token, isMockMode } = useAuth();
@@ -12,6 +13,7 @@ export default function AdminReports() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
     const location = useLocation();
@@ -109,7 +111,7 @@ export default function AdminReports() {
 
     const filteredReports = reports.filter(r => {
         const matchesTab = activeTab === 'All' || r.status === activeTab.toLowerCase();
-        const searchLower = searchTerm.toLowerCase();
+        const searchLower = debouncedSearchTerm.toLowerCase();
         // Safe access checks
         const matchesSearch =
             (r.type && r.type.toLowerCase().includes(searchLower)) ||

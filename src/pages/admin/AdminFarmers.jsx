@@ -5,6 +5,7 @@ import { useOutletContext } from 'react-router-dom';
 import { MOCK_DATA } from '../../config/mockData';
 import FarmerDetailModal from '../../components/FarmerDetailModal';
 import AddFarmerModal from '../../components/AddFarmerModal';
+import { useDebounce } from '../../utils/debounce';
 
 export default function AdminFarmers() {
     const { token, isMockMode } = useAuth();
@@ -12,6 +13,7 @@ export default function AdminFarmers() {
     const [farmers, setFarmers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
     const [selectedFarmer, setSelectedFarmer] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -19,7 +21,7 @@ export default function AdminFarmers() {
     // Inject "Add New Farmer" button into header
     useEffect(() => {
         setHeaderAction(
-            <button 
+            <button
                 onClick={() => setShowAddModal(true)}
                 className="bg-primary text-white px-4 py-2 rounded-md font-bold text-sm shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
@@ -71,7 +73,7 @@ export default function AdminFarmers() {
     }, [token, isMockMode]);
 
     const handleStatusUpdate = (farmerId, newStatus) => {
-        setFarmers(prev => prev.map(f => 
+        setFarmers(prev => prev.map(f =>
             (f.id === farmerId || f.user_id === farmerId) ? { ...f, is_active: newStatus } : f
         ));
     };
@@ -83,7 +85,7 @@ export default function AdminFarmers() {
     };
 
     const filteredFarmers = farmers.filter(f => {
-        const term = searchTerm.toLowerCase();
+        const term = debouncedSearchTerm.toLowerCase();
         return (
             (f.first_name && f.first_name.toLowerCase().includes(term)) ||
             (f.last_name && f.last_name.toLowerCase().includes(term)) ||
@@ -175,7 +177,7 @@ export default function AdminFarmers() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedFarmer(farmer)}
                                             className="text-primary hover:text-primary/80 p-1.5 rounded-md hover:bg-primary/10 transition-colors mr-1"
                                             title="View Details"
@@ -210,8 +212,8 @@ export default function AdminFarmers() {
                     <p className="text-center py-8 text-gray-500">No farmers found.</p>
                 )}
                 {!loading && !error && filteredFarmers.map((farmer) => (
-                    <div 
-                        key={farmer.id} 
+                    <div
+                        key={farmer.id}
                         className="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
                         onClick={() => setSelectedFarmer(farmer)}
                     >
@@ -240,8 +242,8 @@ export default function AdminFarmers() {
 
             {/* Farmer Detail Modal */}
             {selectedFarmer && (
-                <FarmerDetailModal 
-                    farmer={selectedFarmer} 
+                <FarmerDetailModal
+                    farmer={selectedFarmer}
                     onClose={() => setSelectedFarmer(null)}
                     onStatusUpdate={handleStatusUpdate}
                     onDelete={handleDeleteFarmer}
@@ -250,7 +252,7 @@ export default function AdminFarmers() {
 
             {/* Add Farmer Modal */}
             {showAddModal && (
-                <AddFarmerModal 
+                <AddFarmerModal
                     onClose={() => setShowAddModal(false)}
                     onSuccess={handleAddSuccess}
                 />
