@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, API_URL } from '../context/AuthContext';
+import { barangayBoundaries } from '../config/barangayBoundaries';
 import { ArrowLeft, Save, Plus, MapPin, Calendar, Sprout, Tractor, ShieldCheck, Ruler } from 'lucide-react';
 
 export default function FarmerFarmsPage() {
@@ -14,7 +15,7 @@ export default function FarmerFarmsPage() {
     useEffect(() => {
         const fetchFarms = async () => {
             try {
-                const response = await fetch(`${API_URL}/farms`, {
+                const response = await fetch(`${API_URL}/farmer/farms`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -60,7 +61,11 @@ export default function FarmerFarmsPage() {
                     {/* 1. Basic Location & Size */}
                     <Section title="Location & Size" icon={<MapPin size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
-                            <Input label="Barangay" value={editingFarm.location_barangay} />
+                            <Select
+                                label="Barangay"
+                                options={Object.keys(barangayBoundaries).sort()}
+                                value={editingFarm.location_barangay}
+                            />
                             <Input label="Sitio" value={editingFarm.location_sitio} />
                             <Input label="Latitude" value={editingFarm.latitude} />
                             <Input label="Longitude" value={editingFarm.longitude} />

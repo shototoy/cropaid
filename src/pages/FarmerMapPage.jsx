@@ -213,12 +213,15 @@ export default function FarmerMapPage() {
             try {
                 if (isMockMode) {
                     setReports(MOCK_DATA.reports);
-                    setFarmData({
+                    setMyFarms([{
+                        id: 'mock-farm-1',
                         lat: 6.5206,
                         lng: 124.6623,
                         barangay: 'Poblacion',
-                        size: 2.5
-                    });
+                        size: 2.5,
+                        current_crop: 'Rice',
+                        planting_method: 'Transplanting'
+                    }]);
                 } else {
                     try {
                         // Pass token from context
@@ -522,7 +525,7 @@ export default function FarmerMapPage() {
                                 Tap on the map to pin location.
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 mb-2">
                                 <button
                                     onClick={() => setEditingId(null)}
                                     className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-lg hover:bg-gray-200 text-xs transition-colors"
@@ -534,9 +537,15 @@ export default function FarmerMapPage() {
                                     disabled={saving || !editedFarm.lat}
                                     className="flex-1 bg-primary text-white font-bold py-2.5 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2 text-xs transition-colors disabled:opacity-70"
                                 >
-                                    {saving ? 'Saving...' : <><Save size={14} /> Save</>}
+                                    {saving ? 'Saving...' : <><Save size={14} /> Update Location</>}
                                 </button>
                             </div>
+                            <button
+                                onClick={() => window.location.href = '/my-farms'}
+                                className="w-full text-xs text-primary font-bold underline text-center py-2"
+                            >
+                                Edit Full Details (Crops, Soil, etc.)
+                            </button>
                         </div>
                     )}
                 </div>
@@ -647,8 +656,9 @@ export default function FarmerMapPage() {
                                         <Popup>
                                             <div className="text-center p-1">
                                                 <p className="font-bold text-primary">🏠 My Farm</p>
-                                                <p className="text-xs text-gray-500">{farm.barangay}</p>
-                                                <p className="text-xs text-gray-500">{farm.size} ha</p>
+                                                <p className="text-xs text-gray-800 font-bold">{farm.current_crop || 'No Crop'}</p>
+                                                <p className="text-xs text-gray-500">{farm.barangay} • {farm.size} ha</p>
+                                                {farm.planting_method && <p className="text-[10px] text-gray-400 italic">{farm.planting_method}</p>}
                                             </div>
                                         </Popup>
                                     )}
