@@ -18,10 +18,10 @@ export default function FarmerLayout() {
     return (
         <div className="max-w-[480px] mx-auto h-full relative bg-bg-surface text-text-main font-sans overflow-hidden">
             {/* Key added to force re-render and trigger animation on route change */}
-            <div key={location.pathname} className="h-full overflow-y-auto pb-28 animate-slide-up">
+            <div key={location.pathname} className={`h-full overflow-y-auto animate-slide-up ${location.pathname !== '/my-map' ? 'pb-28' : ''}`}>
                 <Outlet />
             </div>
-            <BottomNavbar />
+            {location.pathname !== '/my-map' && <BottomNavbar />}
         </div>
     );
 }

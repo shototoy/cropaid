@@ -211,6 +211,11 @@ export default function FarmerProfile() {
         }
     };
 
+    const handleSetupLocation = () => {
+        setIsEditing(true);
+        setShowLocationMap(true);
+    };
+
     const handleLocationConfirm = () => {
         if (mapPosition) {
             setEditedProfile({
@@ -249,7 +254,9 @@ export default function FarmerProfile() {
                     address_barangay: editedProfile.barangay,
                     farm_latitude: editedProfile.farmLatitude,
                     farm_longitude: editedProfile.farmLongitude,
-                    profile_picture: editedProfile.profilePicture
+                    profile_picture: editedProfile.profilePicture,
+                    farm_barangay: editedProfile.farmBarangay,
+                    farm_size_hectares: editedProfile.farmSize
                 })
             });
 
@@ -297,10 +304,12 @@ export default function FarmerProfile() {
                 />
 
                 {/* Profile Header */}
-                <div className="bg-primary text-white p-6 pb-16 relative">
-                    <div className="flex items-center gap-4">
+                {/* Profile Header - Redesigned to be a single cohesive card */}
+                {/* Profile Header - Redesigned to be a single cohesive card */}
+                <div className="bg-primary text-white pt-8 pb-6 px-6 rounded-b-[40px] shadow-sm">
+                    <div className="flex flex-col items-center gap-4 text-center">
                         <div
-                            className={`relative w-20 h-20 rounded-full border-4 border-white/30 overflow-hidden ${isEditing ? 'cursor-pointer' : ''}`}
+                            className={`relative w-28 h-28 rounded-full border-4 border-white shadow-lg overflow-hidden ${isEditing ? 'cursor-pointer' : ''}`}
                             onClick={handleProfilePictureClick}
                         >
                             {(isEditing ? editedProfile.profilePicture : profile.profilePicture) ? (
@@ -311,27 +320,29 @@ export default function FarmerProfile() {
                                 />
                             ) : (
                                 <div className="w-full h-full bg-white/20 flex items-center justify-center">
-                                    <User size={40} className="text-white" />
+                                    <User size={48} className="text-white" />
                                 </div>
                             )}
                             {isEditing && (
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                    <Camera size={24} className="text-white" />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity hover:opacity-100">
+                                    <Camera size={32} className="text-white" />
                                 </div>
                             )}
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">{profile.firstName} {profile.lastName}</h2>
-                            <p className="text-white/80 text-sm">RSBSA: {profile.rsbsaId}</p>
+                            <h2 className="text-2xl font-bold tracking-tight">{profile.firstName} {profile.lastName}</h2>
+                            <p className="text-white/80 text-sm font-medium mt-1 inline-block bg-white/20 px-3 py-1 rounded-full">
+                                RSBSA: {profile.rsbsaId}
+                            </p>
                             {isEditing && (
-                                <p className="text-white/60 text-xs mt-1">Tap photo to change</p>
+                                <p className="text-white/60 text-xs mt-2 animate-pulse">Tap photo to change</p>
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Profile Card */}
-                <div className="px-4 -mt-10">
+                <div className="px-4 mt-4">
                     <div className="bg-white rounded-xl shadow-lg p-5">
                         {/* Action Buttons */}
                         <div className="flex justify-end mb-4">
@@ -431,16 +442,42 @@ export default function FarmerProfile() {
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                 <MapPin size={18} className="text-gray-400" />
                                 <div className="flex-1">
-                                    <p className="text-xs text-gray-400">Farm Location</p>
-                                    <p className="text-sm font-medium">{profile.farmBarangay || 'Not set'}</p>
+                                    <p className="text-xs text-gray-400">Farm Barangay</p>
+                                    {isEditing ? (
+                                        <select
+                                            className="w-full text-sm font-medium bg-white border border-gray-200 rounded px-2 py-1 mt-1"
+                                            value={editedProfile.farmBarangay}
+                                            onChange={(e) => setEditedProfile({ ...editedProfile, farmBarangay: e.target.value })}
+                                        >
+                                            <option value="">Select Barangay</option>
+                                            <option value="San Jose">San Jose</option>
+                                            <option value="Liberty">Liberty</option>
+                                            <option value="Esperanza">Esperanza</option>
+                                            <option value="San Miguel">San Miguel</option>
+                                            <option value="Poblacion">Poblacion</option>
+                                        </select>
+                                    ) : (
+                                        <p className="text-sm font-medium">{profile.farmBarangay || 'Not set'}</p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                 <Calendar size={18} className="text-gray-400" />
                                 <div className="flex-1">
-                                    <p className="text-xs text-gray-400">Farm Size</p>
-                                    <p className="text-sm font-medium">{profile.farmSize ? `${profile.farmSize} hectares` : 'Not set'}</p>
+                                    <p className="text-xs text-gray-400">Farm Size (Hectares)</p>
+                                    {isEditing ? (
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={editedProfile.farmSize}
+                                            onChange={(e) => setEditedProfile({ ...editedProfile, farmSize: e.target.value })}
+                                            className="w-full text-sm font-medium bg-white border border-gray-200 rounded px-2 py-1 mt-1"
+                                            placeholder="0.0"
+                                        />
+                                    ) : (
+                                        <p className="text-sm font-medium">{profile.farmSize ? `${profile.farmSize} ha` : 'Not set'}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -457,7 +494,17 @@ export default function FarmerProfile() {
                                                     {Number(isEditing ? editedProfile.farmLongitude : profile.farmLongitude).toFixed(6)}
                                                 </p>
                                             ) : (
-                                                <p className="text-sm text-gray-500">Not pinned</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm text-gray-500">Not pinned</p>
+                                                    {!isEditing && (
+                                                        <button
+                                                            onClick={handleSetupLocation}
+                                                            className="text-xs text-primary font-bold underline"
+                                                        >
+                                                            Set Location
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Activity, Home, User, LogOut, X, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning, Menu, Megaphone, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react';
+import { FileText, Activity, Home, User, LogOut, X, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning, Menu, Megaphone, AlertTriangle, CheckCircle, ChevronRight, MapPin, Tractor } from 'lucide-react';
 import Layout from '../components/Layout';
 import BottomNavbar from '../components/BottomNavbar';
 import { API_URL, useAuth } from '../context/AuthContext';
@@ -251,7 +251,7 @@ export default function FarmerDashboard() {
             <div className="mt-2 px-5 py-4">
                 {/* Quick Actions Grid */}
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-5 gap-2 mb-6">
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
                         <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors relative">
                             <Bell size={24} />
@@ -261,13 +261,25 @@ export default function FarmerDashboard() {
                                 </span>
                             )}
                         </div>
-                        <span className="text-[10px] font-medium text-center leading-tight">Notifications</span>
+                        <span className="text-[10px] font-medium text-center leading-tight">Notifs</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/news')}>
                         <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm cursor-pointer hover:bg-blue-200 transition-colors">
                             <Newspaper size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">News</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-map')}>
+                        <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm cursor-pointer hover:bg-orange-200 transition-colors">
+                            <MapPin size={24} />
+                        </div>
+                        <span className="text-[10px] font-medium text-center leading-tight">Map</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-farms')}>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm cursor-pointer hover:bg-emerald-200 transition-colors">
+                            <Home size={24} />
+                        </div>
+                        <span className="text-[10px] font-medium text-center leading-tight">Farms</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={toggleSidebar}>
                         <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shadow-sm cursor-pointer hover:bg-gray-200 transition-colors">
@@ -347,47 +359,50 @@ export default function FarmerDashboard() {
             {createPortal(
                 <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
                     <div className="w-full max-w-[480px] h-full relative overflow-hidden">
-                        <div className={`absolute inset-0 bg-primary pointer-events-auto flex flex-col p-6 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                            {/* Close Button (Top Left - matching profile button) */}
-                            <div className="flex justify-between items-center mb-6 mt-8">
-                                <button onClick={toggleSidebar} className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                                    <X size={24} className="text-white" />
+                        {/* Sidebar Drawer */}
+                        <div className={`absolute inset-0 bg-white pointer-events-auto flex flex-col shadow-2xl transform transition-transform duration-300 ease-out z-[101] max-w-[300px] rounded-r-3xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
+                            {/* Header / Profile */}
+                            <div className="p-6 bg-primary/5 border-b border-primary/10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border-2 border-primary/20">
+                                        <User size={32} />
+                                    </div>
+                                    <button onClick={toggleSidebar} className="p-2 -mr-2 text-gray-400 hover:text-gray-600">
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800">{profile?.name || 'Farmer'}</h2>
+                                <p className="text-gray-500 text-xs font-medium mt-1">RSBSA: <span className="text-primary">{profile?.rsbsa || 'N/A'}</span></p>
+                            </div>
+
+                            {/* Menu Items */}
+                            <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+                                <MenuItem icon={<User size={20} />} label="My Profile" onClick={() => { toggleSidebar(); navigate('/profile'); }} />
+                                <MenuItem icon={<MapPin size={20} />} label="Map" onClick={() => { toggleSidebar(); navigate('/my-map'); }} />
+                                <MenuItem icon={<Tractor size={20} />} label="My Farms" onClick={() => { toggleSidebar(); navigate('/my-farms'); }} />
+                                <div className="h-px bg-gray-100 my-2"></div>
+                                <MenuItem icon={<Newspaper size={20} />} label="News & Advisories" onClick={() => { toggleSidebar(); navigate('/news'); }} />
+                                <MenuItem icon={<Activity size={20} />} label="Report History" onClick={() => { toggleSidebar(); navigate('/status'); }} />
+                            </div>
+
+                            {/* Footer / Logout */}
+                            <div className="p-4 border-t border-gray-100">
+                                <button
+                                    onClick={logout}
+                                    className="w-full bg-red-50 text-red-600 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                >
+                                    <LogOut size={18} />
+                                    <span>Log Out</span>
                                 </button>
+                                <p className="text-center text-[10px] text-gray-300 mt-4">Version 1.2.0 • CropAid</p>
                             </div>
-
-                            <div className="flex flex-col items-center mb-8">
-                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 text-primary shadow-lg border-4 border-white/20">
-                                    <User size={40} />
-                                </div>
-                                <h2 className="text-2xl font-bold">{profile?.name || 'Farmer'}</h2>
-                                <p className="text-white/70 text-sm">RSBSA: {profile?.rsbsa}</p>
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="space-y-4">
-                                    <div onClick={() => { toggleSidebar(); navigate('/profile'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
-                                        <User size={20} />
-                                        <span className="font-medium">My Profile</span>
-                                    </div>
-                                    <div onClick={() => { toggleSidebar(); navigate('/status'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
-                                        <Activity size={20} />
-                                        <span className="font-medium">Report History</span>
-                                    </div>
-                                    <div onClick={() => { toggleSidebar(); navigate('/notifications'); }} className="p-4 bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/20 transition-colors">
-                                        <Bell size={20} />
-                                        <span className="font-medium">Notifications</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={logout}
-                                className="w-full bg-white text-red-600 font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg mt-auto"
-                            >
-                                <LogOut size={20} />
-                                LOGOUT
-                            </button>
                         </div>
+
+                        {/* Backdrop */}
+                        {isSidebarOpen && (
+                            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[100] transition-opacity duration-300" onClick={toggleSidebar}></div>
+                        )}
                     </div>
                 </div>,
                 document.body
@@ -395,3 +410,12 @@ export default function FarmerDashboard() {
         </>
     );
 }
+
+// Helper Component for Sidebar Items
+const MenuItem = ({ icon, label, onClick }) => (
+    <div onClick={onClick} className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-primary cursor-pointer transition-colors group">
+        <div className="text-gray-400 group-hover:text-primary transition-colors">{icon}</div>
+        <span className="font-medium text-sm">{label}</span>
+        <ChevronRight size={16} className="ml-auto text-gray-300 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all" />
+    </div>
+);

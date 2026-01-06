@@ -58,7 +58,7 @@ export default function SignupAppInfo() {
             <Header
                 title="Sign Up – App Information"
                 showBack
-                onBack={() => navigate('/signup/farm-info', { state: formData })}
+                onBack={() => navigate('/signup/basic-info', { state: formData })}
             />
 
             <div className="flex-1 px-6 pt-2 pb-20 flex flex-col justify-center overflow-y-auto">

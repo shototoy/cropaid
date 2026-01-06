@@ -13,6 +13,8 @@ export const MOCK_DB = {
             date: '2025-01-10',
             severity: 'High',
             location: 'San Jose',
+            latitude: 6.5507, // San Jose Center
+            longitude: 124.6417,
             details: 'Rice Black Bug infestation observed in northern field section.',
             created_at: '2025-01-10T08:30:00Z',
             is_active: true
@@ -25,6 +27,8 @@ export const MOCK_DB = {
             date: '2025-01-08',
             severity: 'Moderate',
             location: 'San Jose',
+            latitude: 6.5515, // Offset
+            longitude: 124.6425,
             details: 'Irrigation canal water level critically low. Crops showing stress.',
             created_at: '2025-01-08T14:20:00Z',
             is_active: true
@@ -37,6 +41,8 @@ export const MOCK_DB = {
             date: '2024-12-28',
             severity: 'Low',
             location: 'San Jose',
+            latitude: 6.5498, // Offset
+            longitude: 124.6405,
             details: 'Leaf blight detected on corn plants. Treated with fungicide.',
             created_at: '2024-12-28T10:15:00Z',
             is_active: false
@@ -49,6 +55,8 @@ export const MOCK_DB = {
             date: '2025-01-12',
             severity: 'High',
             location: 'Liberty',
+            latitude: 6.5364, // Liberty Center
+            longitude: 124.6317,
             details: 'Field submerged due to heavy rain. Rice seedlings at risk.',
             created_at: '2025-01-12T14:15:00Z',
             is_active: true
@@ -61,6 +69,8 @@ export const MOCK_DB = {
             date: '2025-01-14',
             severity: 'Moderate',
             location: 'Liberty',
+            latitude: 6.5372, // Offset
+            longitude: 124.6325,
             details: 'Army worms spotted on vegetable crops. Immediate action needed.',
             created_at: '2025-01-14T09:45:00Z',
             is_active: true
@@ -73,6 +83,8 @@ export const MOCK_DB = {
             date: '2025-01-05',
             severity: 'Low',
             location: 'Liberty',
+            latitude: 6.5355, // Offset
+            longitude: 124.6310,
             details: 'Water shortage reported but rainfall recorded in area.',
             created_at: '2025-01-05T16:30:00Z',
             is_active: false

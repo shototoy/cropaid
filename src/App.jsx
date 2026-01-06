@@ -13,7 +13,7 @@ import Login from './pages/Login';
 // Lazy load all other routes
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const SignupBasicInfo = lazy(() => import('./pages/SignupBasicInfo'));
-const SignupFarmInfo = lazy(() => import('./pages/SignupFarmInfo'));
+// const SignupFarmInfo = lazy(() => import('./pages/SignupFarmInfo')); // Removed
 const SignupAppInfo = lazy(() => import('./pages/SignupAppInfo'));
 const SignupSummary = lazy(() => import('./pages/SignupSummary'));
 const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard'));
@@ -31,6 +31,7 @@ const ReportConfirmation = lazy(() => import('./pages/ReportConfirmation'));
 const FarmerProfile = lazy(() => import('./pages/FarmerProfile'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const FarmerMapPage = lazy(() => import('./pages/FarmerMapPage'));
+const FarmerFarmsPage = lazy(() => import('./pages/FarmerFarmsPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const AdminFarmReports = lazy(() => import('./pages/AdminFarmReports'));
 const AdminDailySummary = lazy(() => import('./pages/AdminDailySummary'));
@@ -58,7 +59,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/signup/basic-info" element={<SignupBasicInfo />} />
-            <Route path="/signup/farm-info" element={<SignupFarmInfo />} />
+            {/* Farm Info removed from flow */}
             <Route path="/signup/app-info" element={<SignupAppInfo />} />
             <Route path="/signup/summary" element={<SignupSummary />} />
 
@@ -70,6 +71,7 @@ function App() {
               <Route path="/profile" element={<FarmerProfile />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/my-map" element={<FarmerMapPage />} />
+              <Route path="/my-farms" element={<FarmerFarmsPage />} />
               <Route path="/news" element={<NewsPage />} />
             </Route>
 

@@ -40,13 +40,13 @@ export default function SignupSummary() {
             dobYear: formData.dobYear,
             civilStatus: formData.civilStatus,
 
-            // Farm Info
-            farmSitio: formData.farmSitio,
-            farmBarangay: formData.farmBarangay,
-            farmMunicipality: formData.farmMunicipality,
-            farmProvince: formData.farmProvince,
-            farmLatitude: formData.farmLatitude || null,
-            farmLongitude: formData.farmLongitude || null
+            // Farm Info - Defaulting to basic location or empty since removed from signup flow
+            farmSitio: '',
+            farmBarangay: '',
+            farmMunicipality: 'Norala',
+            farmProvince: 'South Cotabato',
+            farmLatitude: null,
+            farmLongitude: null
         };
 
         try {
@@ -143,13 +143,7 @@ export default function SignupSummary() {
                         ]}
                     />
 
-                    <Section
-                        title="Farm Information"
-                        data={[
-                            { label: 'Farm Location', value: `${formData.farmSitio || ''}, ${formData.farmBarangay || ''}, ${formData.farmMunicipality || ''}, ${formData.farmProvince || ''}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Not set' },
-                            { label: 'GPS Coordinates', value: formData.farmLatitude && formData.farmLongitude ? `${formData.farmLatitude.toFixed(6)}, ${formData.farmLongitude.toFixed(6)}` : 'Not pinned' },
-                        ]}
-                    />
+
 
                     <Section
                         title="Account Info"

@@ -1,29 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polygon, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Tooltip, Polygon } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
-import { useAuth, API_URL } from '../context/AuthContext';
 import { MOCK_DATA } from '../config/mockData';
-import { MapPin, Bug, CloudRain, Sun, Clock, CheckCircle, Home, Crosshair } from 'lucide-react';
+import { MapPin, Bug, CloudRain, Sun, Home, Crosshair, Edit2, Save, X } from 'lucide-react';
 import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
+import { barangayBoundaries } from '../config/barangayBoundaries';
+import { API_BASE_URL } from '../services/api';
+import * as turf from '@turf/turf';
 
 // Fix for default marker icons in React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom marker icons
-const createIcon = (iconSvg, bgColor) => {
-    return new L.DivIcon({
-        className: 'custom-marker',
+// Custom Icons - Reports (Circular)
+const createReportIcon = (iconSvg, color, size = 32) => {
+    const bgColor = color.replace('text-', '').replace('-500', '');
+    const hexColor = {
+        'red': '#ef4444',
+        'blue': '#3b82f6',
+        'orange': '#f97316',
+        'green': '#22c55e',
+        'gray': '#6b7280'
+    }[bgColor] || '#3b82f6';
+
+    return L.divIcon({
+        className: 'custom-icon',
         html: `<div style="
-            background-color: ${bgColor};
-            width: 36px;
-            height: 36px;
+            background-color: ${hexColor};
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0.9;
+            transform: scale(${size / 36}); 
+            transform-origin: center;
+        ">${iconSvg}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2], // Center anchor for circular
+        popupAnchor: [0, -size / 2]
+    });
+};
+
+// Custom Icons - Farms (Rounded Square, Original Style)
+const createFarmIcon = (iconSvg, color, size = 32) => {
+    const bgColor = color.replace('text-', '').replace('-500', '');
+    const hexColor = {
+        'red': '#ef4444',
+        'blue': '#3b82f6',
+        'orange': '#f97316',
+        'green': '#22c55e',
+        'gray': '#6b7280'
+    }[bgColor] || '#3b82f6';
+
+    return L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+            background-color: ${hexColor};
+            width: ${size}px;
+            height: ${size}px;
             border-radius: 12px;
             border: 2px solid white;
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
@@ -31,166 +77,309 @@ const createIcon = (iconSvg, bgColor) => {
             align-items: center;
             justify-content: center;
             color: white;
+            transform: scale(${size / 28});
+            transform-origin: center;
         ">${iconSvg}</div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
-        popupAnchor: [0, -18]
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size], // Bottom anchor
+        popupAnchor: [0, -size]
     });
 };
 
-const farmIcon = createIcon(`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-    </svg>`, '#22c55e'); // Green with Home icon
-
-const reportIcons = {
-    pest: createIcon(`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="8" height="14" x="8" y="6" rx="4"></rect>
-        <path d="m25 19-3-3"></path>
-        <path d="m19 8 3-3"></path>
-        <path d="m2 19 3-3"></path>
-        <path d="m2 8 3-3"></path>
-        <path d="m2 13 3 0"></path>
-        <path d="m19 13 3 0"></path>
-    </svg>
-    `, '#ef4444'), // Red with Bug icon (simplified)
-
-    flood: createIcon(`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-        <path d="M16 14v6"></path>
-        <path d="M8 14v6"></path>
-        <path d="M12 16v6"></path>
-    </svg>
-    `, '#3b82f6'), // Blue with CloudRain icon
-
-    drought: createIcon(`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2"></path>
-        <path d="M12 20v2"></path>
-        <path d="m4.93 4.93 1.41 1.41"></path>
-        <path d="m17.66 17.66 1.41 1.41"></path>
-        <path d="M2 12h2"></path>
-        <path d="M20 12h2"></path>
-        <path d="m6.34 17.66-1.41 1.41"></path>
-        <path d="m19.07 4.93-1.41 1.41"></path>
-    </svg>
-    `, '#f59e0b'), // Orange with Sun icon
-
-    default: createIcon(`
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-        <circle cx="12" cy="10" r="3"></circle>
-    </svg>
-    `, '#6b7280')
+// SVG Strings for Icons
+// SVG Strings for Icons (Standard 24x24 for consistent scaling)
+const Icons = {
+    pest: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13a6 6 0 0 0-6-6"/><path d="M18 13a6 6 0 0 1 6-6"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-1.9 3.53-4"/></svg>',
+    flood: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 20v4"/><path d="M8 20v4"/><path d="M12 20v4"/></svg>',
+    drought: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    farm: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
 };
 
+// Report Marker Icons (80% of Farm Size)
+const reportIcons = (type, zoom) => {
+    // Farm Size Logic (reused to calculate proportion)
+    const farmSizeRaw = 22 + (zoom - 12) * 3;
+    const farmSize = Math.max(18, Math.min(40, farmSizeRaw));
+
+    // Reports = 90% of Farm Size
+    const size = farmSize * 0.9;
+
+    const typeKey = type?.toLowerCase();
+
+    if (typeKey === 'pest') return createReportIcon(Icons.pest, 'red', size);
+    if (typeKey === 'flood') return createReportIcon(Icons.flood, 'blue', size);
+    if (typeKey === 'drought') return createReportIcon(Icons.drought, 'orange', size);
+    return createReportIcon(Icons.pest, 'gray', size);
+};
+
+// Farm Marker Icon
+const farmIcon = (zoom, color = 'green') => {
+    // Base 22px at Zoom 12 + 3px per level. Min 18px, Max 40px.
+    const calculatedSize = 22 + (zoom - 12) * 3;
+    const size = Math.max(18, Math.min(40, calculatedSize));
+    return createFarmIcon(Icons.farm, color, size);
+};
+
+// Delete Badge Icon
+const deleteFarmIcon = () => {
+    return L.divIcon({
+        className: 'delete-badge',
+        html: `<div style="background:#ef4444; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,0.3); font-size:12px; line-height:1;">×</div>`,
+        iconSize: [18, 18],
+        iconAnchor: [-10, 10], // Offset to upper right relative to center of a 32px icon roughly
+        popupAnchor: [0, 0]
+    });
+};
+
+// Component to handle map clicks for editing and zoom events
+function MapController({ isEditing, onLocationSelect, setZoom }) {
+    useMapEvents({
+        click(e) {
+            if (isEditing && onLocationSelect) {
+                onLocationSelect(e.latlng.lat, e.latlng.lng);
+            }
+        },
+        zoomend(e) {
+            setZoom(e.target.getZoom());
+        }
+    });
+    return null;
+}
+
 // Component to center map on user location
-function LocationMarker({ farmLocation, setUserLocation }) {
-    const map = useMap();
-    const [position, setPosition] = useState(null);
+const LocationMarker = ({ farmLocation, setUserLocation }) => {
+    const map = useMapEvents({
+        locationfound(e) {
+            setUserLocation(e.latlng);
+            // Removed auto-flyTo to keep map centered on Norala by default
+        },
+    });
 
     useEffect(() => {
-        map.locate().on("locationfound", (e) => {
-            setPosition(e.latlng);
-            setUserLocation(e.latlng);
-        });
+        map.locate();
     }, [map]);
 
-    // If we have farm location, center on it
     useEffect(() => {
         if (farmLocation) {
-            map.setView([farmLocation.lat, farmLocation.lng], 15);
+            map.flyTo([farmLocation.lat, farmLocation.lng], 16);
         }
     }, [farmLocation, map]);
 
-    return position ? (
-        <Circle
-            center={position}
-            radius={50}
-            pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.3 }}
-        />
-    ) : null;
-}
+    return null;
+};
+
+
 
 export default function FarmerMapPage() {
-    const { token, isMockMode, user } = useAuth();
-    const [loading, setLoading] = useState(true);
-    const [farmData, setFarmData] = useState(null);
-    const [reports, setReports] = useState([]);
+    const { user, token, isMockMode } = useAuth();
+
+    // Default Center (Norala)
+    const defaultCenter = [6.5206, 124.6623];
+
+    // User Interaction States
     const [userLocation, setUserLocation] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
-    const [filter, setFilter] = useState('all');
+    const [activeFilters, setActiveFilters] = useState({
+        farm: true,
+        pest: true,
+        flood: true,
+        drought: true
+    });
+    const [viewMode, setViewMode] = useState('all');
 
-    // Default center: Norala, South Cotabato
-    const defaultCenter = [6.5294, 124.6647];
+    // Editing States
+    const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [editedFarm, setEditedFarm] = useState({
+        lat: null,
+        lng: null,
+        barangay: '',
+        size: ''
+    });
+
+    // Data States
+    const [reports, setReports] = useState([]);
+    const [myFarms, setMyFarms] = useState([]); // Array of my farms
+    const [otherFarms, setOtherFarms] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [zoom, setZoom] = useState(11);
+
+    // Manage Mode State
+    const [editingId, setEditingId] = useState(null); // null = not editing, 'new' = adding, number = editing specific id
 
     useEffect(() => {
         const fetchData = async () => {
-            if (isMockMode) {
-                const username = user?.username || 'james';
-                const data = MOCK_DATA.getFarmerDashboard(username);
-
-                // Mock farm location
-                setFarmData({
-                    name: data.profile?.name || 'My Farm',
-                    lat: 6.5294 + (Math.random() * 0.01 - 0.005),
-                    lng: 124.6647 + (Math.random() * 0.01 - 0.005),
-                    size: '2.5 hectares',
-                    barangay: data.profile?.barangay || 'Poblacion'
-                });
-
-                // Mock reports with locations
-                const mockReports = (data.history || []).map((r, idx) => ({
-                    ...r,
-                    latitude: 6.5294 + (Math.random() * 0.02 - 0.01),
-                    longitude: 124.6647 + (Math.random() * 0.02 - 0.01)
-                }));
-                setReports(mockReports);
-                setLoading(false);
-                return;
-            }
-
+            setLoading(true);
             try {
-                // Fetch farmer's profile to get farm data
-                const profileRes = await fetch(`${API_URL}/farmer/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (profileRes.ok) {
-                    const profile = await profileRes.json();
-                    if (profile.farm_latitude && profile.farm_longitude) {
-                        setFarmData({
-                            name: 'My Farm',
-                            lat: parseFloat(profile.farm_latitude),
-                            lng: parseFloat(profile.farm_longitude),
-                            size: profile.farm_size_hectares ? `${profile.farm_size_hectares} hectares` : 'Unknown',
-                            barangay: profile.barangay || profile.farm_barangay
+                if (isMockMode) {
+                    setReports(MOCK_DATA.reports);
+                    setFarmData({
+                        lat: 6.5206,
+                        lng: 124.6623,
+                        barangay: 'Poblacion',
+                        size: 2.5
+                    });
+                } else {
+                    try {
+                        // Pass token from context
+                        const reportRes = await fetch(`${API_BASE_URL}/public/reports`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
                         });
+                        if (reportRes.ok) {
+                            const reportData = await reportRes.json();
+                            setReports(reportData);
+                        }
+                    } catch (e) { console.error("Error fetching reports", e); }
+
+                    if (user?.id) {
+                        try {
+                            // Use /farms endpoint to get array
+                            const farmsRes = await fetch(`${API_BASE_URL}/farmer/farms`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (farmsRes.ok) {
+                                const farms = await farmsRes.json();
+                                setMyFarms(farms);
+                            }
+                        } catch (e) { console.error("Error fetching farms", e); }
+
+                        // Fetch ALL other farms for community map
+                        try {
+                            const farmsRes = await fetch(`${API_BASE_URL}/public/farms`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            if (farmsRes.ok) {
+                                const farmsData = await farmsRes.json();
+                                // Filter out my own farm from this list to avoid duplicate markers if needed.
+                                setOtherFarms(farmsData.filter(f => f.owner !== user.name));
+                            }
+                        } catch (e) { console.error("Error fetching community farms", e); }
                     }
                 }
-
-                // Fetch farmer's reports with locations
-                const reportsRes = await fetch(`${API_URL}/reports/history`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (reportsRes.ok) {
-                    const reportsData = await reportsRes.json();
-                    // Handle both array and object with reports property
-                    const reportsArray = Array.isArray(reportsData) ? reportsData : (reportsData.reports || reportsData.history || []);
-                    setReports(reportsArray.filter(r => r.latitude && r.longitude));
-                }
-            } catch (err) {
-                console.error('Failed to fetch map data:', err);
+            } catch (error) {
+                console.error("Data load error:", error);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [token, isMockMode, user]);
+    }, [user, isMockMode]);
+
+    useEffect(() => {
+        if (editingId && editingId !== 'new') {
+            const farmToEdit = myFarms.find(f => f.id === editingId);
+            if (farmToEdit) {
+                setEditedFarm({
+                    lat: farmToEdit.lat,
+                    lng: farmToEdit.lng,
+                    barangay: farmToEdit.barangay || '',
+                    size: farmToEdit.size || ''
+                });
+            }
+        } else if (editingId === 'new') {
+            // Reset for new farm
+            setEditedFarm({
+                lat: defaultCenter[0],
+                lng: defaultCenter[1],
+                barangay: '',
+                size: ''
+            });
+        }
+    }, [editingId, myFarms]);
+
+    // Save (Create or Update)
+    const handleSaveFarm = async () => {
+        setSaving(true);
+        try {
+            if (editingId === 'new') {
+                // CREATE
+                const res = await fetch(`${API_BASE_URL}/farmer/farm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(editedFarm)
+                });
+                if (res.ok) {
+                    const newFarm = await res.json();
+                    setMyFarms([...myFarms, newFarm]);
+                    setEditingId(null); // Go back to list or close? Close manager for now.
+                    setIsEditing(false);
+                }
+            } else {
+                // UPDATE
+                const res = await fetch(`${API_BASE_URL}/farmer/farm/${editingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(editedFarm)
+                });
+                if (res.ok) {
+                    setMyFarms(myFarms.map(f => f.id === editingId ? { ...f, ...editedFarm } : f));
+                    setEditingId(null);
+                    setIsEditing(false);
+                }
+            }
+        } catch (e) { console.error("Error saving farm", e); }
+        setSaving(false);
+    };
+
+    const handleDeleteFarm = async (id) => {
+        if (!confirm("Are you sure you want to delete this farm?")) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/farmer/farm/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setMyFarms(myFarms.filter(f => f.id !== id));
+            }
+        } catch (e) { console.error("Error deleting farm", e); }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setIsEditing(false);
+    };
+
+    const getCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    handleLocationSelect(latitude, longitude);
+                },
+                (error) => console.error(error),
+                { enableHighAccuracy: true }
+            );
+        }
+    };
+
+    const toggleFilter = (type) => {
+        setActiveFilters(prev => ({ ...prev, [type]: !prev[type] }));
+    };
+
+    const identifyBarangay = (lat, lng) => {
+        const point = turf.point([lng, lat]);
+
+        for (const [name, data] of Object.entries(barangayBoundaries)) {
+            const polyCoords = [data.coordinates.map(c => [c[1], c[0]])];
+            const poly = turf.polygon(polyCoords);
+
+            if (turf.booleanPointInPolygon(point, poly)) {
+                return name;
+            }
+        }
+        return '';
+    };
+
+    const handleLocationSelect = (lat, lng) => {
+        const detectedBarangay = identifyBarangay(lat, lng);
+        setEditedFarm(prev => ({
+            ...prev,
+            lat,
+            lng,
+            barangay: detectedBarangay || prev.barangay
+        }));
+    };
 
     const getStatusBadge = (status) => {
         const styles = {
@@ -203,194 +392,410 @@ export default function FarmerMapPage() {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric'
-        });
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
-    const filteredReports = filter === 'all'
-        ? reports
-        : reports.filter(r => r.type === filter || r.report_type === filter);
+    const filteredReports = useMemo(() => {
+        return reports.filter(r => {
+            // Ensure valid coordinates and type exist
+            if (!r.latitude || !r.longitude) return false;
 
-    const mapCenter = farmData
-        ? [farmData.lat, farmData.lng]
-        : defaultCenter;
+            const rawType = r.type || r.report_type;
+            if (!rawType) return false;
+
+            const type = rawType.trim().toLowerCase();
+            // Check if the type is actively validated
+            if (!activeFilters[type]) return false;
+
+            if (viewMode === 'personal') {
+                if (isMockMode) return r.user_id === 'my-id';
+                return user?.id && r.user_id === user.id;
+            }
+
+            // Community View: Includes ALL valid reports (Mine + Others)
+            return true;
+        });
+    }, [reports, activeFilters, viewMode, user, isMockMode]);
+
+    const mapCenter = (editingId && editedFarm.lat)
+        ? [editedFarm.lat, editedFarm.lng]
+        : (myFarms.length > 0 ? [myFarms[0].lat, myFarms[0].lng] : defaultCenter);
 
     return (
-        <div className="flex flex-col h-full bg-white">
-            <Header title="My Farm Map" showBack />
+        <div className="flex flex-col h-[100dvh] bg-white relative">
+            <Header title={viewMode === 'personal' ? "Personal Map" : "Community Map"} showBack />
 
-            {/* Filter Tabs */}
-            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex gap-2 overflow-x-auto">
-                {['all', 'pest', 'flood', 'drought'].map(type => (
+            <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center justify-between gap-3 shadow-sm z-[1000]">
+                <div className="bg-gray-100 p-1 rounded-lg flex w-full max-w-[200px]">
                     <button
-                        key={type}
-                        onClick={() => setFilter(type)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${filter === type
-                            ? 'bg-primary text-white'
-                            : 'bg-white text-gray-600 border border-gray-200'
+                        onClick={() => setViewMode('all')}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'all' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
-                        {type === 'all' ? 'All Reports' : type.charAt(0).toUpperCase() + type.slice(1)}
+                        Community
                     </button>
-                ))}
+                    <button
+                        onClick={() => setViewMode('personal')}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'personal' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        Personal
+                    </button>
+                </div>
+
+                {!isEditing && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="bg-primary text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95"
+                    >
+                        <Edit2 size={14} />
+                        Manage Farms
+                    </button>
+                )}
             </div>
 
-            {/* Map Container */}
-            <div className="flex-1 relative">
+            {isEditing && (
+                <div className="absolute top-16 left-0 right-0 z-[1000] bg-white shadow-md p-3 animate-slide-down border-b border-gray-100 max-h-[60vh] overflow-y-auto">
+                    {!editingId ? (
+                        // LIST VIEW
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <h3 className="font-bold text-gray-800">Manage Farms</h3>
+                                <p className="text-[10px] text-gray-500">Tap a farm on the map to edit or delete.</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-lg text-xs"
+                                >
+                                    Done
+                                </button>
+                                <button
+                                    onClick={() => setEditingId('new')}
+                                    className="bg-primary text-white text-xs px-3 py-2 rounded-lg flex items-center gap-1 font-bold shadow-sm"
+                                >
+                                    + Add New
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        // EDIT VIEW
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                                    <Edit2 size={16} className="text-primary" />
+                                    {editingId === 'new' ? 'New Farm' : 'Edit Farm'}
+                                </h3>
+                                <button onClick={getCurrentLocation} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full flex items-center gap-1 font-medium transition-colors">
+                                    <Crosshair size={14} />
+                                    Get Location
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Barangay</label>
+                                    <select
+                                        className="w-full bg-transparent text-sm font-medium outline-none"
+                                        value={editedFarm.barangay}
+                                        onChange={(e) => setEditedFarm({ ...editedFarm, barangay: e.target.value })}
+                                    >
+                                        <option value="">Select</option>
+                                        {Object.keys(barangayBoundaries).sort().map(name => (
+                                            <option key={name} value={name}>{name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+                                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Size (ha)</label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        className="w-full bg-transparent text-sm font-medium outline-none"
+                                        placeholder="0.0"
+                                        value={editedFarm.size}
+                                        onChange={(e) => setEditedFarm({ ...editedFarm, size: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-center text-gray-500 bg-blue-50 p-2 rounded border border-blue-100 mb-2">
+                                Tap on the map to pin location.
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setEditingId(null)}
+                                    className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-lg hover:bg-gray-200 text-xs transition-colors"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    onClick={handleSaveFarm}
+                                    disabled={saving || !editedFarm.lat}
+                                    className="flex-1 bg-primary text-white font-bold py-2.5 rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2 text-xs transition-colors disabled:opacity-70"
+                                >
+                                    {saving ? 'Saving...' : <><Save size={14} /> Save</>}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="flex-1 relative overflow-hidden">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                 ) : (
                     <MapContainer
-                        center={mapCenter}
-                        zoom={15}
+                        center={defaultCenter} // Always start at default center (Norala)
+                        zoom={12}
                         style={{ height: '100%', width: '100%' }}
                         zoomControl={false}
+                        preferCanvas={true} // Enable Canvas rendering for smoother mask panning
+                        maxBounds={[[6.43, 124.58], [6.62, 124.75]]} // Tighly constrained to Norala
+                        maxBoundsViscosity={1.0} // Hard limit on panning
+                        minZoom={12}
+                        maxZoom={18}
                     >
                         <TileLayer
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            attribution='&copy; OpenStreetMap contributors'
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         />
 
-                        {/* Norala Municipality Boundary */}
+
+
+                        {/* Norala Municipality Boundary (Border Only) */}
                         <Polygon
                             positions={noralaBoundaryCoordinates}
                             pathOptions={{
-                                color: '#1B5E20',
-                                weight: 6,
-                                opacity: 1,
-                                fillColor: '#4CAF50',
-                                fillOpacity: 0.3
+                                color: '#15803d',
+                                weight: 5, // Thicker outer boundary
+                                opacity: 0.8,
+                                fill: false
                             }}
                         />
 
-                        <LocationMarker
-                            farmLocation={farmData ? { lat: farmData.lat, lng: farmData.lng } : null}
-                            setUserLocation={setUserLocation}
-                        />
-
-                        {/* Farm Location Marker */}
-                        {farmData && (
-                            <Marker
-                                position={[farmData.lat, farmData.lng]}
-                                icon={farmIcon}
-                            >
-                                <Popup>
-                                    <div className="text-center">
-                                        <p className="font-bold text-primary">🏠 My Farm</p>
-                                        <p className="text-xs text-gray-500">{farmData.barangay}</p>
-                                        <p className="text-xs text-gray-500">{farmData.size}</p>
-                                    </div>
-                                </Popup>
-                            </Marker>
-                        )}
-
-                        {/* Report Markers */}
-                        {filteredReports.map((report) => (
-                            <Marker
-                                key={report.id}
-                                position={[report.latitude, report.longitude]}
-                                icon={reportIcons[report.type || report.report_type] || reportIcons.default}
-                                eventHandlers={{
-                                    click: () => setSelectedReport(report)
+                        {/* Inter-Barangay Boundaries (Voronoi) */}
+                        {Object.entries(barangayBoundaries).map(([name, data]) => (
+                            <Polygon
+                                key={name}
+                                positions={data.coordinates}
+                                pathOptions={{
+                                    color: 'white',
+                                    weight: 3, // Thicker inter-barangay borders
+                                    opacity: 0.8,
+                                    fillColor: data.color,
+                                    fillOpacity: 0.05 // Lighter fill
                                 }}
                             >
+                                <Tooltip sticky direction="center" className="bg-transparent border-0 font-bold text-xs shadow-none text-gray-700">
+                                    {name}
+                                </Tooltip>
+                            </Polygon>
+                        ))}
+
+                        {!isEditing && (
+                            <LocationMarker
+                                farmLocation={null} // Don't auto-fly to farm on load either, stick to Norala center
+                                setUserLocation={setUserLocation}
+                            />
+                        )}
+
+                        {/* Community Farms (Only in Community Mode) */}
+                        {viewMode === 'all' && activeFilters.farm && otherFarms.map(farm => (
+                            <Marker
+                                key={farm.id}
+                                position={[farm.lat, farm.lng]}
+                                icon={farmIcon(zoom, 'gray')} // Gray for others
+                                opacity={0.7} // Slightly transparent to distinguish from own farm
+                            >
                                 <Popup>
-                                    <div className="min-w-[150px]">
-                                        <p className="font-bold capitalize">{report.type || report.report_type} Report</p>
-                                        <p className="text-xs text-gray-500">{formatDate(report.created_at)}</p>
-                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs capitalize ${getStatusBadge(report.status)}`}>
-                                            {report.status}
-                                        </span>
+                                    <div className="text-center p-1">
+                                        <div className="font-bold text-sm">{farm.owner}'s Farm</div>
+                                        <div className="text-xs text-gray-500">{farm.barangay}</div>
                                     </div>
                                 </Popup>
                             </Marker>
                         ))}
+
+                        {/* Editable Farm Marker */}
+                        {(editingId && editedFarm.lat) ? (
+                            <Marker position={[editedFarm.lat, editedFarm.lng]} icon={farmIcon(zoom, 'green')}>
+                                <Popup>New Location</Popup>
+                            </Marker>
+                        ) : null}
+
+                        {/* Render My Farms */}
+                        {!editingId && activeFilters.farm && myFarms.map(farm => (
+                            <React.Fragment key={farm.id}>
+                                <Marker
+                                    position={[farm.lat, farm.lng]}
+                                    icon={farmIcon(zoom, 'green')}
+                                    eventHandlers={{
+                                        click: () => {
+                                            if (isEditing) {
+                                                setEditingId(farm.id); // Only edit if manager is already open
+                                            }
+                                            // Else do nothing, let popup open naturally
+                                        }
+                                    }}
+                                >
+                                    {/* Show popup if NOT in editing mode OR if we just want details */}
+                                    {!isEditing && (
+                                        <Popup>
+                                            <div className="text-center p-1">
+                                                <p className="font-bold text-primary">🏠 My Farm</p>
+                                                <p className="text-xs text-gray-500">{farm.barangay}</p>
+                                                <p className="text-xs text-gray-500">{farm.size} ha</p>
+                                            </div>
+                                        </Popup>
+                                    )}
+                                </Marker>
+
+                                {/* Delete Badge - Only in Edit Mode */}
+                                {isEditing && (
+                                    <Marker
+                                        position={[farm.lat, farm.lng]}
+                                        icon={deleteFarmIcon()}
+                                        zIndexOffset={1000} // Ensure it's on top
+                                        eventHandlers={{
+                                            click: (e) => {
+                                                L.DomEvent.stopPropagation(e); // Prevent map click
+                                                handleDeleteFarm(farm.id);
+                                            }
+                                        }}
+                                    >
+                                    </Marker>
+                                )}
+                            </React.Fragment>
+                        ))}
+
+                        <MapController
+                            isEditing={!!editingId} // Only capture clicks if actively editing a specific farm
+                            onLocationSelect={handleLocationSelect}
+                            setZoom={setZoom}
+                        />
+
+                        {/* Report Markers */}
+                        {!isEditing && filteredReports.map((report) => (
+                            <Marker
+                                key={report.id}
+                                position={[report.latitude, report.longitude]}
+                                icon={reportIcons(report.type || report.report_type, zoom)}
+                                eventHandlers={{ click: () => setSelectedReport(report) }}
+                            >
+                            </Marker>
+                        ))}
                     </MapContainer>
                 )}
-
-                {/* Legend */}
-                <div className="absolute bottom-20 left-3 bg-white rounded-lg shadow-lg p-3 z-[1000]">
-                    <p className="text-xs font-bold text-gray-500 mb-2">LEGEND</p>
-                    <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-md bg-green-500 text-white flex items-center justify-center">
-                                <Home size={12} />
-                            </div>
-                            <span>My Farm</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-md bg-red-500 text-white flex items-center justify-center">
-                                <Bug size={12} />
-                            </div>
-                            <span>Pest Report</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-md bg-blue-500 text-white flex items-center justify-center">
-                                <CloudRain size={12} />
-                            </div>
-                            <span>Flood Report</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-md bg-orange-500 text-white flex items-center justify-center">
-                                <Sun size={12} />
-                            </div>
-                            <span>Drought Report</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Stats Card */}
-                <div className="absolute top-3 right-3 bg-white rounded-lg shadow-lg p-3 z-[1000]">
-                    <p className="text-xs font-bold text-gray-500 mb-2">MY REPORTS</p>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                        <div>
-                            <p className="text-lg font-bold text-red-500">{reports.filter(r => (r.type || r.report_type) === 'pest').length}</p>
-                            <p className="text-[10px] text-gray-400">Pest</p>
-                        </div>
-                        <div>
-                            <p className="text-lg font-bold text-blue-500">{reports.filter(r => (r.type || r.report_type) === 'flood').length}</p>
-                            <p className="text-[10px] text-gray-400">Flood</p>
-                        </div>
-                        <div>
-                            <p className="text-lg font-bold text-orange-500">{reports.filter(r => (r.type || r.report_type) === 'drought').length}</p>
-                            <p className="text-[10px] text-gray-400">Drought</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            {/* Selected Report Detail Panel */}
-            {selectedReport && (
-                <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-4 z-[1001] animate-slide-up">
-                    <div className="flex justify-between items-start mb-3">
-                        <div>
-                            <h3 className="font-bold capitalize flex items-center gap-2">
-                                {(selectedReport.type || selectedReport.report_type) === 'pest' && <Bug size={18} className="text-red-500" />}
-                                {(selectedReport.type || selectedReport.report_type) === 'flood' && <CloudRain size={18} className="text-blue-500" />}
-                                {(selectedReport.type || selectedReport.report_type) === 'drought' && <Sun size={18} className="text-orange-500" />}
-                                {selectedReport.type || selectedReport.report_type} Report
-                            </h3>
-                            <p className="text-xs text-gray-400">{formatDate(selectedReport.created_at)}</p>
-                        </div>
+            {!isEditing && (
+                <div className="absolute bottom-6 left-4 z-[1000] flex flex-col gap-2">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
+                        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Filters</span>
+
                         <button
-                            onClick={() => setSelectedReport(null)}
-                            className="p-1 hover:bg-gray-100 rounded-full"
+                            onClick={() => toggleFilter('farm')}
+                            className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm
+                                ? 'bg-green-50 border-green-200 text-green-800'
+                                : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                }`}
                         >
-                            ✕
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                <Home size={12} />
+                            </div>
+                            <span className="text-[10px] font-bold">Farms</span>
+                        </button>
+
+                        <button
+                            onClick={() => toggleFilter('pest')}
+                            className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.pest
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                }`}
+                        >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.pest ? 'bg-red-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                <Bug size={12} />
+                            </div>
+                            <span className="text-[10px] font-bold">Pest</span>
+                        </button>
+
+                        <button
+                            onClick={() => toggleFilter('flood')}
+                            className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.flood
+                                ? 'bg-blue-50 border-blue-200 text-blue-800'
+                                : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                }`}
+                        >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.flood ? 'bg-blue-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                <CloudRain size={12} />
+                            </div>
+                            <span className="text-[10px] font-bold">Flood</span>
+                        </button>
+
+                        <button
+                            onClick={() => toggleFilter('drought')}
+                            className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.drought
+                                ? 'bg-orange-50 border-orange-200 text-orange-800'
+                                : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                }`}
+                        >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.drought ? 'bg-orange-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                <Sun size={12} />
+                            </div>
+                            <span className="text-[10px] font-bold">Drought</span>
                         </button>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-xs capitalize ${getStatusBadge(selectedReport.status)}`}>
-                            {selectedReport.status}
-                        </span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <MapPin size={12} />
-                            {selectedReport.location || selectedReport.barangay || 'Unknown location'}
-                        </span>
+                </div>
+            )}
+
+            {selectedReport && !isEditing && (
+                <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 z-[1100] animate-slide-up border-t border-gray-100">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-xl text-white shadow-sm ${(selectedReport.type || selectedReport.report_type) === 'pest' ? 'bg-red-500' :
+                                (selectedReport.type || selectedReport.report_type) === 'flood' ? 'bg-blue-500' :
+                                    'bg-orange-500'
+                                }`}>
+                                {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={24} /> :
+                                    (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={24} /> :
+                                        <Sun size={24} />}
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-900 capitalize">{selectedReport.type || selectedReport.report_type} Alert</h3>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <MapPin size={12} /> {selectedReport.location} • {formatDate(selectedReport.created_at)}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                            <button onClick={() => setSelectedReport(null)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+                                <X size={20} />
+                            </button>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(selectedReport.status)}`}>
+                                {selectedReport.status}
+                            </span>
+                        </div>
                     </div>
+
+                    <div className="bg-gray-50 p-3 rounded-xl mb-4 text-sm text-gray-600 border border-gray-100 italic">
+                        "{selectedReport.details ? (typeof selectedReport.details === 'string' ? JSON.parse(selectedReport.details).description : selectedReport.details.description) : 'No description provided.'}"
+                    </div>
+
+                    {selectedReport.photo_base64 && (
+                        <div className="mb-4 rounded-xl overflow-hidden h-40 border border-gray-200">
+                            <img src={selectedReport.photo_base64} alt="Report" className="w-full h-full object-cover" />
+                        </div>
+                    )}
+
+                    {(isMockMode ? selectedReport.user_id === 'my-id' : user?.id && selectedReport.user_id === user.id) && (
+                        <div className="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-lg text-xs text-center border border-blue-100">
+                            This is your report
+                        </div>
+                    )}
                 </div>
             )}
         </div>

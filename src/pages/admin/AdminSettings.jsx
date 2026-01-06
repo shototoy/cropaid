@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/AdminLayout';
 import { useAuth, API_URL } from '../../context/AuthContext';
-import { 
-    Settings, Bug, Leaf, MapPin, Users, Plus, Pencil, Trash2, 
-    Save, X, ChevronRight, Check, AlertTriangle 
+import {
+    Settings, Bug, Leaf, MapPin, Users, Plus, Pencil, Trash2,
+    Save, X, ChevronRight, Check, AlertTriangle
 } from 'lucide-react';
 
 // Tab Component
@@ -11,11 +11,10 @@ function TabButton({ active, onClick, icon: Icon, label }) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                active 
-                    ? 'bg-primary text-white' 
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${active
+                    ? 'bg-primary text-white'
                     : 'text-gray-600 hover:bg-gray-100'
-            }`}
+                }`}
         >
             <Icon size={18} />
             {label}
@@ -24,13 +23,13 @@ function TabButton({ active, onClick, icon: Icon, label }) {
 }
 
 // Generic CRUD Table Component
-function CrudTable({ 
-    title, 
-    items, 
-    columns, 
-    onAdd, 
-    onEdit, 
-    onDelete, 
+function CrudTable({
+    title,
+    items,
+    columns,
+    onAdd,
+    onEdit,
+    onDelete,
     loading,
     emptyMessage = 'No items found'
 }) {
@@ -119,13 +118,13 @@ function CrudTable({
                                 ))}
                                 <td className="px-4 py-3 text-right">
                                     <div className="flex justify-end gap-2">
-                                        <button 
+                                        <button
                                             onClick={handleSaveAdd}
                                             className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors"
                                         >
                                             <Check size={18} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={handleCancelAdd}
                                             className="p-1.5 text-gray-400 hover:bg-gray-100 rounded transition-colors"
                                         >
@@ -172,13 +171,13 @@ function CrudTable({
                                         <div className="flex justify-end gap-2">
                                             {editingId === item.id ? (
                                                 <>
-                                                    <button 
+                                                    <button
                                                         onClick={handleSaveEdit}
                                                         className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors"
                                                     >
                                                         <Check size={18} />
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={handleCancelEdit}
                                                         className="p-1.5 text-gray-400 hover:bg-gray-100 rounded transition-colors"
                                                     >
@@ -187,13 +186,13 @@ function CrudTable({
                                                 </>
                                             ) : (
                                                 <>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleStartEdit(item)}
                                                         className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
                                                     >
                                                         <Pencil size={16} />
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={() => onDelete(item.id)}
                                                         className="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors"
                                                     >
@@ -222,13 +221,14 @@ export default function AdminSettings() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Fetch data based on active tab
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             setMessage({ type: '', text: '' });
-            
+
             try {
                 let endpoint = '';
                 switch (activeTab) {
@@ -244,14 +244,15 @@ export default function AdminSettings() {
                 });
 
                 if (!response.ok) throw new Error('Failed to fetch data');
-                
+
                 const data = await response.json();
-                
+
+                // Backend returns arrays directly, but we support object wrapper for compatibility
                 switch (activeTab) {
-                    case 'pest': setPestCategories(data.categories || []); break;
-                    case 'crop': setCropTypes(data.cropTypes || []); break;
-                    case 'barangay': setBarangays(data.barangays || []); break;
-                    case 'users': setUsers(data.users || []); break;
+                    case 'pest': setPestCategories(Array.isArray(data) ? data : data.categories || []); break;
+                    case 'crop': setCropTypes(Array.isArray(data) ? data : data.cropTypes || []); break;
+                    case 'barangay': setBarangays(Array.isArray(data) ? data : data.barangays || []); break;
+                    case 'users': setUsers(Array.isArray(data) ? data : data.users || []); break;
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
@@ -262,7 +263,7 @@ export default function AdminSettings() {
         };
 
         if (token) fetchData();
-    }, [token, activeTab]);
+    }, [token, activeTab, refreshTrigger]);
 
     // Generic CRUD handlers
     const handleAdd = async (endpoint, data, refreshFn) => {
@@ -277,7 +278,7 @@ export default function AdminSettings() {
             });
 
             if (!response.ok) throw new Error('Failed to add item');
-            
+
             setMessage({ type: 'success', text: 'Item added successfully' });
             refreshFn();
         } catch (err) {
@@ -297,7 +298,7 @@ export default function AdminSettings() {
             });
 
             if (!response.ok) throw new Error('Failed to update item');
-            
+
             setMessage({ type: 'success', text: 'Item updated successfully' });
             refreshFn();
         } catch (err) {
@@ -307,7 +308,7 @@ export default function AdminSettings() {
 
     const handleDelete = async (endpoint, id, refreshFn) => {
         if (!confirm('Are you sure you want to delete this item?')) return;
-        
+
         try {
             const response = await fetch(`${API_URL}${endpoint}/${id}`, {
                 method: 'DELETE',
@@ -315,7 +316,7 @@ export default function AdminSettings() {
             });
 
             if (!response.ok) throw new Error('Failed to delete item');
-            
+
             setMessage({ type: 'success', text: 'Item deleted successfully' });
             refreshFn();
         } catch (err) {
@@ -325,7 +326,7 @@ export default function AdminSettings() {
 
     // Refresh function
     const refreshData = () => {
-        setActiveTab(prev => prev); // Force re-fetch
+        setRefreshTrigger(prev => prev + 1);
     };
 
     // Column definitions
@@ -333,9 +334,9 @@ export default function AdminSettings() {
         { key: 'id', label: 'ID', editable: false },
         { key: 'name', label: 'Pest Name', editable: true, placeholder: 'e.g. Black Bug' },
         { key: 'description', label: 'Description', editable: true, placeholder: 'Brief description' },
-        { 
-            key: 'is_active', 
-            label: 'Status', 
+        {
+            key: 'is_active',
+            label: 'Status',
             editable: false,
             render: (value) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -349,9 +350,9 @@ export default function AdminSettings() {
         { key: 'id', label: 'ID', editable: false },
         { key: 'name', label: 'Crop Name', editable: true, placeholder: 'e.g. Rice' },
         { key: 'variety', label: 'Variety', editable: true, placeholder: 'e.g. RC160' },
-        { 
-            key: 'is_active', 
-            label: 'Status', 
+        {
+            key: 'is_active',
+            label: 'Status',
             editable: false,
             render: (value) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -372,21 +373,20 @@ export default function AdminSettings() {
         { key: 'id', label: 'ID', editable: false },
         { key: 'username', label: 'Username', editable: true },
         { key: 'email', label: 'Email', editable: true, type: 'email' },
-        { 
-            key: 'role', 
-            label: 'Role', 
+        {
+            key: 'role',
+            label: 'Role',
             editable: false,
             render: (value) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    value === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                }`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${value === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
                     {value?.toUpperCase()}
                 </span>
             )
         },
-        { 
-            key: 'is_active', 
-            label: 'Status', 
+        {
+            key: 'is_active',
+            label: 'Status',
             editable: false,
             render: (value) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${value ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}>
@@ -400,12 +400,11 @@ export default function AdminSettings() {
         <div className="space-y-6">
             {/* Message Banner */}
             {message.text && (
-                <div className={`p-4 rounded-lg flex items-center gap-3 ${
-                    message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                }`}>
+                <div className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                    }`}>
                     {message.type === 'success' ? <Check size={20} /> : <AlertTriangle size={20} />}
                     <span>{message.text}</span>
-                    <button 
+                    <button
                         onClick={() => setMessage({ type: '', text: '' })}
                         className="ml-auto hover:opacity-70"
                     >
@@ -416,29 +415,29 @@ export default function AdminSettings() {
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-xl shadow-sm p-2 flex flex-wrap gap-2">
-                <TabButton 
-                    active={activeTab === 'pest'} 
-                    onClick={() => setActiveTab('pest')} 
-                    icon={Bug} 
-                    label="Pest Categories" 
+                <TabButton
+                    active={activeTab === 'pest'}
+                    onClick={() => setActiveTab('pest')}
+                    icon={Bug}
+                    label="Pest Categories"
                 />
-                <TabButton 
-                    active={activeTab === 'crop'} 
-                    onClick={() => setActiveTab('crop')} 
-                    icon={Leaf} 
-                    label="Crop Types" 
+                <TabButton
+                    active={activeTab === 'crop'}
+                    onClick={() => setActiveTab('crop')}
+                    icon={Leaf}
+                    label="Crop Types"
                 />
-                <TabButton 
-                    active={activeTab === 'barangay'} 
-                    onClick={() => setActiveTab('barangay')} 
-                    icon={MapPin} 
-                    label="Barangays" 
+                <TabButton
+                    active={activeTab === 'barangay'}
+                    onClick={() => setActiveTab('barangay')}
+                    icon={MapPin}
+                    label="Barangays"
                 />
-                <TabButton 
-                    active={activeTab === 'users'} 
-                    onClick={() => setActiveTab('users')} 
-                    icon={Users} 
-                    label="User Management" 
+                <TabButton
+                    active={activeTab === 'users'}
+                    onClick={() => setActiveTab('users')}
+                    icon={Users}
+                    label="User Management"
                 />
             </div>
 
