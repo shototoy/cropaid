@@ -605,271 +605,269 @@ export default function FarmerMapPage() {
                             </button>
                         </div>
             )}
-        </div>
-    )
-}
-
-<div className="flex-1 relative overflow-hidden">
-    {loading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-    ) : (
-        <MapContainer
-            center={defaultCenter} // Always start at default center (Norala)
-            zoom={12}
-            style={{ height: '100%', width: '100%' }}
-            zoomControl={false}
-            preferCanvas={true} // Enable Canvas rendering for smoother mask panning
-            maxBounds={[[6.43, 124.58], [6.62, 124.75]]} // Tighly constrained to Norala
-            maxBoundsViscosity={1.0} // Hard limit on panning
-            minZoom={12}
-            maxZoom={18}
-        >
-            <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
 
 
-
-            {/* Norala Municipality Boundary (Border Only) */}
-            <Polygon
-                positions={noralaBoundaryCoordinates}
-                pathOptions={{
-                    color: '#15803d',
-                    weight: 5, // Thicker outer boundary
-                    opacity: 0.8,
-                    fill: false
-                }}
-            />
-
-            {/* Inter-Barangay Boundaries (Voronoi) */}
-            {Object.entries(barangayBoundaries).map(([name, data]) => (
-                <Polygon
-                    key={name}
-                    positions={data.coordinates}
-                    pathOptions={{
-                        color: 'white',
-                        weight: 3, // Thicker inter-barangay borders
-                        opacity: 0.8,
-                        fillColor: data.color,
-                        fillOpacity: 0.05 // Lighter fill
-                    }}
-                >
-                    <Tooltip sticky direction="center" className="bg-transparent border-0 font-bold text-xs shadow-none text-gray-700">
-                        {name}
-                    </Tooltip>
-                </Polygon>
-            ))}
-
-            {!isEditing && (
-                <LocationMarker
-                    farmLocation={null} // Don't auto-fly to farm on load either, stick to Norala center
-                    setUserLocation={setUserLocation}
-                />
-            )}
-
-            {/* Community Farms (Only in Community Mode) */}
-            {viewMode === 'all' && activeFilters.farm && otherFarms.map(farm => (
-                <Marker
-                    key={farm.id}
-                    position={[farm.lat, farm.lng]}
-                    icon={farmIcon(zoom, 'gray')} // Gray for others
-                    opacity={0.7} // Slightly transparent to distinguish from own farm
-                >
-                    <Popup>
-                        <div className="text-center p-1">
-                            <div className="font-bold text-sm">{farm.owner}'s Farm</div>
-                            <div className="text-xs text-gray-500">{farm.barangay}</div>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
-
-            {/* Editable Farm Marker */}
-            {(editingId && editedFarm.lat) ? (
-                <Marker position={[editedFarm.lat, editedFarm.lng]} icon={farmIcon(zoom, 'green')}>
-                    <Popup>New Location</Popup>
-                </Marker>
-            ) : null}
-
-            {/* Render My Farms */}
-            {!editingId && activeFilters.farm && myFarms.map(farm => (
-                <React.Fragment key={farm.id}>
-                    <Marker
-                        position={[farm.lat, farm.lng]}
-                        icon={farmIcon(zoom, 'green')}
-                        eventHandlers={{
-                            click: () => {
-                                if (isEditing) {
-                                    setEditingId(farm.id); // Only edit if manager is already open
-                                }
-                                // Else do nothing, let popup open naturally
-                            }
-                        }}
+            <div className="flex-1 relative overflow-hidden">
+                {loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                ) : (
+                    <MapContainer
+                        center={defaultCenter} // Always start at default center (Norala)
+                        zoom={12}
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                        preferCanvas={true} // Enable Canvas rendering for smoother mask panning
+                        maxBounds={[[6.43, 124.58], [6.62, 124.75]]} // Tighly constrained to Norala
+                        maxBoundsViscosity={1.0} // Hard limit on panning
+                        minZoom={12}
+                        maxZoom={18}
                     >
-                        {/* Show popup if NOT in editing mode OR if we just want details */}
-                        {!isEditing && (
-                            <Popup>
-                                <div className="text-center p-1">
-                                    <p className="font-bold text-primary">🏠 My Farm</p>
-                                    <p className="text-xs text-gray-800 font-bold">{farm.current_crop || 'No Crop'}</p>
-                                    <p className="text-xs text-gray-500">{farm.barangay} • {farm.size} ha</p>
-                                    {farm.planting_method && <p className="text-[10px] text-gray-400 italic">{farm.planting_method}</p>}
-                                </div>
-                            </Popup>
-                        )}
-                    </Marker>
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
 
-                    {/* Delete Badge - Only in Edit Mode */}
-                    {isEditing && (
-                        <Marker
-                            position={[farm.lat, farm.lng]}
-                            icon={deleteFarmIcon()}
-                            zIndexOffset={1000} // Ensure it's on top
-                            eventHandlers={{
-                                click: (e) => {
-                                    L.DomEvent.stopPropagation(e); // Prevent map click
-                                    handleDeleteFarm(farm.id);
-                                }
+
+
+                        {/* Norala Municipality Boundary (Border Only) */}
+                        <Polygon
+                            positions={noralaBoundaryCoordinates}
+                            pathOptions={{
+                                color: '#15803d',
+                                weight: 5, // Thicker outer boundary
+                                opacity: 0.8,
+                                fill: false
                             }}
-                        >
-                        </Marker>
-                    )}
-                </React.Fragment>
-            ))}
+                        />
 
-            <MapController
-                isEditing={!!editingId} // Only capture clicks if actively editing a specific farm
-                onLocationSelect={handleLocationSelect}
-                setZoom={setZoom}
-            />
+                        {/* Inter-Barangay Boundaries (Voronoi) */}
+                        {Object.entries(barangayBoundaries).map(([name, data]) => (
+                            <Polygon
+                                key={name}
+                                positions={data.coordinates}
+                                pathOptions={{
+                                    color: 'white',
+                                    weight: 3, // Thicker inter-barangay borders
+                                    opacity: 0.8,
+                                    fillColor: data.color,
+                                    fillOpacity: 0.05 // Lighter fill
+                                }}
+                            >
+                                <Tooltip sticky direction="center" className="bg-transparent border-0 font-bold text-xs shadow-none text-gray-700">
+                                    {name}
+                                </Tooltip>
+                            </Polygon>
+                        ))}
 
-            {/* Report Markers */}
-            {!isEditing && filteredReports.map((report) => (
-                <Marker
-                    key={report.id}
-                    position={[report.latitude, report.longitude]}
-                    icon={reportIcons(report.type || report.report_type, zoom)}
-                    eventHandlers={{ click: () => setSelectedReport(report) }}
-                >
-                </Marker>
-            ))}
-        </MapContainer>
-    )}
-</div>
+                        {!isEditing && (
+                            <LocationMarker
+                                farmLocation={null} // Don't auto-fly to farm on load either, stick to Norala center
+                                setUserLocation={setUserLocation}
+                            />
+                        )}
 
-{
-    !isEditing && (
-        <div className="absolute bottom-6 left-4 z-[1000] flex flex-col gap-2">
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
-                <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Filters</span>
+                        {/* Community Farms (Only in Community Mode) */}
+                        {viewMode === 'all' && activeFilters.farm && otherFarms.map(farm => (
+                            <Marker
+                                key={farm.id}
+                                position={[farm.lat, farm.lng]}
+                                icon={farmIcon(zoom, 'gray')} // Gray for others
+                                opacity={0.7} // Slightly transparent to distinguish from own farm
+                            >
+                                <Popup>
+                                    <div className="text-center p-1">
+                                        <div className="font-bold text-sm">{farm.owner}'s Farm</div>
+                                        <div className="text-xs text-gray-500">{farm.barangay}</div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
 
-                <button
-                    onClick={() => toggleFilter('farm')}
-                    className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm
-                        ? 'bg-green-50 border-green-200 text-green-800'
-                        : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
-                        }`}
-                >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'}`}>
-                        <Home size={12} />
-                    </div>
-                    <span className="text-[10px] font-bold">Farms</span>
-                </button>
+                        {/* Editable Farm Marker */}
+                        {(editingId && editedFarm.lat) ? (
+                            <Marker position={[editedFarm.lat, editedFarm.lng]} icon={farmIcon(zoom, 'green')}>
+                                <Popup>New Location</Popup>
+                            </Marker>
+                        ) : null}
 
-                <button
-                    onClick={() => toggleFilter('pest')}
-                    className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.pest
-                        ? 'bg-red-50 border-red-200 text-red-800'
-                        : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
-                        }`}
-                >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.pest ? 'bg-red-500 text-white' : 'bg-gray-300 text-white'}`}>
-                        <Bug size={12} />
-                    </div>
-                    <span className="text-[10px] font-bold">Pest</span>
-                </button>
+                        {/* Render My Farms */}
+                        {!editingId && activeFilters.farm && myFarms.map(farm => (
+                            <React.Fragment key={farm.id}>
+                                <Marker
+                                    position={[farm.lat, farm.lng]}
+                                    icon={farmIcon(zoom, 'green')}
+                                    eventHandlers={{
+                                        click: () => {
+                                            if (isEditing) {
+                                                setEditingId(farm.id); // Only edit if manager is already open
+                                            }
+                                            // Else do nothing, let popup open naturally
+                                        }
+                                    }}
+                                >
+                                    {/* Show popup if NOT in editing mode OR if we just want details */}
+                                    {!isEditing && (
+                                        <Popup>
+                                            <div className="text-center p-1">
+                                                <p className="font-bold text-primary">🏠 My Farm</p>
+                                                <p className="text-xs text-gray-800 font-bold">{farm.current_crop || 'No Crop'}</p>
+                                                <p className="text-xs text-gray-500">{farm.barangay} • {farm.size} ha</p>
+                                                {farm.planting_method && <p className="text-[10px] text-gray-400 italic">{farm.planting_method}</p>}
+                                            </div>
+                                        </Popup>
+                                    )}
+                                </Marker>
 
-                <button
-                    onClick={() => toggleFilter('flood')}
-                    className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.flood
-                        ? 'bg-blue-50 border-blue-200 text-blue-800'
-                        : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
-                        }`}
-                >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.flood ? 'bg-blue-500 text-white' : 'bg-gray-300 text-white'}`}>
-                        <CloudRain size={12} />
-                    </div>
-                    <span className="text-[10px] font-bold">Flood</span>
-                </button>
+                                {/* Delete Badge - Only in Edit Mode */}
+                                {isEditing && (
+                                    <Marker
+                                        position={[farm.lat, farm.lng]}
+                                        icon={deleteFarmIcon()}
+                                        zIndexOffset={1000} // Ensure it's on top
+                                        eventHandlers={{
+                                            click: (e) => {
+                                                L.DomEvent.stopPropagation(e); // Prevent map click
+                                                handleDeleteFarm(farm.id);
+                                            }
+                                        }}
+                                    >
+                                    </Marker>
+                                )}
+                            </React.Fragment>
+                        ))}
 
-                <button
-                    onClick={() => toggleFilter('drought')}
-                    className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.drought
-                        ? 'bg-orange-50 border-orange-200 text-orange-800'
-                        : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
-                        }`}
-                >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.drought ? 'bg-orange-500 text-white' : 'bg-gray-300 text-white'}`}>
-                        <Sun size={12} />
-                    </div>
-                    <span className="text-[10px] font-bold">Drought</span>
-                </button>
-            </div>
-        </div>
-    )
-}
+                        <MapController
+                            isEditing={!!editingId} // Only capture clicks if actively editing a specific farm
+                            onLocationSelect={handleLocationSelect}
+                            setZoom={setZoom}
+                        />
 
-{
-    selectedReport && !isEditing && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 z-[1100] animate-slide-up border-t border-gray-100">
-            <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl text-white shadow-sm ${(selectedReport.type || selectedReport.report_type) === 'pest' ? 'bg-red-500' :
-                        (selectedReport.type || selectedReport.report_type) === 'flood' ? 'bg-blue-500' :
-                            'bg-orange-500'
-                        }`}>
-                        {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={24} /> :
-                            (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={24} /> :
-                                <Sun size={24} />}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-gray-900 capitalize">{selectedReport.type || selectedReport.report_type} Alert</h3>
-                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <MapPin size={12} /> {selectedReport.location} • {formatDate(selectedReport.created_at)}
-                        </p>
-                    </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                    <button onClick={() => setSelectedReport(null)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
-                        <X size={20} />
-                    </button>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(selectedReport.status)}`}>
-                        {selectedReport.status}
-                    </span>
-                </div>
-            </div>
-
-            <div className="bg-gray-50 p-3 rounded-xl mb-4 text-sm text-gray-600 border border-gray-100 italic">
-                "{selectedReport.details ? (typeof selectedReport.details === 'string' ? JSON.parse(selectedReport.details).description : selectedReport.details.description) : 'No description provided.'}"
+                        {/* Report Markers */}
+                        {!isEditing && filteredReports.map((report) => (
+                            <Marker
+                                key={report.id}
+                                position={[report.latitude, report.longitude]}
+                                icon={reportIcons(report.type || report.report_type, zoom)}
+                                eventHandlers={{ click: () => setSelectedReport(report) }}
+                            >
+                            </Marker>
+                        ))}
+                    </MapContainer>
+                )}
             </div>
 
-            {selectedReport.photo_base64 && (
-                <div className="mb-4 rounded-xl overflow-hidden h-40 border border-gray-200">
-                    <img src={selectedReport.photo_base64} alt="Report" className="w-full h-full object-cover" />
-                </div>
-            )}
+            {
+                !isEditing && (
+                    <div className="absolute bottom-6 left-4 z-[1000] flex flex-col gap-2">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
+                            <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Filters</span>
 
-            {(isMockMode ? selectedReport.user_id === 'my-id' : user?.id && selectedReport.user_id === user.id) && (
-                <div className="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-lg text-xs text-center border border-blue-100">
-                    This is your report
-                </div>
-            )}
-        </div>
-    )
-}
+                            <button
+                                onClick={() => toggleFilter('farm')}
+                                className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm
+                                    ? 'bg-green-50 border-green-200 text-green-800'
+                                    : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                    }`}
+                            >
+                                <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                    <Home size={12} />
+                                </div>
+                                <span className="text-[10px] font-bold">Farms</span>
+                            </button>
+
+                            <button
+                                onClick={() => toggleFilter('pest')}
+                                className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.pest
+                                    ? 'bg-red-50 border-red-200 text-red-800'
+                                    : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                    }`}
+                            >
+                                <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.pest ? 'bg-red-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                    <Bug size={12} />
+                                </div>
+                                <span className="text-[10px] font-bold">Pest</span>
+                            </button>
+
+                            <button
+                                onClick={() => toggleFilter('flood')}
+                                className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.flood
+                                    ? 'bg-blue-50 border-blue-200 text-blue-800'
+                                    : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                    }`}
+                            >
+                                <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.flood ? 'bg-blue-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                    <CloudRain size={12} />
+                                </div>
+                                <span className="text-[10px] font-bold">Flood</span>
+                            </button>
+
+                            <button
+                                onClick={() => toggleFilter('drought')}
+                                className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.drought
+                                    ? 'bg-orange-50 border-orange-200 text-orange-800'
+                                    : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                    }`}
+                            >
+                                <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.drought ? 'bg-orange-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                    <Sun size={12} />
+                                </div>
+                                <span className="text-[10px] font-bold">Drought</span>
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                selectedReport && !isEditing && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 z-[1100] animate-slide-up border-t border-gray-100">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-xl text-white shadow-sm ${(selectedReport.type || selectedReport.report_type) === 'pest' ? 'bg-red-500' :
+                                    (selectedReport.type || selectedReport.report_type) === 'flood' ? 'bg-blue-500' :
+                                        'bg-orange-500'
+                                    }`}>
+                                    {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={24} /> :
+                                        (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={24} /> :
+                                            <Sun size={24} />}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-gray-900 capitalize">{selectedReport.type || selectedReport.report_type} Alert</h3>
+                                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                                        <MapPin size={12} /> {selectedReport.location} • {formatDate(selectedReport.created_at)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                <button onClick={() => setSelectedReport(null)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+                                    <X size={20} />
+                                </button>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(selectedReport.status)}`}>
+                                    {selectedReport.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 p-3 rounded-xl mb-4 text-sm text-gray-600 border border-gray-100 italic">
+                            "{selectedReport.details ? (typeof selectedReport.details === 'string' ? JSON.parse(selectedReport.details).description : selectedReport.details.description) : 'No description provided.'}"
+                        </div>
+
+                        {selectedReport.photo_base64 && (
+                            <div className="mb-4 rounded-xl overflow-hidden h-40 border border-gray-200">
+                                <img src={selectedReport.photo_base64} alt="Report" className="w-full h-full object-cover" />
+                            </div>
+                        )}
+
+                        {(isMockMode ? selectedReport.user_id === 'my-id' : user?.id && selectedReport.user_id === user.id) && (
+                            <div className="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-lg text-xs text-center border border-blue-100">
+                                This is your report
+                            </div>
+                        )}
+                    </div>
+                )
+            }
         </div >
     );
 }
