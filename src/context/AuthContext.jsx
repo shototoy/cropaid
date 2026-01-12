@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_CREDENTIALS } from '../config/mockData';
+import { setApiMockMode } from '../services/api';
 
 const AuthContext = createContext(null);
 
-export const API_URL = 'http://localhost:3000/api';
+// Use environment variable for API URL, fallback to localhost for development
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -22,15 +24,16 @@ export const AuthProvider = ({ children }) => {
                 // Only consider it "connected" if we get a successful response
                 if (response.ok) {
                     setIsMockMode(false);
+                    setApiMockMode(false);
                 } else {
                     // Backend exists but API not ready (404, 500, etc.)
-                    console.warn('Backend API not ready. Switching to Mock Mode.');
                     setIsMockMode(true);
+                    setApiMockMode(true);
                 }
             } catch (err) {
-                // Network error - backend unreachable
-                console.warn('Backend Unreachable. Switching to Mock Mode.', err);
+                // Network error - backend unreachable, use mock mode silently
                 setIsMockMode(true);
+                setApiMockMode(true);
             } finally {
                 // Hydrate user
                 const storedUser = localStorage.getItem('user');
@@ -45,7 +48,6 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (identifier, password) => {
         if (isMockMode) {
-            console.log('Attempting Mock Login for:', identifier);
             return new Promise((resolve) => {
                 setTimeout(() => {
                     const mockUser = MOCK_CREDENTIALS.users.find(
@@ -85,10 +87,13 @@ export const AuthProvider = ({ children }) => {
 
             const data = await response.json();
             setToken(data.token);
-            setUser(data.user);
+
+            // Critical: Backend returns role separate from user object, so we merge it
+            const userWithRole = { ...data.user, role: data.role };
+            setUser(userWithRole);
 
             localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('user', JSON.stringify(userWithRole));
 
             if (data.role === 'admin') navigate('/admin-dashboard');
             else navigate('/dashboard');

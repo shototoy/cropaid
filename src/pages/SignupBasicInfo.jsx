@@ -53,7 +53,7 @@ export default function SignupBasicInfo() {
             return;
         }
 
-        navigate('/signup/farm-info', { state: formData });
+        navigate('/signup/app-info', { state: formData });
     };
 
     return (

@@ -8,7 +8,6 @@ export default function SignupStep3() {
     const formData = location.state || {};
 
     const handleSubmit = () => {
-        console.log("Submitting Registration", formData);
         navigate('/login');
     };
 

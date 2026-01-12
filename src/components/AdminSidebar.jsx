@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 export default function AdminSidebar({ isOpen, toggle }) {
-    const { logout } = useAuth();
+    const { logout, isMockMode } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -17,9 +17,14 @@ export default function AdminSidebar({ isOpen, toggle }) {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/admin-dashboard' },
         { icon: Users, label: 'Farmers', path: '/admin/farmers' },
         { icon: FileText, label: 'Reports', path: '/admin/reports' },
+        { icon: Bell, label: 'News & Alerts', path: '/admin/news' },
         { icon: Map, label: 'Farm Map', path: '/admin/map' },
         { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ];
+
+    const filteredNavItems = isMockMode
+        ? navItems.filter(item => item.path !== '/admin/map' && item.path !== '/admin/settings')
+        : navItems;
 
     return (
         <>
@@ -57,7 +62,7 @@ export default function AdminSidebar({ isOpen, toggle }) {
 
                     {/* Navigation */}
                     <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-                        {navItems.map((item) => (
+                        {filteredNavItems.map((item) => (
                             <NavLink
                                 key={item.path}
                                 to={item.path}

@@ -1,17 +1,28 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo.png';
 
 export default function Splash() {
     const navigate = useNavigate();
 
+    const { loading, user } = useAuth();
+
     useEffect(() => {
+        if (loading) return;
+
         const timer = setTimeout(() => {
-            navigate('/login');
+            if (user) {
+                if (user.role === 'admin') navigate('/admin-dashboard');
+                else navigate('/dashboard');
+            } else {
+                navigate('/login');
+            }
         }, 2000);
+
         return () => clearTimeout(timer);
-    }, [navigate]);
+    }, [navigate, loading, user]);
 
     return (
         <div style={{

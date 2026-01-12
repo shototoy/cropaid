@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
-import { Menu, Search, Bell } from 'lucide-react';
+import NotificationBell from './NotificationBell';
+import { Menu, Search } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [headerAction, setHeaderAction] = useState(null);
     const location = useLocation();
+    const { loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     // Determine page title based on path
     const getPageHeader = () => {
@@ -16,6 +27,7 @@ export default function AdminLayout() {
         if (path.includes('reports')) return { title: 'Incident Reports', subtitle: 'Track and manage farm incidents and claims.' };
         if (path.includes('map')) return { title: 'Farm Map', subtitle: 'Geospatial view of registered farms and reports.' };
         if (path.includes('settings')) return { title: 'System Settings', subtitle: 'Manage application preferences and configurations.' };
+        if (path.includes('news')) return { title: 'News & Advisories', subtitle: 'Manage announcements, weather alerts, and farmer advisories.' };
         return { title: 'Admin Panel', subtitle: 'CropAid Administration' };
     };
 
@@ -51,11 +63,8 @@ export default function AdminLayout() {
                             {/* Page Content Actions (Injected via Context) */}
                             {headerAction}
 
-                            {/* Notification Bell */}
-                            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0">
-                                <Bell size={24} />
-                                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                            </button>
+                            {/* Notification Bell with Real-time Polling */}
+                            <NotificationBell />
                         </div>
                     </div>
 

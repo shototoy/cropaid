@@ -1,15 +1,46 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
+import ReportDetailModal from '../../components/ReportDetailModal';
+import { useDebounce } from '../../utils/debounce';
 
 export default function AdminReports() {
     const { token, isMockMode } = useAuth();
+    const [searchParams] = useSearchParams();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
+    const [selectedReport, setSelectedReport] = useState(null);
+    const location = useLocation();
+
+    // Initialize Active Tab from URL param
+    useEffect(() => {
+        const statusParam = searchParams.get('status');
+        if (statusParam) {
+            // Capitalize first letter to match tab names (e.g. 'pending' -> 'Pending')
+            const tabName = statusParam.charAt(0).toUpperCase() + statusParam.slice(1);
+            if (['All', 'Pending', 'Verified', 'Resolved'].includes(tabName)) {
+                setActiveTab(tabName);
+            }
+        }
+    }, [searchParams]);
+
+    // Auto-open modal if navigated from notification
+    useEffect(() => {
+        if (location.state?.openReportId && reports.length > 0) {
+            const reportToOpen = reports.find(r => r.id.toString() === location.state.openReportId.toString());
+            if (reportToOpen) {
+                setSelectedReport(reportToOpen);
+                // Clear state so it doesn't re-open on refresh/nav
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [reports, location.state]);
 
     const fetchReports = async () => {
         setLoading(true);
@@ -28,7 +59,18 @@ export default function AdminReports() {
             });
             if (!response.ok) throw new Error('Failed to fetch reports');
             const data = await response.json();
-            setReports(data);
+            // Backend returns { reports: [...] } or array directly
+            const reportsArray = data.reports || data;
+            // Normalize field names
+            const normalizedReports = reportsArray.map(r => ({
+                ...r,
+                type: r.report_type || r.type,
+                first_name: r.first_name || 'Unknown',
+                last_name: r.last_name || 'Farmer',
+                // details is already in r, only populate if missing but description exists (mock data legacy)
+                details: r.details || (r.description ? { description: r.description } : {})
+            }));
+            setReports(normalizedReports);
         } catch (err) {
             console.error(err);
             setError('Failed to load reports');
@@ -69,7 +111,7 @@ export default function AdminReports() {
 
     const filteredReports = reports.filter(r => {
         const matchesTab = activeTab === 'All' || r.status === activeTab.toLowerCase();
-        const searchLower = searchTerm.toLowerCase();
+        const searchLower = debouncedSearchTerm.toLowerCase();
         // Safe access checks
         const matchesSearch =
             (r.type && r.type.toLowerCase().includes(searchLower)) ||
@@ -85,6 +127,16 @@ export default function AdminReports() {
             case 'verified': return 'bg-blue-50 text-blue-700 border-blue-200';
             case 'resolved': return 'bg-green-50 text-green-700 border-green-200';
             case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
+            default: return 'bg-gray-50 text-gray-700 border-gray-200';
+        }
+    };
+
+    const getSeverityColor = (severity) => {
+        switch (severity?.toLowerCase()) {
+            case 'low': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'medium': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+            case 'high': return 'bg-orange-50 text-orange-700 border-orange-200';
+            case 'critical': return 'bg-red-50 text-red-700 border-red-200';
             default: return 'bg-gray-50 text-gray-700 border-gray-200';
         }
     };
@@ -158,6 +210,11 @@ export default function AdminReports() {
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(report.status)} uppercase tracking-wide`}>
                                             {report.status}
                                         </span>
+                                        {details.severity && (
+                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${getSeverityColor(details.severity)} uppercase tracking-wide`}>
+                                                {details.severity}
+                                            </span>
+                                        )}
                                         <span className="text-xs text-gray-400 font-medium">{formatDate(report.created_at)}</span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 capitalize">
@@ -180,6 +237,15 @@ export default function AdminReports() {
                                 </div>
 
                                 <div className="flex items-center gap-3 md:border-l md:border-gray-100 md:pl-6 shrink-0 pt-4 md:pt-0 border-t border-gray-100 mt-2 md:mt-0">
+                                    {/* View Button */}
+                                    <button
+                                        onClick={() => setSelectedReport(report)}
+                                        className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-700 transition-colors p-2 rounded-md hover:bg-gray-100"
+                                    >
+                                        <Eye size={20} />
+                                        <span className="text-[10px] uppercase font-bold">View</span>
+                                    </button>
+
                                     {report.status === 'pending' && (
                                         <>
                                             <button
@@ -213,6 +279,18 @@ export default function AdminReports() {
                     );
                 })}
             </div>
+
+            {/* Report Detail Modal */}
+            {selectedReport && (
+                <ReportDetailModal
+                    report={selectedReport}
+                    onClose={() => setSelectedReport(null)}
+                    onStatusUpdate={(id, newStatus) => {
+                        handleStatusUpdate(id, newStatus);
+                        setSelectedReport(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

@@ -2,31 +2,64 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Activity, Home, User, LogOut, X, Map, Bell, Newspaper, LayoutGrid, Sun } from 'lucide-react';
+import { FileText, Activity, Home, User, LogOut, X, Bell, Newspaper, LayoutGrid, Sun, Cloud, CloudRain, CloudLightning, Menu, Megaphone, AlertTriangle, CheckCircle, ChevronRight, MapPin, Tractor } from 'lucide-react';
 import Layout from '../components/Layout';
 import BottomNavbar from '../components/BottomNavbar';
 import { API_URL, useAuth } from '../context/AuthContext';
 import { MOCK_DATA } from '../config/mockData';
+import { fetchWeather, getCurrentPosition } from '../services/api';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
-    const { user, token, logout, isMockMode, loading: authLoading } = useAuth();
+    const { user, logout, token, isMockMode } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dashboardData, setDashboardData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [dashboardProfile, setDashboardProfile] = useState(null); // Local profile state from API
+    const [weather, setWeather] = useState(null);
+    const [liveWeather, setLiveWeather] = useState(null);
+    const [activeSlide, setActiveSlide] = useState(0);
+    const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]);
+    const [stats, setStats] = useState({ active_reports: 0 });
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    // Prioritize fresh dashboard data over auth context user
+    const profile = dashboardProfile || user;
+
+    // Fetch live weather data
+    const getWeather = async () => {
+        try {
+            let lat = 6.5294; // Default: Norala, South Cotabato, Philippines
+            let lon = 124.6647;
+
+            try {
+                const coords = await getCurrentPosition();
+                lat = coords.latitude;
+                lon = coords.longitude;
+            } catch (err) {
+                // Use default Norala coordinates if GPS unavailable
+            }
+
+            const weatherData = await fetchWeather(lat, lon);
+            setLiveWeather(weatherData);
+        } catch (err) {
+            // Weather fetch failed silently - will use fallback data
+        }
+    };
 
     useEffect(() => {
-        // Wait for auth initialization
-        if (authLoading) return;
+        getWeather();
+        // Refresh every 15 minutes
+        const interval = setInterval(getWeather, 15 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
+    // Fetch dashboard data (profile and stats)
+    useEffect(() => {
         const fetchDashboardData = async () => {
             if (isMockMode) {
-                // Mock Data - Dynamic based on logged in user
-                const username = user?.username || 'james'; // Default to james if generic
-                setDashboardData(MOCK_DATA.getFarmerDashboard(username));
-                setLoading(false);
+                const username = user?.username || 'james';
+                const mockDashboard = MOCK_DATA.getFarmerDashboard(username);
+                setStats(mockDashboard.stats);
+                setWeather(mockDashboard.weather);
                 return;
             }
 
@@ -36,51 +69,174 @@ export default function FarmerDashboard() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setDashboardData(data);
+                    setStats({
+                        ...data.stats,
+                        active_reports: data.stats.pending
+                    });
+                    setWeather(data.weather);
+                    if (data.profile) setDashboardProfile(data.profile);
                 }
             } catch (error) {
                 console.error("Failed to load dashboard", error);
-            } finally {
-                setLoading(false);
             }
         };
 
         if (token || isMockMode) fetchDashboardData();
-    }, [token, isMockMode, authLoading]);
+    }, [token, isMockMode, user]);
 
-    if (loading || authLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    // Live Polling for Notifications
+    useEffect(() => {
+        const pollNotifications = async () => {
+            if (isMockMode) {
+                setUnreadCount(prev => prev > 0 ? prev : 2); // Simulating 2 unread in mock
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/notifications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const notifs = Array.isArray(data) ? data : data.notifications || [];
+                    const count = notifs.filter(n => !n.is_read).length;
+                    setUnreadCount(count);
+                }
+            } catch (error) {
+                console.error("Notification polling error", error);
+            }
+        };
 
-    const { profile, weather, stats, latest_advisory } = dashboardData || {};
+        // Poll immediately and then every 30 seconds
+        pollNotifications();
+        const interval = setInterval(pollNotifications, 30000);
+        return () => clearInterval(interval);
+    }, [token, isMockMode]);
+
+    // Fetch latest advisory (Carousel Logic)
+    useEffect(() => {
+        const fetchAdvisories = async () => {
+            const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+            let items = [];
+
+            if (isMockMode) {
+                // Mock news data (Fallback / Mock Mode)
+                const MOCK_NEWS = [
+                    { id: 1, title: 'Pest Alert: Black Bug Infestation Warning', summary: 'The Municipal Agriculture Office has detected increased black bug activity in several barangays. Farmers are advised to monitor their rice fields closely.', type: 'alert', priority: 'high', date: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 2, title: 'Weather Advisory: Dry Season Preparations', summary: 'With the dry season approaching, farmers should begin preparing water conservation strategies for their crops.', type: 'advisory', priority: 'medium', date: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 3, title: 'New Seed Distribution Program', summary: 'The DA is distributing free high-yield rice seeds to registered farmers this month.', type: 'news', priority: 'low', date: new Date(Date.now() - 259200000).toISOString() }
+                ];
+                items = MOCK_NEWS;
+            } else {
+                try {
+                    const response = await fetch(`${API_URL}/news`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        const newsList = Array.isArray(data) ? data : data.news || [];
+                        items = newsList;
+                    }
+                } catch (err) {
+                    // Fail silently, show default
+                }
+            }
+
+            // Carousel Logic:
+            // 1. Take Top 5 from raw list
+            const top5 = items.slice(0, 5);
+
+            // 2. Filter Top 5 for "Recent" (last 3 days)
+            const recentItems = top5.filter(item => {
+                const date = item.created_at || item.date;
+                return new Date(date) >= threeDaysAgo;
+            });
+
+            // 3. Normalize items for display
+            const normalizedItems = recentItems.map(item => ({
+                id: item.id,
+                title: item.title,
+                message: item.content ? (item.content.substring(0, 100) + '...') : item.summary,
+                type: item.type,
+                priority: item.priority,
+                date: item.created_at || item.date
+            }));
+
+            // 4. Append Default Card
+            setCarouselItems([...normalizedItems, { isDefault: true }]);
+        };
+
+        if (token || isMockMode) fetchAdvisories();
+    }, [token, isMockMode]);
+
+    // Carousel Auto-Play
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveSlide(prev => (prev + 1) % carouselItems.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [carouselItems.length]);
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    // Get weather icon component
+    const getWeatherIcon = (condition) => {
+        if (!condition) return <Sun size={24} className="text-yellow-500" />;
+        const cond = condition.toLowerCase();
+        if (cond.includes('rain') || cond.includes('drizzle')) return <CloudRain size={24} className="text-blue-500" />;
+        if (cond.includes('cloud') || cond.includes('overcast')) return <Cloud size={24} className="text-gray-500" />;
+        return <Sun size={24} className="text-yellow-500" />;
+    };
+
+    // Styling Helpers matching NewsPage/AdminNews
+    const getCardStyle = (priority) => {
+        switch (priority) {
+            case 'critical': return 'bg-red-500 text-white';
+            case 'high': return 'bg-orange-500 text-white';
+            case 'medium': return 'bg-amber-500 text-white';
+            default: return 'bg-blue-500 text-white';
+        }
+    };
+
+    const getTypeIcon = (type, className = "text-white") => {
+        switch (type) {
+            case 'alert': return <AlertTriangle size={20} className={className} />;
+            case 'weather': return <CloudRain size={20} className={className} />;
+            case 'advisory': return <Megaphone size={20} className={className} />;
+            default: return <Newspaper size={20} className={className} />;
+        }
+    };
 
     return (
         <>
-            {/* Header / Top Bar */}
-            <div className="bg-primary text-white p-5 pt-8 rounded-b-3xl shadow-md relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                    <button onClick={toggleSidebar} className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                        <User size={24} className="text-white" />
-                    </button>
-                    <div className="text-right">
-                        <h1 className="text-xl font-bold m-0">Hello, {profile?.name?.split(' ')[0] || 'Farmer'}</h1>
-                        <p className="text-xs text-white/80 m-0">{profile?.barangay || 'Norala'}, South Cotabato</p>
+            {/* Header Area */}
+            <div className="bg-primary pb-20 pt-8 px-6 rounded-b-[2.5rem] relative shadow-lg">
+                <div className="flex justify-between items-center text-white mb-6">
+                    <div className="flex items-center gap-3" onClick={toggleSidebar}>
+                        <div className="w-10 h-10 rounded-full bg-white/20 border border-white/30 flex items-center justify-center cursor-pointer backdrop-blur-sm">
+                            <Menu size={20} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs opacity-80 font-medium">Welcome back,</span>
+                            <span className="font-bold text-lg leading-tight">{profile?.name || 'Farmer'}</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Weather / Status Card */}
+                {/* Weather Card */}
                 <div className="bg-white text-text-main p-4 rounded-xl shadow-lg flex justify-between items-center mb-[-40px]">
                     <div className="flex flex-col">
                         <span className="text-xs text-text-muted font-bold uppercase tracking-wider">Current Weather</span>
                         <div className="flex items-center gap-2 mt-1">
-                            <Sun size={24} className="text-yellow-500" />
-                            <span className="text-2xl font-bold">{weather?.temp || 32}°C</span>
+                            {liveWeather ? (
+                                getWeatherIcon(liveWeather.condition)
+                            ) : (
+                                <div className="w-6 h-6 animate-pulse bg-gray-200 rounded-full"></div>
+                            )}
+                            <span className="text-2xl font-bold">{liveWeather?.temperature || weather?.temp || 32}°C</span>
                         </div>
-                        <span className="text-[10px] text-text-muted">{weather?.condition || 'Sunny'}, {weather?.location || 'Norala'}</span>
+                        <span className="text-[10px] text-text-muted">
+                            {liveWeather?.condition || weather?.condition || 'Sunny'}, {profile?.barangay || 'Norala'}
+                        </span>
                     </div>
                     <div className="h-10 w-[1px] bg-gray-200"></div>
                     <div className="flex flex-col items-end">
@@ -92,27 +248,38 @@ export default function FarmerDashboard() {
             </div>
 
             {/* Main Content Area */}
-            <div className="mt-16 px-5 py-4">
-                {/* Quick Actions Grid (Updated) */}
+            <div className="mt-2 px-5 py-4">
+                {/* Quick Actions Grid */}
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
-                        <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm cursor-pointer hover:bg-orange-200 transition-colors">
-                            <Map size={24} />
-                        </div>
-                        <span className="text-[10px] font-medium text-center leading-tight">Farm<br />Map</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
-                        <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors">
+                <div className="grid grid-cols-5 gap-2 mb-6">
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
+                        <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors relative">
                             <Bell size={24} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm scale-110 animate-pulse">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
                         </div>
-                        <span className="text-[10px] font-medium text-center leading-tight">Advisories</span>
+                        <span className="text-[10px] font-medium text-center leading-tight">Notifs</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2" onClick={() => { }}>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/news')}>
                         <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm cursor-pointer hover:bg-blue-200 transition-colors">
                             <Newspaper size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">News</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-map')}>
+                        <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm cursor-pointer hover:bg-orange-200 transition-colors">
+                            <MapPin size={24} />
+                        </div>
+                        <span className="text-[10px] font-medium text-center leading-tight">Map</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-farms')}>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm cursor-pointer hover:bg-emerald-200 transition-colors">
+                            <Home size={24} />
+                        </div>
+                        <span className="text-[10px] font-medium text-center leading-tight">Farms</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={toggleSidebar}>
                         <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shadow-sm cursor-pointer hover:bg-gray-200 transition-colors">
@@ -122,11 +289,69 @@ export default function FarmerDashboard() {
                     </div>
                 </div>
 
-                {/* Promo / Info Section */}
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Latest Advisory</h3>
-                <div className="bg-gradient-to-r from-primary to-primary-light text-white p-4 rounded-xl shadow-md mb-4">
-                    <h4 className="font-bold text-sm mb-1">{latest_advisory?.title || 'System Notice'}</h4>
-                    <p className="text-xs opacity-90">{latest_advisory?.message || 'No critical alerts at this time.'}</p>
+                {/* Latest Advisory Carousel */}
+                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex justify-between items-center">
+                    <span>Latest Advisory</span>
+                    {carouselItems.length > 1 && (
+                        <div className="flex gap-1">
+                            {carouselItems.map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`w-1.5 h-1.5 rounded-full transition-colors ${activeSlide === idx ? 'bg-primary' : 'bg-gray-300'}`}
+                                ></div>
+                            ))}
+                        </div>
+                    )}
+                </h3>
+
+                <div className="relative overflow-hidden rounded-xl shadow-md min-h-[100px]">
+                    <div
+                        className="flex transition-transform duration-500 ease-in-out"
+                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                    >
+                        {carouselItems.map((item, index) => (
+                            <div key={index} className="w-full flex-shrink-0">
+                                {item.isDefault ? (
+                                    <div className="bg-emerald-50 text-emerald-800 p-4 h-full flex items-center gap-4">
+                                        <div className="bg-emerald-100 p-3 rounded-full">
+                                            <CheckCircle size={24} className="text-emerald-600" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm">System Monitoring Active</h4>
+                                            <p className="text-xs opacity-80 mt-1">No other critical alerts at this time. Stay safe!</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={`${getCardStyle(item.priority)} p-4 h-full flex flex-col justify-center relative overflow-hidden`} onClick={() => navigate('/news')}>
+                                        {/* Background Decorative Icon */}
+                                        <div className="absolute -right-4 -bottom-4 opacity-10 transform rotate-12">
+                                            {getTypeIcon(item.type, "w-24 h-24")}
+                                        </div>
+
+                                        <div className="flex items-start justify-between relative z-10">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold uppercase backdrop-blur-sm">
+                                                        {item.type}
+                                                    </span>
+                                                    <span className="text-[10px] opacity-80 uppercase font-medium">
+                                                        {item.priority}
+                                                    </span>
+                                                </div>
+                                                <h4 className="font-bold text-sm mb-1 line-clamp-1">{item.title}</h4>
+                                                <p className="text-xs opacity-90 line-clamp-2 leading-relaxed">
+                                                    {item.message}
+                                                </p>
+                                            </div>
+                                            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                                {getTypeIcon(item.type)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -134,43 +359,50 @@ export default function FarmerDashboard() {
             {createPortal(
                 <div className="fixed inset-0 z-[100] flex justify-center pointer-events-none">
                     <div className="w-full max-w-[480px] h-full relative overflow-hidden">
-                        <div className={`absolute inset-0 bg-primary pointer-events-auto flex flex-col p-6 text-white transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                            {/* Close Button (Top Left - matching profile button) */}
-                            <div className="flex justify-between items-center mb-6 mt-8">
-                                <button onClick={toggleSidebar} className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                                    <X size={24} className="text-white" />
+                        {/* Sidebar Drawer */}
+                        <div className={`absolute inset-0 bg-white pointer-events-auto flex flex-col shadow-2xl transform transition-transform duration-300 ease-out z-[101] max-w-[300px] rounded-r-3xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
+                            {/* Header / Profile */}
+                            <div className="p-6 bg-primary/5 border-b border-primary/10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary shadow-sm border-2 border-primary/20">
+                                        <User size={32} />
+                                    </div>
+                                    <button onClick={toggleSidebar} className="p-2 -mr-2 text-gray-400 hover:text-gray-600">
+                                        <X size={24} />
+                                    </button>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800">{profile?.name || 'Farmer'}</h2>
+                                <p className="text-gray-500 text-xs font-medium mt-1">RSBSA: <span className="text-primary">{profile?.rsbsa || 'N/A'}</span></p>
+                            </div>
+
+                            {/* Menu Items */}
+                            <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+                                <MenuItem icon={<User size={20} />} label="My Profile" onClick={() => { toggleSidebar(); navigate('/profile'); }} />
+                                <MenuItem icon={<MapPin size={20} />} label="Map" onClick={() => { toggleSidebar(); navigate('/my-map'); }} />
+                                <MenuItem icon={<Tractor size={20} />} label="My Farms" onClick={() => { toggleSidebar(); navigate('/my-farms'); }} />
+                                <div className="h-px bg-gray-100 my-2"></div>
+                                <MenuItem icon={<Newspaper size={20} />} label="News & Advisories" onClick={() => { toggleSidebar(); navigate('/news'); }} />
+                                <MenuItem icon={<Activity size={20} />} label="Report History" onClick={() => { toggleSidebar(); navigate('/status'); }} />
+                            </div>
+
+                            {/* Footer / Logout */}
+                            <div className="p-4 border-t border-gray-100">
+                                <button
+                                    onClick={logout}
+                                    className="w-full bg-red-50 text-red-600 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                >
+                                    <LogOut size={18} />
+                                    <span>Log Out</span>
                                 </button>
+                                <p className="text-center text-[10px] text-gray-300 mt-4">Version 1.2.0 • CropAid</p>
                             </div>
-
-                            <div className="flex flex-col items-center mb-8">
-                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 text-primary shadow-lg border-4 border-white/20">
-                                    <User size={40} />
-                                </div>
-                                <h2 className="text-2xl font-bold">{profile?.name || 'Farmer'}</h2>
-                                <p className="text-white/70 text-sm">RSBSA: {profile?.rsbsa}</p>
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="space-y-4">
-                                    <div className="p-4 bg-white/10 rounded-lg flex items-center gap-3">
-                                        <User size={20} />
-                                        <span className="font-medium">My Profile</span>
-                                    </div>
-                                    <div className="p-4 bg-white/10 rounded-lg flex items-center gap-3">
-                                        <Activity size={20} />
-                                        <span className="font-medium">History</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={logout}
-                                className="w-full bg-white text-red-600 font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg mt-auto"
-                            >
-                                <LogOut size={20} />
-                                LOGOUT
-                            </button>
                         </div>
+
+                        {/* Backdrop */}
+                        {isSidebarOpen && (
+                            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm z-[100] transition-opacity duration-300" onClick={toggleSidebar}></div>
+                        )}
                     </div>
                 </div>,
                 document.body
@@ -178,3 +410,12 @@ export default function FarmerDashboard() {
         </>
     );
 }
+
+// Helper Component for Sidebar Items
+const MenuItem = ({ icon, label, onClick }) => (
+    <div onClick={onClick} className="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-primary cursor-pointer transition-colors group">
+        <div className="text-gray-400 group-hover:text-primary transition-colors">{icon}</div>
+        <span className="font-medium text-sm">{label}</span>
+        <ChevronRight size={16} className="ml-auto text-gray-300 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all" />
+    </div>
+);
