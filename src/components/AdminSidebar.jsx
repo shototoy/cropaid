@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, FileText, Map, Settings, LogOut, Menu, X, ChevronRight, Bell, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePendingReports } from '../utils/usePendingReports';
 import logo from '../assets/logo.png';
 
 export default function AdminSidebar({ isOpen, toggle }) {
     const { logout, isMockMode } = useAuth();
     const navigate = useNavigate();
+    const pendingCount = usePendingReports();
 
     const handleLogout = () => {
         logout();
@@ -77,8 +79,8 @@ export default function AdminSidebar({ isOpen, toggle }) {
                                     `}>
                                         <item.icon size={20} className={isActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'} />
                                         <span>{item.label}</span>
-                                        {item.path === '/admin/reports' && (
-                                            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">3</span>
+                                        {item.path === '/admin/reports' && pendingCount > 0 && (
+                                            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">{pendingCount}</span>
                                         )}
                                     </div>
                                 )}
