@@ -27,8 +27,8 @@ export default function NotificationBell() {
                 }
             };
 
-            // Start polling every 30 seconds
-            pollingRef.current = startNotificationPolling(token, handleNewNotifications, 30000);
+            // Start polling every 5 seconds (Live)
+            pollingRef.current = startNotificationPolling(token, handleNewNotifications, 5000);
         }
 
         // Cleanup on unmount
