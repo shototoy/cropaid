@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, AlertTriangle, Eye, CheckCircle, XCircle, Printer } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
 import ReportDetailModal from '../../components/ReportDetailModal';
@@ -146,6 +146,143 @@ export default function AdminReports() {
         return new Date(dateString).toLocaleDateString();
     };
 
+    const handleExport = (report) => {
+        let details = {};
+        try {
+            details = typeof report.details === 'string' ? JSON.parse(report.details) : report.details;
+        } catch (e) {
+            details = { description: report.details };
+        }
+        if (!details || typeof details !== 'object') details = {};
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>CropAid Report Summary #${report.id}</title>
+                <style>
+                    body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+                    .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 20px; margin-bottom: 30px; }
+                    .logo { font-size: 24px; font-weight: bold; color: #16a34a; }
+                    .title { font-size: 18px; margin-top: 10px; font-weight: normal; }
+                    .section { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+                    .section-header { background: #f9fafb; padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; font-size: 14px; text-transform: uppercase; }
+                    .section-content { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                    .field { margin-bottom: 5px; }
+                    .label { font-size: 12px; color: #666; display: block; }
+                    .value { font-size: 14px; font-weight: 500; }
+                    .full-width { grid-column: span 2; }
+                    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="logo">CropAid</div>
+                    <div class="title">Verified Report Summary</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Report Information</div>
+                    <div class="section-content">
+                        <div class="field">
+                            <span class="label">Report ID</span>
+                            <span class="value">#${report.id}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Date Submitted</span>
+                            <span class="value">${new Date(report.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Type</span>
+                            <span class="value" style="text-transform: capitalize">${report.type}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Status</span>
+                            <span class="value status-badge">${report.status}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Farmer Details</div>
+                    <div class="section-content">
+                        <div class="field">
+                            <span class="label">Name</span>
+                            <span class="value">${report.first_name} ${report.last_name}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">RSBSA ID</span>
+                            <span class="value">${report.rsbsa_id || 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Contact Number</span>
+                            <span class="value">${report.cellphone || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Farm & Incident Details</div>
+                    <div class="section-content">
+                        <div class="field">
+                            <span class="label">Location (Barangay)</span>
+                            <span class="value">${report.location || report.farm_barangay || 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Coordinates</span>
+                            <span class="value">${report.latitude && report.longitude ? `${parseFloat(report.latitude).toFixed(6)}, ${parseFloat(report.longitude).toFixed(6)}` : 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Crop Type</span>
+                            <span class="value">${details.cropType || 'N/A'}</span>
+                        </div>
+                         <div class="field">
+                            <span class="label">Severity</span>
+                            <span class="value">${details.severity || 'N/A'}</span>
+                        </div>
+                        <div class="field full-width">
+                            <span class="label">Description</span>
+                            <span class="value">${details.description || 'N/A'}</span>
+                        </div>
+                        ${details.affectedArea ? `
+                        <div class="field">
+                            <span class="label">Affected Area</span>
+                            <span class="value">${details.affectedArea} ha</span>
+                        </div>` : ''}
+                        ${details.pestType ? `
+                        <div class="field">
+                            <span class="label">Pest Type</span>
+                            <span class="value">${details.pestType}</span>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                ${report.admin_notes ? `
+                <div class="section">
+                    <div class="section-header">Admin Notes</div>
+                    <div class="section-content">
+                        <div class="field full-width">
+                            <span class="value">${report.admin_notes}</span>
+                        </div>
+                    </div>
+                </div>` : ''}
+
+                <div class="footer">
+                    Generated on ${new Date().toLocaleString()} by CropAid System
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
+    };
+
     return (
         <div className="space-y-6">
             {/* Redundant header removed */}
@@ -245,6 +382,16 @@ export default function AdminReports() {
                                         <Eye size={20} />
                                         <span className="text-[10px] uppercase font-bold">View</span>
                                     </button>
+
+                                    {report.status === 'verified' && (
+                                        <button
+                                            onClick={() => handleExport(report)}
+                                            className="flex flex-col items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors p-2 rounded-md hover:bg-indigo-50"
+                                        >
+                                            <Printer size={20} />
+                                            <span className="text-[10px] uppercase font-bold">Export</span>
+                                        </button>
+                                    )}
 
                                     {report.status === 'pending' && (
                                         <>
