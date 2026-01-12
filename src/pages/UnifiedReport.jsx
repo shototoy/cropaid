@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bug, CloudRain, Sun, AlertTriangle } from 'lucide-react';
+import { Bug, CloudRain, Sun, AlertTriangle, Layers } from 'lucide-react';
 
 export default function UnifiedReport() {
     const navigate = useNavigate();
@@ -33,6 +33,15 @@ export default function UnifiedReport() {
             color: 'bg-orange-500',
             bgColor: 'bg-orange-50',
             route: '/report/drought'
+        },
+        {
+            id: 'mix',
+            title: 'Multiple Issues (Mix)',
+            description: 'Report multiple problems (e.g. Pest + Flood)',
+            icon: Layers,
+            color: 'bg-purple-500',
+            bgColor: 'bg-purple-50',
+            route: '/report/mix'
         }
     ];
 
@@ -76,7 +85,7 @@ export default function UnifiedReport() {
                     <div>
                         <h4 className="font-bold text-amber-800 text-sm">Important Reminder</h4>
                         <p className="text-xs text-amber-700 mt-1">
-                            Please ensure your GPS is enabled for accurate location tracking. 
+                            Please ensure your GPS is enabled for accurate location tracking.
                             Take clear photos of the affected area to help with assessment.
                         </p>
                     </div>

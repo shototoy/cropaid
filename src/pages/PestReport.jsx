@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import FarmSelector from '../components/FarmSelector';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
@@ -16,6 +17,7 @@ export default function PestReport() {
     const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
+        farmId: null,
         location: '',
         crop: '',
         pestType: '',
@@ -51,7 +53,7 @@ export default function PestReport() {
         try {
             const file = e.target.files?.[0];
             if (!file) return;
-            
+
             const result = await processFileInput(file);
             if (result) {
                 setPhotoPreview(result.preview);
@@ -72,12 +74,18 @@ export default function PestReport() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.farmId) {
+            setError('Please select a farm');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
         try {
             const payload = {
                 type: 'pest',
+                farmId: formData.farmId,
                 location: formData.location,
                 details: {
                     cropType: formData.crop,
@@ -138,9 +146,9 @@ export default function PestReport() {
                         />
                         {photoPreview ? (
                             <div className="relative">
-                                <img 
-                                    src={photoPreview} 
-                                    alt="Evidence preview" 
+                                <img
+                                    src={photoPreview}
+                                    alt="Evidence preview"
                                     className="w-full h-48 object-cover rounded-lg"
                                 />
                                 <button
@@ -163,12 +171,16 @@ export default function PestReport() {
                         )}
                     </div>
 
-                    <Input
-                        label="Location/Farm Area"
-                        placeholder="e.g. Purok 2, Rice Field"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        required
+                    <FarmSelector
+                        selectedFarmId={formData.farmId}
+                        onSelect={(farm) => {
+                            setFormData(prev => ({
+                                ...prev,
+                                farmId: farm ? farm.id : null,
+                                location: farm ? `${farm.location_barangay}` : '',
+                                crop: farm ? farm.current_crop || '' : ''
+                            }));
+                        }}
                     />
 
                     <Input

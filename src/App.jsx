@@ -26,6 +26,7 @@ const ReportStatus = lazy(() => import('./pages/ReportStatus'));
 const PestReport = lazy(() => import('./pages/PestReport'));
 const FloodReport = lazy(() => import('./pages/FloodReport'));
 const DroughtReport = lazy(() => import('./pages/DroughtReport'));
+const MixReport = lazy(() => import('./pages/MixReport'));
 const Confirmation = lazy(() => import('./pages/Confirmation'));
 const ReportConfirmation = lazy(() => import('./pages/ReportConfirmation'));
 const FarmerProfile = lazy(() => import('./pages/FarmerProfile'));
@@ -88,6 +89,7 @@ function App() {
             <Route path="/report/pest" element={<PestReport />} />
             <Route path="/report/flood" element={<FloodReport />} />
             <Route path="/report/drought" element={<DroughtReport />} />
+            <Route path="/report/mix" element={<MixReport />} />
             <Route path="/confirmation" element={<Confirmation />} />
             <Route path="/report-confirmation" element={<ReportConfirmation />} />
             <Route path="/admin/farm-reports" element={<AdminFarmReports />} />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -7,7 +8,7 @@ import FarmSelector from '../components/FarmSelector';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
-export default function FloodReport() {
+export default function MixReport() {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [loading, setLoading] = useState(false);
@@ -19,10 +20,8 @@ export default function FloodReport() {
     const [formData, setFormData] = useState({
         farmId: null,
         location: '',
-        // farmArea removed (derived from farm)
         affectedArea: '',
-        crop: '',
-        cropStage: '',
+        damageTypes: [], // Array of selected damage types
         description: '',
         latitude: null,
         longitude: null,
@@ -72,27 +71,32 @@ export default function FloodReport() {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const handleDamageTypeChange = (type) => {
+        setFormData(prev => {
+            const types = prev.damageTypes.includes(type)
+                ? prev.damageTypes.filter(t => t !== type)
+                : [...prev.damageTypes, type];
+            return { ...prev, damageTypes: types };
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.farmId) {
+            setError('Please select a farm');
+            return;
+        }
         setLoading(true);
         setError('');
 
         try {
-            if (!formData.farmId) {
-                throw new Error('Please select a farm');
-            }
-
             const payload = {
-                type: 'flood',
+                type: 'mix',
                 farmId: formData.farmId,
-                location: formData.location,
+                location: formData.location, // Will differ from GPS if farm location is used, but backend logic prefers farmId linkage
                 details: {
-                    cropType: formData.crop,
-                    cropStage: formData.cropStage,
+                    damageTypes: formData.damageTypes,
                     affectedArea: formData.affectedArea,
-                    // farmArea is implicitly in farm details on backend, or we can send it if needed. 
-                    // But user wanted to remove manual input. Backend 'details' json column might expect it?
-                    // I will omit it or send 0, as it's now redundant.
                     description: formData.description
                 },
                 latitude: formData.latitude,
@@ -125,7 +129,7 @@ export default function FloodReport() {
 
     return (
         <div className="flex flex-col h-full bg-white">
-            <Header title="Report Flood Damage" showBack onBack={() => navigate(-1)} />
+            <Header title="Report Multiple Issues" showBack onBack={() => navigate(-1)} />
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -178,11 +182,29 @@ export default function FloodReport() {
                             setFormData(prev => ({
                                 ...prev,
                                 farmId: farm ? farm.id : null,
-                                location: farm ? `${farm.location_barangay}` : '',
-                                crop: farm ? farm.current_crop || '' : ''
+                                location: farm ? `${farm.location_barangay}` : ''
                             }));
                         }}
                     />
+
+                    <div>
+                        <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Nature of Damage</label>
+                        <div className="flex flex-wrap gap-2">
+                            {['Pest', 'Flood', 'Drought', 'Disease', 'Wind'].map(type => (
+                                <button
+                                    key={type}
+                                    type="button"
+                                    onClick={() => handleDamageTypeChange(type)}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.damageTypes.includes(type)
+                                            ? 'bg-primary text-white'
+                                            : 'bg-gray-100 text-gray-600'
+                                        }`}
+                                >
+                                    {type}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
                     <Input
                         label="Affected Area (ha)"
@@ -192,25 +214,11 @@ export default function FloodReport() {
                         onChange={(e) => setFormData({ ...formData, affectedArea: e.target.value })}
                     />
 
-                    <Input
-                        label="Crop Planted"
-                        placeholder="e.g. Rice (RC216)"
-                        value={formData.crop}
-                        onChange={(e) => setFormData({ ...formData, crop: e.target.value })}
-                    />
-
-                    <Input
-                        label="Crop Stage"
-                        placeholder="e.g. Vegetative, Flowering"
-                        value={formData.cropStage}
-                        onChange={(e) => setFormData({ ...formData, cropStage: e.target.value })}
-                    />
-
                     <div>
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Description / Notes</label>
                         <textarea
                             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 min-h-[100px]"
-                            placeholder="Describe the flood extent and damage..."
+                            placeholder="Describe the combined issues and damage..."
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />

@@ -174,16 +174,12 @@ export default function AdminReports() {
                     .full-width { grid-column: span 2; }
                     .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
                     .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
-                    @media print {
-                        body { padding: 0; }
-                        .no-print { display: none; }
-                    }
                 </style>
             </head>
             <body>
                 <div class="header">
                     <div class="logo">CropAid</div>
-                    <div class="title">Verified Report Summary</div>
+                    <div class="title">Complete Report Summary</div>
                 </div>
 
                 <div class="section">
@@ -209,41 +205,97 @@ export default function AdminReports() {
                 </div>
 
                 <div class="section">
-                    <div class="section-header">Farmer Details</div>
+                    <div class="section-header">Farmer Profile</div>
                     <div class="section-content">
                         <div class="field">
                             <span class="label">Name</span>
-                            <span class="value">${report.first_name} ${report.last_name}</span>
+                            <span class="value">${report.farmer_first_name || report.first_name} ${report.farmer_last_name || report.last_name}</span>
                         </div>
                         <div class="field">
                             <span class="label">RSBSA ID</span>
-                            <span class="value">${report.rsbsa_id || 'N/A'}</span>
+                            <span class="value">${report.farmer_rsbsa_id || report.rsbsa_id || 'N/A'}</span>
                         </div>
                         <div class="field">
-                            <span class="label">Contact Number</span>
-                            <span class="value">${report.cellphone || 'N/A'}</span>
+                            <span class="label">Address</span>
+                            <span class="value">${report.farmer_address_sitio || ''}, ${report.farmer_address_barangay || ''}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Contact</span>
+                            <span class="value">${report.farmer_cellphone || report.cellphone || 'N/A'}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <div class="section-header">Farm & Incident Details</div>
+                    <div class="section-header">Farm Details</div>
                     <div class="section-content">
                         <div class="field">
-                            <span class="label">Location (Barangay)</span>
-                            <span class="value">${report.location || report.farm_barangay || 'N/A'}</span>
+                            <span class="label">Farm Location</span>
+                            <span class="value">${report.farm_barangay || report.location || 'N/A'}</span>
                         </div>
                         <div class="field">
-                            <span class="label">Coordinates</span>
-                            <span class="value">${report.latitude && report.longitude ? `${parseFloat(report.latitude).toFixed(6)}, ${parseFloat(report.longitude).toFixed(6)}` : 'N/A'}</span>
+                            <span class="label">Size / Coordinates</span>
+                            <span class="value">${report.farm_size ? report.farm_size + ' ha' : 'N/A'} (${report.latitude}, ${report.longitude})</span>
                         </div>
                         <div class="field">
-                            <span class="label">Crop Type</span>
-                            <span class="value">${details.cropType || 'N/A'}</span>
+                            <span class="label">Land & Soil</span>
+                            <span class="value">${report.farm_land_category || 'N/A'} | ${report.farm_soil_type || 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Topography / Irrigation</span>
+                            <span class="value">${report.farm_topography || 'N/A'} | ${report.farm_irrigation_source || 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Planting Method</span>
+                            <span class="value">${report.farm_planting_method || 'N/A'}</span>
                         </div>
                          <div class="field">
-                            <span class="label">Severity</span>
-                            <span class="value">${details.severity || 'N/A'}</span>
+                            <span class="label">Current Crop</span>
+                            <span class="value">${report.farm_current_crop || details.cropType || 'N/A'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Key Dates (Sowing/Trans/Harv)</span>
+                            <span class="value">
+                                ${formatDate(report.farm_date_of_sowing) || '-'} / 
+                                ${formatDate(report.farm_date_of_transplanting) || '-'} / 
+                                ${formatDate(report.farm_date_of_harvest) || '-'}
+                            </span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Tenural Status</span>
+                            <span class="value">${report.farm_tenural_status || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Insurance Information</div>
+                    <div class="section-content">
+                         <div class="field">
+                            <span class="label">Cover Type</span>
+                            <span class="value">${report.farm_cover_type || 'None'}</span>
+                        </div>
+                        <div class="field">
+                            <span class="label">Details</span>
+                            <span class="value">Amt: ${report.farm_amount_cover || 0} | Prem: ${report.farm_insurance_premium || 0}</span>
+                        </div>
+                        <div class="field full-width">
+                            <span class="label">CLTIP Details</span>
+                            <span class="value">Sum Insured: ${report.farm_cltip_sum_insured || 0} | Premium: ${report.farm_cltip_premium || 0}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">Incident Report Details</div>
+                    <div class="section-content">
+                        <div class="field">
+                            <span class="label">Incident Type</span>
+                            <span class="value" style="text-transform: capitalize">${report.type}</span>
+                        </div>
+                         <div class="field">
+                            <span class="label">Severity / Damage</span>
+                            <span class="value">${details.severity || 'N/A'} | ${details.damageLevel || 'N/A'}</span>
                         </div>
                         <div class="field full-width">
                             <span class="label">Description</span>
@@ -251,13 +303,18 @@ export default function AdminReports() {
                         </div>
                         ${details.affectedArea ? `
                         <div class="field">
-                            <span class="label">Affected Area</span>
+                            <span class="label">Affected Area Reported</span>
                             <span class="value">${details.affectedArea} ha</span>
                         </div>` : ''}
                         ${details.pestType ? `
                         <div class="field">
                             <span class="label">Pest Type</span>
                             <span class="value">${details.pestType}</span>
+                        </div>` : ''}
+                        ${details.damageTypes && details.damageTypes.length > 0 ? `
+                        <div class="field full-width">
+                            <span class="label">Damage Types</span>
+                            <span class="value">${details.damageTypes.join(', ')}</span>
                         </div>` : ''}
                     </div>
                 </div>
@@ -352,11 +409,17 @@ export default function AdminReports() {
                                                 {details.severity}
                                             </span>
                                         )}
+                                        {details.damageTypes && details.damageTypes.map(type => (
+                                            <span key={type} className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-purple-50 text-purple-700 border-purple-200 uppercase tracking-wide">
+                                                {type}
+                                            </span>
+                                        ))}
                                         <span className="text-xs text-gray-400 font-medium">{formatDate(report.created_at)}</span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 capitalize">
                                         <AlertTriangle size={18} className="text-primary" />
-                                        {report.type} Report - <span className="text-gray-600">{details.severity || 'Unknown'} Severity</span>
+                                        {report.type === 'mix' ? 'Multiple Issues Report' : `${report.type} Report`}
+                                        {details.severity && <span className="text-gray-600"> - {details.severity} Severity</span>}
                                     </h3>
                                     <p className="text-sm text-gray-600 mt-2 leading-relaxed italic">
                                         "{details.description || 'No description provided'}"
@@ -364,12 +427,12 @@ export default function AdminReports() {
                                     <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
                                         <span className="flex items-center gap-1.5 font-medium">
                                             <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
-                                                {report.first_name ? report.first_name.charAt(0) : '?'}
+                                                {report.farmer_first_name ? report.farmer_first_name.charAt(0) : (report.first_name ? report.first_name.charAt(0) : '?')}
                                             </div>
-                                            {report.first_name} {report.last_name}
+                                            {report.farmer_first_name || report.first_name} {report.farmer_last_name || report.last_name}
                                         </span>
                                         <span>•</span>
-                                        <span>{report.location}</span>
+                                        <span>{report.farm_barangay || report.location}</span>
                                     </div>
                                 </div>
 
@@ -383,15 +446,14 @@ export default function AdminReports() {
                                         <span className="text-[10px] uppercase font-bold">View</span>
                                     </button>
 
-                                    {report.status === 'verified' && (
-                                        <button
-                                            onClick={() => handleExport(report)}
-                                            className="flex flex-col items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors p-2 rounded-md hover:bg-indigo-50"
-                                        >
-                                            <Printer size={20} />
-                                            <span className="text-[10px] uppercase font-bold">Export</span>
-                                        </button>
-                                    )}
+                                    {/* Export Button - Always Visible */}
+                                    <button
+                                        onClick={() => handleExport(report)}
+                                        className="flex flex-col items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors p-2 rounded-md hover:bg-indigo-50"
+                                    >
+                                        <Printer size={20} />
+                                        <span className="text-[10px] uppercase font-bold">Export</span>
+                                    </button>
 
                                     {report.status === 'pending' && (
                                         <>

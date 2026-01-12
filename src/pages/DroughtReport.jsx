@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import FarmSelector from '../components/FarmSelector';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
@@ -16,8 +17,9 @@ export default function DroughtReport() {
     const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
+        farmId: null,
         location: '',
-        farmArea: '',
+        // farmArea removed
         affectedArea: '',
         crop: '',
         cropStage: '',
@@ -53,7 +55,7 @@ export default function DroughtReport() {
         try {
             const file = e.target.files?.[0];
             if (!file) return;
-            
+
             const result = await processFileInput(file);
             if (result) {
                 setPhotoPreview(result.preview);
@@ -78,14 +80,19 @@ export default function DroughtReport() {
         setError('');
 
         try {
+            if (!formData.farmId) {
+                throw new Error('Please select a farm');
+            }
+
             const payload = {
                 type: 'drought',
+                farmId: formData.farmId,
                 location: formData.location,
                 details: {
                     cropType: formData.crop,
                     cropStage: formData.cropStage,
                     affectedArea: formData.affectedArea,
-                    farmArea: formData.farmArea,
+                    // farmArea removed
                     waterSource: formData.waterSource,
                     daysSinceRain: formData.daysSinceRain,
                     description: formData.description
@@ -142,9 +149,9 @@ export default function DroughtReport() {
                         />
                         {photoPreview ? (
                             <div className="relative">
-                                <img 
-                                    src={photoPreview} 
-                                    alt="Evidence preview" 
+                                <img
+                                    src={photoPreview}
+                                    alt="Evidence preview"
                                     className="w-full h-48 object-cover rounded-lg"
                                 />
                                 <button
@@ -167,34 +174,25 @@ export default function DroughtReport() {
                         )}
                     </div>
 
-                    <Input
-                        label="Location/Farm Area"
-                        placeholder="e.g. Purok 3, Upland Field"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        required
+                    <FarmSelector
+                        selectedFarmId={formData.farmId}
+                        onSelect={(farm) => {
+                            setFormData(prev => ({
+                                ...prev,
+                                farmId: farm ? farm.id : null,
+                                location: farm ? `${farm.location_barangay}` : '',
+                                crop: farm ? farm.current_crop || '' : ''
+                            }));
+                        }}
                     />
 
-                    <div className="flex gap-3">
-                        <div className="flex-1">
-                            <Input
-                                label="Total Farm Area (ha)"
-                                type="number"
-                                placeholder="0.0"
-                                value={formData.farmArea}
-                                onChange={(e) => setFormData({ ...formData, farmArea: e.target.value })}
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <Input
-                                label="Affected Area (ha)"
-                                type="number"
-                                placeholder="0.0"
-                                value={formData.affectedArea}
-                                onChange={(e) => setFormData({ ...formData, affectedArea: e.target.value })}
-                            />
-                        </div>
-                    </div>
+                    <Input
+                        label="Affected Area (ha)"
+                        type="number"
+                        placeholder="0.0"
+                        value={formData.affectedArea}
+                        onChange={(e) => setFormData({ ...formData, affectedArea: e.target.value })}
+                    />
 
                     <Input
                         label="Crop Planted"
