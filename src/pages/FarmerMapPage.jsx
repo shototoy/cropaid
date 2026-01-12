@@ -269,7 +269,6 @@ export default function FarmerMapPage() {
         };
 
         fetchData();
-        fetchData();
     }, [user, isMockMode]);
 
     // Fetch Options
@@ -295,7 +294,6 @@ export default function FarmerMapPage() {
                     lat: farmToEdit.lat,
                     lng: farmToEdit.lng,
                     barangay: farmToEdit.barangay || '',
-                    barangay: farmToEdit.barangay || '',
                     size: farmToEdit.size || '',
                     current_crop: farmToEdit.current_crop || ''
                 });
@@ -305,212 +303,210 @@ export default function FarmerMapPage() {
                 // Simplified: If not in options, set custom? 
                 // For now just initialize.
             }
-        }
-    } else if (editingId === 'new') {
-        // Reset for new farm
-        setEditedFarm({
-            lat: defaultCenter[0],
-            lng: defaultCenter[1],
-            barangay: '',
-            barangay: '',
-            size: '',
-            current_crop: ''
-        });
-        setIsCustomCrop(false);
-    }
-}, [editingId, myFarms]);
-
-// Save (Create or Update)
-const handleSaveFarm = async () => {
-    setSaving(true);
-    try {
-        if (editingId === 'new') {
-            // CREATE
-            const res = await fetch(`${API_BASE_URL}/farmer/farm`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(editedFarm)
+        } else if (editingId === 'new') {
+            // Reset for new farm
+            setEditedFarm({
+                lat: defaultCenter[0],
+                lng: defaultCenter[1],
+                barangay: '',
+                size: '',
+                current_crop: ''
             });
-            if (res.ok) {
-                const newFarm = await res.json();
-                setMyFarms([...myFarms, newFarm]);
-                setEditingId(null); // Go back to list or close? Close manager for now.
-                setIsEditing(false);
+            setIsCustomCrop(false);
+        }
+    }, [editingId, myFarms]);
+
+    // Save (Create or Update)
+    const handleSaveFarm = async () => {
+        setSaving(true);
+        try {
+            if (editingId === 'new') {
+                // CREATE
+                const res = await fetch(`${API_BASE_URL}/farmer/farm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(editedFarm)
+                });
+                if (res.ok) {
+                    const newFarm = await res.json();
+                    setMyFarms([...myFarms, newFarm]);
+                    setEditingId(null); // Go back to list or close? Close manager for now.
+                    setIsEditing(false);
+                }
+            } else {
+                // UPDATE
+                const res = await fetch(`${API_BASE_URL}/farmer/farm/${editingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(editedFarm)
+                });
+                if (res.ok) {
+                    setMyFarms(myFarms.map(f => f.id === editingId ? { ...f, ...editedFarm } : f));
+                    setEditingId(null);
+                    setIsEditing(false);
+                }
             }
-        } else {
-            // UPDATE
-            const res = await fetch(`${API_BASE_URL}/farmer/farm/${editingId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(editedFarm)
-            });
-            if (res.ok) {
-                setMyFarms(myFarms.map(f => f.id === editingId ? { ...f, ...editedFarm } : f));
-                setEditingId(null);
-                setIsEditing(false);
-            }
-        }
-    } catch (e) { console.error("Error saving farm", e); }
-    setSaving(false);
-};
-
-const handleDeleteFarm = async (id) => {
-    if (!confirm("Are you sure you want to delete this farm?")) return;
-    try {
-        const res = await fetch(`${API_BASE_URL}/farmer/farm/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-            setMyFarms(myFarms.filter(f => f.id !== id));
-        }
-    } catch (e) { console.error("Error deleting farm", e); }
-};
-
-const handleCancelEdit = () => {
-    setEditingId(null);
-    setIsEditing(false);
-};
-
-const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                handleLocationSelect(latitude, longitude);
-            },
-            (error) => console.error(error),
-            { enableHighAccuracy: true }
-        );
-    }
-};
-
-const toggleFilter = (type) => {
-    setActiveFilters(prev => ({ ...prev, [type]: !prev[type] }));
-};
-
-const identifyBarangay = (lat, lng) => {
-    const point = turf.point([lng, lat]);
-
-    for (const [name, data] of Object.entries(barangayBoundaries)) {
-        const polyCoords = [data.coordinates.map(c => [c[1], c[0]])];
-        const poly = turf.polygon(polyCoords);
-
-        if (turf.booleanPointInPolygon(point, poly)) {
-            return name;
-        }
-    }
-    return '';
-};
-
-const handleLocationSelect = (lat, lng) => {
-    const detectedBarangay = identifyBarangay(lat, lng);
-    setEditedFarm(prev => ({
-        ...prev,
-        lat,
-        lng,
-        barangay: detectedBarangay || prev.barangay
-    }));
-};
-
-const getStatusBadge = (status) => {
-    const styles = {
-        pending: 'bg-amber-100 text-amber-700',
-        verified: 'bg-blue-100 text-blue-700',
-        resolved: 'bg-green-100 text-green-700',
-        rejected: 'bg-red-100 text-red-700'
+        } catch (e) { console.error("Error saving farm", e); }
+        setSaving(false);
     };
-    return styles[status] || 'bg-gray-100 text-gray-700';
-};
 
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
+    const handleDeleteFarm = async (id) => {
+        if (!confirm("Are you sure you want to delete this farm?")) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/farmer/farm/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setMyFarms(myFarms.filter(f => f.id !== id));
+            }
+        } catch (e) { console.error("Error deleting farm", e); }
+    };
 
-const filteredReports = useMemo(() => {
-    return reports.filter(r => {
-        // Ensure valid coordinates and type exist
-        if (!r.latitude || !r.longitude) return false;
+    const handleCancelEdit = () => {
+        setEditingId(null);
+        setIsEditing(false);
+    };
 
-        const rawType = r.type || r.report_type;
-        if (!rawType) return false;
-
-        const type = rawType.trim().toLowerCase();
-        // Check if the type is actively validated
-        if (!activeFilters[type]) return false;
-
-        if (viewMode === 'personal') {
-            if (isMockMode) return r.user_id === 'my-id';
-            return user?.id && r.user_id === user.id;
+    const getCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    handleLocationSelect(latitude, longitude);
+                },
+                (error) => console.error(error),
+                { enableHighAccuracy: true }
+            );
         }
+    };
 
-        // Community View: Includes ALL valid reports (Mine + Others)
-        return true;
-    });
-}, [reports, activeFilters, viewMode, user, isMockMode]);
+    const toggleFilter = (type) => {
+        setActiveFilters(prev => ({ ...prev, [type]: !prev[type] }));
+    };
 
-const mapCenter = (editingId && editedFarm.lat)
-    ? [editedFarm.lat, editedFarm.lng]
-    : (myFarms.length > 0 ? [myFarms[0].lat, myFarms[0].lng] : defaultCenter);
+    const identifyBarangay = (lat, lng) => {
+        const point = turf.point([lng, lat]);
 
-return (
-    <div className="flex flex-col h-[100dvh] bg-white relative">
-        <Header title={viewMode === 'personal' ? "Personal Map" : "Community Map"} showBack />
+        for (const [name, data] of Object.entries(barangayBoundaries)) {
+            const polyCoords = [data.coordinates.map(c => [c[1], c[0]])];
+            const poly = turf.polygon(polyCoords);
 
-        <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center justify-between gap-3 shadow-sm z-[1000]">
-            <div className="bg-gray-100 p-1 rounded-lg flex w-full max-w-[200px]">
-                <button
-                    onClick={() => setViewMode('all')}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'all' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                >
-                    Community
-                </button>
-                <button
-                    onClick={() => setViewMode('personal')}
-                    className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'personal' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                >
-                    Personal
-                </button>
+            if (turf.booleanPointInPolygon(point, poly)) {
+                return name;
+            }
+        }
+        return '';
+    };
+
+    const handleLocationSelect = (lat, lng) => {
+        const detectedBarangay = identifyBarangay(lat, lng);
+        setEditedFarm(prev => ({
+            ...prev,
+            lat,
+            lng,
+            barangay: detectedBarangay || prev.barangay
+        }));
+    };
+
+    const getStatusBadge = (status) => {
+        const styles = {
+            pending: 'bg-amber-100 text-amber-700',
+            verified: 'bg-blue-100 text-blue-700',
+            resolved: 'bg-green-100 text-green-700',
+            rejected: 'bg-red-100 text-red-700'
+        };
+        return styles[status] || 'bg-gray-100 text-gray-700';
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const filteredReports = useMemo(() => {
+        return reports.filter(r => {
+            // Ensure valid coordinates and type exist
+            if (!r.latitude || !r.longitude) return false;
+
+            const rawType = r.type || r.report_type;
+            if (!rawType) return false;
+
+            const type = rawType.trim().toLowerCase();
+            // Check if the type is actively validated
+            if (!activeFilters[type]) return false;
+
+            if (viewMode === 'personal') {
+                if (isMockMode) return r.user_id === 'my-id';
+                return user?.id && r.user_id === user.id;
+            }
+
+            // Community View: Includes ALL valid reports (Mine + Others)
+            return true;
+        });
+    }, [reports, activeFilters, viewMode, user, isMockMode]);
+
+    const mapCenter = (editingId && editedFarm.lat)
+        ? [editedFarm.lat, editedFarm.lng]
+        : (myFarms.length > 0 ? [myFarms[0].lat, myFarms[0].lng] : defaultCenter);
+
+    return (
+        <div className="flex flex-col h-[100dvh] bg-white relative">
+            <Header title={viewMode === 'personal' ? "Personal Map" : "Community Map"} showBack />
+
+            <div className="bg-white border-b border-gray-100 px-4 py-2 flex items-center justify-between gap-3 shadow-sm z-[1000]">
+                <div className="bg-gray-100 p-1 rounded-lg flex w-full max-w-[200px]">
+                    <button
+                        onClick={() => setViewMode('all')}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'all' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        Community
+                    </button>
+                    <button
+                        onClick={() => setViewMode('personal')}
+                        className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${viewMode === 'personal' ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        Personal
+                    </button>
+                </div>
+
+                {!isEditing && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="bg-primary text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95"
+                    >
+                        <Edit2 size={14} />
+                        Manage Farms
+                    </button>
+                )}
             </div>
 
-            {!isEditing && (
-                <button
-                    onClick={() => setIsEditing(true)}
-                    className="bg-primary text-white text-xs font-bold py-2 px-3 rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95"
-                >
-                    <Edit2 size={14} />
-                    Manage Farms
-                </button>
-            )}
-        </div>
-
-        {isEditing && (
-            <div className="absolute top-16 left-0 right-0 z-[1000] bg-white shadow-md p-3 animate-slide-down border-b border-gray-100 max-h-[60vh] overflow-y-auto">
-                {!editingId ? (
-                    // LIST VIEW
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                            <h3 className="font-bold text-gray-800">Manage Farms</h3>
-                            <p className="text-[10px] text-gray-500">Tap a farm on the map to edit or delete.</p>
+            {isEditing && (
+                <div className="absolute top-16 left-0 right-0 z-[1000] bg-white shadow-md p-3 animate-slide-down border-b border-gray-100 max-h-[60vh] overflow-y-auto">
+                    {!editingId ? (
+                        // LIST VIEW
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <h3 className="font-bold text-gray-800">Manage Farms</h3>
+                                <p className="text-[10px] text-gray-500">Tap a farm on the map to edit or delete.</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelEdit}
+                                    className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-lg text-xs"
+                                >
+                                    Done
+                                </button>
+                                <button
+                                    onClick={() => setEditingId('new')}
+                                    className="bg-primary text-white text-xs px-3 py-2 rounded-lg flex items-center gap-1 font-bold shadow-sm"
+                                >
+                                    + Add New
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleCancelEdit}
-                                className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-lg text-xs"
-                            >
-                                Done
-                            </button>
-                            <button
-                                onClick={() => setEditingId('new')}
-                                className="bg-primary text-white text-xs px-3 py-2 rounded-lg flex items-center gap-1 font-bold shadow-sm"
-                            >
-                                + Add New
-                            </button>
-                        </div>
-                    </div>
-                ) : (
+                    ) : (
                         // EDIT VIEW
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center justify-between">
@@ -608,9 +604,10 @@ return (
                                 Edit Full Details (Crops, Soil, etc.)
                             </button>
                         </div>
-        )}
-    </div>
-)}
+            )}
+        </div>
+    )
+}
 
 <div className="flex-1 relative overflow-hidden">
     {loading ? (

@@ -54,18 +54,6 @@ export default function PestReport() {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const res = await fetch(`${API_URL}/options`); // Public endpoint? Or auth? /api/options in index.js didn't use auth middleware explicitly but index.js applies it globally?
-                // Wait, index.js: app.get('/api/options'...) is defined BEFORE or AFTER auth middleware?
-                // In my edit, I placed it after /api/farmer context? 
-                // Let's check index.js placement layer. 
-                // If it fails, I'll use token.
-                /* 
-                   Wait, I placed it after `app.get('/api/farmer/farms'...)` which has `authenticateToken`.
-                   But `app.get('/api/options', ...)` definition itself doesn't have `authenticateToken`.
-                   Express middleware order applies if `app.use(auth)` is used globally.
-                   In `index.js`, auth middleware is usually applied to specific routes or groups.
-                   I should send token just in case.
-                */
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
                 const response = await fetch(`${API_URL}/options`, { headers });
                 if (response.ok) {
@@ -76,6 +64,7 @@ export default function PestReport() {
                 console.error("Failed to load options", e);
             }
         };
+
         fetchOptions();
     }, [token]);
 
