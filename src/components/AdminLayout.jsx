@@ -38,38 +38,36 @@ export default function AdminLayout() {
             <AdminSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Main Content Scrollable Area */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-                    {/* Top Bar for both Mobile and Desktop */}
-                    <div className="flex items-center justify-between mb-6">
-                        {/* Mobile Menu Button - Visible only on mobile */}
-                        <div className="flex items-center gap-4">
-                            <button
-                                className="p-2 text-gray-500 hover:bg-gray-100 rounded-md lg:hidden"
-                                onClick={() => setSidebarOpen(true)}
-                            >
-                                <Menu size={24} />
-                            </button>
+                {/* Top Bar - Fixed at top of content area */}
+                <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between shrink-0">
+                    {/* Mobile Menu Button */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-md lg:hidden"
+                            onClick={() => setSidebarOpen(true)}
+                        >
+                            <Menu size={24} />
+                        </button>
 
-                            {/* Desktop Page Title */}
-                            <div className="hidden lg:block">
-                                <h1 className="text-2xl font-bold text-gray-900">{headerInfo.title}</h1>
-                                <p className="text-sm text-gray-500">{headerInfo.subtitle}</p>
-                            </div>
-                        </div>
-
-                        {/* Right Side Actions Container */}
-                        <div className="flex items-center gap-3">
-                            {/* Page Content Actions (Injected via Context) */}
-                            {headerAction}
-
-                            {/* Notification Bell with Real-time Polling */}
-                            <NotificationBell />
+                        <div className="hidden lg:block">
+                            <h1 className="text-2xl font-bold text-gray-900">{headerInfo.title}</h1>
+                            <p className="text-sm text-gray-500">{headerInfo.subtitle}</p>
                         </div>
                     </div>
 
-                    <div className="max-w-7xl mx-auto h-full">
-                        <Outlet context={{ setHeaderAction }} />
+                    {/* Right Side Actions */}
+                    <div className="flex items-center gap-3">
+                        {headerAction}
+                        <NotificationBell />
+                    </div>
+                </header>
+
+                {/* Main Content Area - Scrollable */}
+                <main className="flex-1 overflow-hidden relative flex flex-col">
+                    <div className={`flex-1 ${location.pathname.includes('map') ? 'p-0 overflow-hidden' : 'p-4 lg:p-8 overflow-y-auto'}`}>
+                        <div className={`mx-auto h-full ${location.pathname.includes('map') ? 'max-w-none' : 'max-w-7xl'}`}>
+                            <Outlet context={{ setHeaderAction }} />
+                        </div>
                     </div>
                 </main>
             </div>

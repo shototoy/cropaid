@@ -28,6 +28,8 @@ export default function PestReport() {
         longitude: null,
         photoBase64: null
     });
+    const [pestOptions, setPestOptions] = useState([]);
+    const [isCustomPest, setIsCustomPest] = useState(false);
 
     // Capture GPS on component mount
     useEffect(() => {
@@ -47,6 +49,35 @@ export default function PestReport() {
         };
         getLocation();
     }, []);
+
+    // Fetch Options on Mount
+    useEffect(() => {
+        const fetchOptions = async () => {
+            try {
+                const res = await fetch(`${API_URL}/options`); // Public endpoint? Or auth? /api/options in index.js didn't use auth middleware explicitly but index.js applies it globally?
+                // Wait, index.js: app.get('/api/options'...) is defined BEFORE or AFTER auth middleware?
+                // In my edit, I placed it after /api/farmer context? 
+                // Let's check index.js placement layer. 
+                // If it fails, I'll use token.
+                /* 
+                   Wait, I placed it after `app.get('/api/farmer/farms'...)` which has `authenticateToken`.
+                   But `app.get('/api/options', ...)` definition itself doesn't have `authenticateToken`.
+                   Express middleware order applies if `app.use(auth)` is used globally.
+                   In `index.js`, auth middleware is usually applied to specific routes or groups.
+                   I should send token just in case.
+                */
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const response = await fetch(`${API_URL}/options`, { headers });
+                if (response.ok) {
+                    const data = await response.json();
+                    setPestOptions(data.pests || []);
+                }
+            } catch (e) {
+                console.error("Failed to load options", e);
+            }
+        };
+        fetchOptions();
+    }, [token]);
 
     // Handle photo capture from file input
     const handlePhotoCapture = async (e) => {
@@ -190,13 +221,37 @@ export default function PestReport() {
                         onChange={(e) => setFormData({ ...formData, crop: e.target.value })}
                     />
 
-                    <Input
-                        label="Type of Pest (if known)"
-                        placeholder="e.g. Black Bug, Stem Borer"
-                        value={formData.pestType}
-                        onChange={(e) => setFormData({ ...formData, pestType: e.target.value })}
-                        required
-                    />
+                    <div>
+                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Type of Pest</label>
+                        <select
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 mb-2"
+                            value={isCustomPest ? 'Other' : formData.pestType}
+                            onChange={(e) => {
+                                if (e.target.value === 'Other') {
+                                    setIsCustomPest(true);
+                                    setFormData({ ...formData, pestType: '' });
+                                } else {
+                                    setIsCustomPest(false);
+                                    setFormData({ ...formData, pestType: e.target.value });
+                                }
+                            }}
+                            required
+                        >
+                            <option value="">Select Pest</option>
+                            {pestOptions.map((p, idx) => (
+                                <option key={idx} value={p.name}>{p.name}</option>
+                            ))}
+                            <option value="Other">Specify Other...</option>
+                        </select>
+                        {isCustomPest && (
+                            <Input
+                                placeholder="Enter specific pest name..."
+                                value={formData.pestType}
+                                onChange={(e) => setFormData({ ...formData, pestType: e.target.value })}
+                                required
+                            />
+                        )}
+                    </div>
 
                     <div>
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Severity Level</label>
