@@ -17,7 +17,26 @@ export default function FarmerDashboard() {
     const [weather, setWeather] = useState(null);
     const [liveWeather, setLiveWeather] = useState(null);
     const [activeSlide, setActiveSlide] = useState(0);
-    const [carouselItems, setCarouselItems] = useState([{ isDefault: true }]);
+    const [carouselItems, setCarouselItems] = useState(() => {
+        try {
+            const cached = sessionStorage.getItem('preload_news');
+            if (cached) {
+                const items = JSON.parse(cached);
+                const newsList = Array.isArray(items) ? items : items.news || [];
+                // Process same as fetchAdvisories
+                const top5 = newsList.slice(0, 5);
+                const recentItems = top5.filter(item => {
+                    const date = item.created_at || item.date;
+                    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+                    return new Date(date) > threeDaysAgo;
+                });
+                if (recentItems.length > 0) return recentItems;
+            }
+        } catch (e) {
+            console.error("Cache load error", e);
+        }
+        return [{ isDefault: true }];
+    });
     const [stats, setStats] = useState({ active_reports: 0 });
     const [unreadCount, setUnreadCount] = useState(0);
 

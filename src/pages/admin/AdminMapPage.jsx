@@ -1,237 +1,358 @@
-import React, { useState } from 'react';
-import AdminMap from '../../components/AdminMap';
-import { X, MapPin, Calendar, User, Leaf, AlertTriangle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Tooltip, Polygon } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { useAuth, API_URL } from '../../context/AuthContext';
+import { MOCK_DATA } from '../../config/mockData';
+import { MapPin, Bug, CloudRain, Sun, Home, Crosshair, X, Filter } from 'lucide-react';
+import { noralaBoundaryCoordinates } from '../../config/noralaBoundary';
+import { barangayBoundaries } from '../../config/barangayBoundaries';
+import { API_BASE_URL } from '../../services/api';
+import * as turf from '@turf/turf';
+
+// Fix for default marker icons in React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom Icons - Reports (Circular)
+const createReportIcon = (iconSvg, color, size = 32) => {
+    const bgColor = color.replace('text-', '').replace('-500', '');
+    const hexColor = {
+        'red': '#ef4444',
+        'blue': '#3b82f6',
+        'orange': '#f97316',
+        'green': '#22c55e',
+        'gray': '#6b7280',
+        'purple': '#a855f7' // Added purple for Mix
+    }[bgColor] || '#3b82f6';
+
+    return L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+            background-color: ${hexColor};
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0.9;
+            transform: scale(${size / 36}); 
+            transform-origin: center;
+        ">${iconSvg}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+        popupAnchor: [0, -size / 2]
+    });
+};
+
+// Custom Icons - Farms (Rounded Square)
+const createFarmIcon = (iconSvg, color, size = 32) => {
+    // Gray is standard for community farms
+    const hexColor = '#6b7280';
+
+    return L.divIcon({
+        className: 'custom-icon',
+        html: `<div style="
+            background-color: ${hexColor};
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 12px;
+            border: 2px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transform: scale(${size / 28});
+            transform-origin: center;
+        ">${iconSvg}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size],
+        popupAnchor: [0, -size]
+    });
+};
+
+// SVG Strings
+const Icons = {
+    pest: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13a6 6 0 0 0-6-6"/><path d="M18 13a6 6 0 0 1 6-6"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-1.9 3.53-4"/></svg>',
+    flood: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 20v4"/><path d="M8 20v4"/><path d="M12 20v4"/></svg>',
+    drought: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    mix: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', // Star/Mix icon
+    farm: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+};
+
+const reportIcons = (type, zoom) => {
+    const farmSizeRaw = 22 + (zoom - 12) * 3;
+    const farmSize = Math.max(18, Math.min(40, farmSizeRaw));
+    const size = farmSize * 0.9;
+
+    const typeKey = type?.toLowerCase();
+
+    if (typeKey === 'pest') return createReportIcon(Icons.pest, 'red', size);
+    if (typeKey === 'flood') return createReportIcon(Icons.flood, 'blue', size);
+    if (typeKey === 'drought') return createReportIcon(Icons.drought, 'orange', size);
+    if (typeKey === 'mix') return createReportIcon(Icons.mix, 'purple', size);
+    return createReportIcon(Icons.pest, 'gray', size);
+};
+
+const farmIcon = (zoom, color = 'gray') => {
+    const calculatedSize = 22 + (zoom - 12) * 3;
+    const size = Math.max(18, Math.min(40, calculatedSize));
+    return createFarmIcon(Icons.farm, color, size);
+};
+
+function MapController({ setZoom }) {
+    useMapEvents({
+        zoomend(e) {
+            setZoom(e.target.getZoom());
+        }
+    });
+    return null;
+}
 
 export default function AdminMapPage() {
-    const { token } = useAuth();
+    const { token, isMockMode } = useAuth();
+
+    // Default Center (Norala)
+    const defaultCenter = [6.5206, 124.6623];
+
+    // State
     const [selectedReport, setSelectedReport] = useState(null);
-    const [showPhotoModal, setShowPhotoModal] = useState(false);
-    const [photoLoading, setPhotoLoading] = useState(false);
-    const [photoData, setPhotoData] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({
+        farm: true,
+        pest: true,
+        flood: true,
+        drought: true,
+        mix: true
+    });
 
-    const handleReportClick = (report) => {
-        // Parse details if it's a string
-        let details = {};
-        try {
-            details = typeof report.details === 'string' ? JSON.parse(report.details || '{}') : (report.details || {});
-        } catch (e) {
-            details = {};
-        }
-        
-        // Normalize the report data
-        const normalizedReport = {
-            ...report,
-            farmer_name: report.farmer_name || `${report.first_name || ''} ${report.last_name || ''}`.trim() || 'Unknown',
-            location: report.location || details.barangay || 'Unknown location',
-            crop_planted: report.crop_planted || details.cropType || 'Not specified',
-            affected_area: report.affected_area || details.affectedArea || 0,
-            description: report.description || details.description || details.notes || ''
-        };
-        
-        setSelectedReport(normalizedReport);
-        setPhotoData(null);
-    };
+    const [reports, setReports] = useState([]);
+    const [farms, setFarms] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [zoom, setZoom] = useState(11);
 
-    const closeDetailPanel = () => {
-        setSelectedReport(null);
-        setPhotoData(null);
-    };
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                if (isMockMode) {
+                    setReports(MOCK_DATA.reports);
+                    // Use mock farms locally if needed
+                } else {
+                    // Fetch Public Reports
+                    try {
+                        const reportRes = await fetch(`${API_BASE_URL}/public/reports`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (reportRes.ok) {
+                            const reportData = await reportRes.json();
+                            setReports(reportData);
+                        }
+                    } catch (e) { console.error("Error fetching reports", e); }
 
-    const loadReportPhoto = async () => {
-        if (!selectedReport?.id) return;
-        
-        setPhotoLoading(true);
-        try {
-            const response = await fetch(`${API_URL}/admin/reports/${selectedReport.id}/photo`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                setPhotoData(data.photo);
-                setShowPhotoModal(true);
+                    // Fetch Public Farms
+                    try {
+                        const farmsRes = await fetch(`${API_BASE_URL}/public/farms`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (farmsRes.ok) {
+                            const farmsData = await farmsRes.json();
+                            setFarms(farmsData);
+                        }
+                    } catch (e) { console.error("Error fetching community farms", e); }
+                }
+            } catch (error) {
+                console.error("Data load error:", error);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            console.error('Failed to load photo:', err);
-        } finally {
-            setPhotoLoading(false);
-        }
-    };
-
-    const getStatusColor = (status) => {
-        const colors = {
-            pending: 'text-yellow-600 bg-yellow-50',
-            verified: 'text-blue-600 bg-blue-50',
-            resolved: 'text-green-600 bg-green-50',
-            rejected: 'text-red-600 bg-red-50'
         };
-        return colors[status?.toLowerCase()] || 'text-gray-600 bg-gray-50';
+
+        fetchData();
+    }, [token, isMockMode]);
+
+    const toggleFilter = (type) => {
+        setActiveFilters(prev => ({ ...prev, [type]: !prev[type] }));
     };
 
-    const getTypeIcon = (type) => {
-        switch (type?.toLowerCase()) {
-            case 'pest': return '🐛';
-            case 'flood': return '🌊';
-            case 'drought': return '☀️';
-            default: return '📋';
-        }
+    const getStatusBadge = (status) => {
+        const styles = {
+            pending: 'bg-amber-100 text-amber-700',
+            verified: 'bg-blue-100 text-blue-700',
+            resolved: 'bg-green-100 text-green-700',
+            rejected: 'bg-red-100 text-red-700'
+        };
+        return styles[status] || 'bg-gray-100 text-gray-700';
     };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const filteredReports = useMemo(() => {
+        return reports.filter(r => {
+            if (!r.latitude || !r.longitude) return false;
+            const rawType = r.type || r.report_type;
+            if (!rawType) return false;
+            const type = rawType.trim().toLowerCase();
+            if (!activeFilters[type]) return false;
+            return true;
+        });
+    }, [reports, activeFilters]);
 
     return (
-        <>
-            <div className="h-[calc(100vh-120px)] flex flex-col md:flex-row gap-4 relative z-0">
-                {/* Main Map Area */}
-                <div className={`flex-1 bg-white rounded-xl shadow-sm overflow-hidden transition-all relative z-0 ${selectedReport ? 'md:w-2/3' : 'w-full'} min-h-[300px] md:min-h-0`}>
-                    <AdminMap onReportClick={handleReportClick} />
+        <div className="flex flex-col h-full bg-white relative rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+            <div className="flex-1 relative">
+                {loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50 z-50">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                ) : (
+                    <MapContainer
+                        center={defaultCenter}
+                        zoom={12}
+                        style={{ height: '100%', width: '100%' }}
+                        zoomControl={false}
+                        preferCanvas={true}
+                        maxBounds={[[6.43, 124.58], [6.62, 124.75]]}
+                        maxBoundsViscosity={1.0}
+                        minZoom={12}
+                        maxZoom={18}
+                    >
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
+
+                        {/* Boundaries */}
+                        <Polygon
+                            positions={noralaBoundaryCoordinates}
+                            pathOptions={{ color: '#15803d', weight: 5, fill: false }}
+                        />
+                        {Object.entries(barangayBoundaries).map(([name, data]) => (
+                            <Polygon
+                                key={name}
+                                positions={data.coordinates}
+                                pathOptions={{ color: 'white', weight: 3, fillColor: data.color, fillOpacity: 0.05 }}
+                            >
+                                <Tooltip sticky direction="center" className="bg-transparent border-0 font-bold text-xs shadow-none text-gray-700">
+                                    {name}
+                                </Tooltip>
+                            </Polygon>
+                        ))}
+
+                        <MapController setZoom={setZoom} />
+
+                        {/* Farms */}
+                        {activeFilters.farm && farms.map(farm => (
+                            <Marker
+                                key={farm.id}
+                                position={[farm.lat, farm.lng]}
+                                icon={farmIcon(zoom)}
+                                opacity={0.8}
+                            >
+                                <Popup>
+                                    <div className="text-center p-1">
+                                        <div className="font-bold text-sm">{farm.owner}'s Farm</div>
+                                        <div className="text-xs text-gray-500">{farm.barangay}</div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        ))}
+
+                        {/* Reports */}
+                        {filteredReports.map((report) => (
+                            <Marker
+                                key={report.id}
+                                position={[report.latitude, report.longitude]}
+                                icon={reportIcons(report.type || report.report_type, zoom)}
+                                eventHandlers={{ click: () => setSelectedReport(report) }}
+                            >
+                            </Marker>
+                        ))}
+                    </MapContainer>
+                )}
+
+                {/* Filters */}
+                <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
+                        <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Layers</span>
+
+                        <button onClick={() => toggleFilter('farm')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm ? 'bg-green-50 border-green-200 text-green-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'}`}><Home size={12} /></div>
+                            <span className="text-[10px] font-bold">Farms</span>
+                        </button>
+                        <button onClick={() => toggleFilter('pest')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.pest ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.pest ? 'bg-red-500 text-white' : 'bg-gray-300 text-white'}`}><Bug size={12} /></div>
+                            <span className="text-[10px] font-bold">Pest</span>
+                        </button>
+                        <button onClick={() => toggleFilter('flood')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.flood ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.flood ? 'bg-blue-500 text-white' : 'bg-gray-300 text-white'}`}><CloudRain size={12} /></div>
+                            <span className="text-[10px] font-bold">Flood</span>
+                        </button>
+                        <button onClick={() => toggleFilter('drought')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.drought ? 'bg-orange-50 border-orange-200 text-orange-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.drought ? 'bg-orange-500 text-white' : 'bg-gray-300 text-white'}`}><Sun size={12} /></div>
+                            <span className="text-[10px] font-bold">Drought</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Detail Panel - Sidebar on Desktop, Modal on Mobile */}
+                {/* Selected Report Popup */}
                 {selectedReport && (
-                    <>
-                        {/* Mobile Overlay */}
-                        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={closeDetailPanel} />
-                        
-                        {/* Panel */}
-                        <div className="fixed inset-x-0 bottom-0 md:relative md:inset-auto md:w-1/3 md:min-w-[320px] bg-white rounded-t-2xl md:rounded-xl shadow-lg md:shadow-sm overflow-hidden flex flex-col z-50 md:z-0 max-h-[80vh] md:max-h-none">
-                            {/* Header */}
-                            <div className="bg-primary text-white p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl">{getTypeIcon(selectedReport.report_type)}</span>
-                                    <div>
-                                        <h3 className="font-bold capitalize">{selectedReport.report_type} Report</h3>
-                                        <p className="text-sm opacity-80">ID: #{selectedReport.id}</p>
-                                    </div>
+                    <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-auto md:w-80 md:bottom-6 md:right-6 bg-white rounded-xl shadow-2xl p-4 z-[1100] animate-slide-up border border-gray-100">
+                        <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-xl text-white shadow-sm ${(selectedReport.type || selectedReport.report_type) === 'pest' ? 'bg-red-500' :
+                                    (selectedReport.type || selectedReport.report_type) === 'flood' ? 'bg-blue-500' :
+                                        (selectedReport.type || selectedReport.report_type) === 'mix' ? 'bg-purple-500' :
+                                            'bg-orange-500'
+                                    }`}>
+                                    {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={20} /> :
+                                        (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={20} /> :
+                                            (selectedReport.type || selectedReport.report_type) === 'mix' ? <Filter size={20} /> : // Mix icon?
+                                                <Sun size={20} />}
                                 </div>
-                                <button 
-                                    onClick={closeDetailPanel}
-                                    className="p-1 hover:bg-white/20 rounded transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                {/* Status Badge */}
-                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(selectedReport.status)}`}>
-                                    {selectedReport.status === 'verified' && <CheckCircle size={16} />}
-                                    {selectedReport.status === 'pending' && <AlertTriangle size={16} />}
-                                    {selectedReport.status?.toUpperCase()}
-                                </div>
-
-                                {/* Farmer Info */}
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                    <User size={16} />
-                                    <span className="text-sm font-medium">Farmer Information</span>
-                                </div>
-                                <p className="font-semibold text-gray-800">{selectedReport.farmer_name || 'Unknown'}</p>
-                            </div>
-
-                            {/* Location Info */}
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                    <MapPin size={16} />
-                                    <span className="text-sm font-medium">Location</span>
-                                </div>
-                                <p className="text-gray-800">{selectedReport.location}</p>
-                                {selectedReport.latitude && selectedReport.longitude && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        GPS: {parseFloat(selectedReport.latitude).toFixed(6)}, {parseFloat(selectedReport.longitude).toFixed(6)}
+                                <div>
+                                    <h3 className="font-bold text-gray-900 capitalize text-sm">{selectedReport.type || selectedReport.report_type} Alert</h3>
+                                    <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                        <MapPin size={10} /> {selectedReport.location}
                                     </p>
-                                )}
-                            </div>
-
-                            {/* Crop Info */}
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                    <Leaf size={16} />
-                                    <span className="text-sm font-medium">Crop Information</span>
                                 </div>
-                                <p className="text-gray-800">{selectedReport.crop_planted || 'Not specified'}</p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Affected Area: <span className="font-medium">{selectedReport.affected_area || 0} hectares</span>
-                                </p>
                             </div>
-
-                            {/* Date Info */}
-                            <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="flex items-center gap-2 text-gray-600 mb-2">
-                                    <Calendar size={16} />
-                                    <span className="text-sm font-medium">Report Date</span>
-                                </div>
-                                <p className="text-gray-800">
-                                    {new Date(selectedReport.created_at).toLocaleDateString('en-PH', {
-                                        weekday: 'long',
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })}
-                                </p>
-                            </div>
-
-                            {/* Description */}
-                            {selectedReport.description && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <div className="text-sm font-medium text-gray-600 mb-2">Description</div>
-                                    <p className="text-gray-800 text-sm">{selectedReport.description}</p>
-                                </div>
-                            )}
-
-                            {/* Photo Button */}
-                            <button
-                                onClick={loadReportPhoto}
-                                disabled={photoLoading}
-                                className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
-                            >
-                                {photoLoading ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                        Loading Photo...
-                                    </>
-                                ) : (
-                                    <>📷 View Photo Evidence</>
-                                )}
+                            <button onClick={() => setSelectedReport(null)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+                                <X size={18} />
                             </button>
                         </div>
+
+                        <div className="space-y-2 mb-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusBadge(selectedReport.status)}`}>
+                                {selectedReport.status}
+                            </span>
+                            <div className="bg-gray-50 p-2 rounded-lg text-xs text-gray-600 border border-gray-100 italic">
+                                "{selectedReport.details ? (typeof selectedReport.details === 'string' ? JSON.parse(selectedReport.details).description : selectedReport.details.description) : 'No description provided.'}"
+                            </div>
+                        </div>
+
+                        {selectedReport.photo_base64 && (
+                            <div className="rounded-lg overflow-hidden h-32 border border-gray-200 mb-2">
+                                <img src={selectedReport.photo_base64} alt="Report" className="w-full h-full object-cover" />
+                            </div>
+                        )}
+
+                        <div className="text-[10px] text-gray-400 text-right">
+                            {formatDate(selectedReport.created_at)}
+                        </div>
                     </div>
-                    </>
                 )}
             </div>
-
-            {/* Photo Modal */}
-            {showPhotoModal && (
-                <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden relative z-[10000]">
-                        <div className="p-4 border-b flex items-center justify-between">
-                            <h3 className="font-bold text-lg">Photo Evidence</h3>
-                            <button 
-                                onClick={() => setShowPhotoModal(false)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className="p-4">
-                            {photoData ? (
-                                <img 
-                                    src={photoData} 
-                                    alt="Report evidence" 
-                                    className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
-                                />
-                            ) : (
-                                <div className="text-center py-12 text-gray-500">
-                                    <span className="text-4xl block mb-2">📷</span>
-                                    No photo available for this report
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
+        </div>
     );
 }
