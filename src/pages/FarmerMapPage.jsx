@@ -544,40 +544,41 @@ export default function FarmerMapPage() {
                                         value={editedFarm.size}
                                         onChange={(e) => setEditedFarm({ ...editedFarm, size: e.target.value })}
                                     />
-                                    </div>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 mt-3">
-                                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Current Crop</label>
-                                    <select
-                                        className="w-full bg-transparent text-sm font-medium outline-none mb-1"
-                                        value={isCustomCrop ? 'Other' : (editedFarm.current_crop || '')}
-                                        onChange={(e) => {
-                                            if (e.target.value === 'Other') {
-                                                setIsCustomCrop(true);
-                                                setEditedFarm({ ...editedFarm, current_crop: '' });
-                                            } else {
-                                                setIsCustomCrop(false);
-                                                setEditedFarm({ ...editedFarm, current_crop: e.target.value });
-                                            }
-                                        }}
-                                    >
-                                        <option value="">Select Crop</option>
-                                        {cropOptions.map((c, idx) => (
-                                            <option key={idx} value={c}>{c}</option>
-                                        ))}
-                                        <option value="Other">Specify Other...</option>
-                                    </select>
-                                    {isCustomCrop && (
-                                        <input
-                                            type="text"
-                                            className="w-full bg-white p-2 text-sm border border-gray-200 rounded"
-                                            placeholder="Enter crop name..."
-                                            value={editedFarm.current_crop}
-                                            onChange={(e) => setEditedFarm({ ...editedFarm, current_crop: e.target.value })}
-                                        />
-                                    )}
                                 </div>
                             </div>
+
+                            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 mt-3">
+                                <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Current Crop</label>
+                                <select
+                                    className="w-full bg-transparent text-sm font-medium outline-none mb-1"
+                                    value={isCustomCrop ? 'Other' : (editedFarm.current_crop || '')}
+                                    onChange={(e) => {
+                                        if (e.target.value === 'Other') {
+                                            setIsCustomCrop(true);
+                                            setEditedFarm({ ...editedFarm, current_crop: '' });
+                                        } else {
+                                            setIsCustomCrop(false);
+                                            setEditedFarm({ ...editedFarm, current_crop: e.target.value });
+                                        }
+                                    }}
+                                >
+                                    <option value="">Select Crop</option>
+                                    {cropOptions.map((c, idx) => (
+                                        <option key={idx} value={c}>{c}</option>
+                                    ))}
+                                    <option value="Other">Specify Other...</option>
+                                </select>
+                                {isCustomCrop && (
+                                    <input
+                                        type="text"
+                                        className="w-full bg-white p-2 text-sm border border-gray-200 rounded"
+                                        placeholder="Enter crop name..."
+                                        value={editedFarm.current_crop}
+                                        onChange={(e) => setEditedFarm({ ...editedFarm, current_crop: e.target.value })}
+                                    />
+                                )}
+                            </div>
+
                             <div className="text-[10px] text-center text-gray-500 bg-blue-50 p-2 rounded border border-blue-100 mb-2">
                                 Tap on the map to pin location.
                             </div>
@@ -604,6 +605,8 @@ export default function FarmerMapPage() {
                                 Edit Full Details (Crops, Soil, etc.)
                             </button>
                         </div>
+                    )}
+                </div>
             )}
 
 
