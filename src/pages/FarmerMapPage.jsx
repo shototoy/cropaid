@@ -426,7 +426,7 @@ export default function FarmerMapPage() {
     const filteredReports = useMemo(() => {
         return reports.filter(r => {
             // Ensure valid coordinates and type exist
-            if (!r.latitude || !r.longitude) return false;
+            if (r.latitude === null || r.latitude === undefined || r.longitude === null || r.longitude === undefined) return false;
 
             const rawType = r.type || r.report_type;
             if (!rawType) return false;
@@ -505,6 +505,36 @@ export default function FarmerMapPage() {
                                     + Add New
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-2">
+                            {myFarms.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                    No farms added yet.
+                                </div>
+                            ) : (
+                                myFarms.map(farm => (
+                                    <div 
+                                        key={farm.id} 
+                                        onClick={() => setEditingId(farm.id)}
+                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(!farm.lat || !farm.lng) ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
+                                                {(!farm.lat || !farm.lng) ? <MapPin size={16} className="opacity-50" /> : <MapPin size={16} />}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-gray-800 text-sm">{farm.location_barangay || farm.barangay || 'Unknown Location'}</span>
+                                                <span className="text-xs text-gray-500">
+                                                    {farm.current_crop || 'No Crop'} • {farm.farm_size_hectares || farm.size || '?'} ha
+                                                    {(!farm.lat || !farm.lng) && <span className="text-amber-600 font-bold ml-1">(No Location)</span>}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Edit2 size={14} className="text-gray-400" />
+                                    </div>
+                                ))
+                            )}
                         </div>
                     ) : (
                         // EDIT VIEW
@@ -696,50 +726,55 @@ export default function FarmerMapPage() {
                         ) : null}
 
                         {/* Render My Farms */}
-                        {!editingId && activeFilters.farm && myFarms.map(farm => (
-                            <React.Fragment key={farm.id}>
-                                <Marker
-                                    position={[farm.lat, farm.lng]}
-                                    icon={farmIcon(zoom, 'green')}
-                                    eventHandlers={{
-                                        click: () => {
-                                            if (isEditing) {
-                                                setEditingId(farm.id); // Only edit if manager is already open
-                                            }
-                                            // Else do nothing, let popup open naturally
-                                        }
-                                    }}
-                                >
-                                    {/* Show popup if NOT in editing mode OR if we just want details */}
-                                    {!isEditing && (
-                                        <Popup>
-                                            <div className="text-center p-1">
-                                                <p className="font-bold text-primary">🏠 My Farm</p>
-                                                <p className="text-xs text-gray-800 font-bold">{farm.current_crop || 'No Crop'}</p>
-                                                <p className="text-xs text-gray-500">{farm.barangay} • {farm.size} ha</p>
-                                                {farm.planting_method && <p className="text-[10px] text-gray-400 italic">{farm.planting_method}</p>}
-                                            </div>
-                                        </Popup>
-                                    )}
-                                </Marker>
+                        {!editingId && activeFilters.farm && myFarms.map(farm => {
+                            // SKIP rendering if no coordinates set (fix for Map Crash)
+                            if (!farm.lat || !farm.lng) return null;
 
-                                {/* Delete Badge - Only in Edit Mode */}
-                                {isEditing && (
+                            return (
+                                <React.Fragment key={farm.id}>
                                     <Marker
                                         position={[farm.lat, farm.lng]}
-                                        icon={deleteFarmIcon()}
-                                        zIndexOffset={1000} // Ensure it's on top
+                                        icon={farmIcon(zoom, 'green')}
                                         eventHandlers={{
-                                            click: (e) => {
-                                                L.DomEvent.stopPropagation(e); // Prevent map click
-                                                handleDeleteFarm(farm.id);
+                                            click: () => {
+                                                if (isEditing) {
+                                                    setEditingId(farm.id); // Only edit if manager is already open
+                                                }
+                                                // Else do nothing, let popup open naturally
                                             }
                                         }}
                                     >
+                                        {/* Show popup if NOT in editing mode OR if we just want details */}
+                                        {!isEditing && (
+                                            <Popup>
+                                                <div className="text-center p-1">
+                                                    <p className="font-bold text-primary">🏠 My Farm</p>
+                                                    <p className="text-xs text-gray-800 font-bold">{farm.current_crop || 'No Crop'}</p>
+                                                    <p className="text-xs text-gray-500">{farm.barangay} • {farm.size} ha</p>
+                                                    {farm.planting_method && <p className="text-[10px] text-gray-400 italic">{farm.planting_method}</p>}
+                                                </div>
+                                            </Popup>
+                                        )}
                                     </Marker>
-                                )}
-                            </React.Fragment>
-                        ))}
+
+                                    {/* Delete Badge - Only in Edit Mode */}
+                                    {isEditing && (
+                                        <Marker
+                                            position={[farm.lat, farm.lng]}
+                                            icon={deleteFarmIcon()}
+                                            zIndexOffset={1000} // Ensure it's on top
+                                            eventHandlers={{
+                                                click: (e) => {
+                                                    L.DomEvent.stopPropagation(e); // Prevent map click
+                                                    handleDeleteFarm(farm.id);
+                                                }
+                                            }}
+                                        >
+                                        </Marker>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
 
                         <MapController
                             isEditing={!!editingId} // Only capture clicks if actively editing a specific farm
@@ -819,6 +854,8 @@ export default function FarmerMapPage() {
                                 <span className="text-[10px] font-bold">Drought</span>
                             </button>
                         </div>
+
+
                     </div>
                 )
             }

@@ -51,8 +51,13 @@ export default function FarmSelector({ onSelect, selectedFarmId, required = true
 
     if (farms.length === 0) {
         return (
-            <div className="p-3 bg-yellow-50 text-yellow-700 rounded-lg text-sm border border-yellow-200">
-                You haven't added any farms yet. Please add a farm in 'My Farms' before reporting.
+            <div className="flex flex-col gap-1 opacity-70">
+                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">
+                    Select Affected Farm
+                </label>
+                <div className="w-full px-3 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-500 italic">
+                    Currently No Farms registered
+                </div>
             </div>
         );
     }

@@ -50,10 +50,13 @@ const LoadingFallback = () => (
   </div>
 );
 
+import ConnectionStatus from './components/ConnectionStatus';
+
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
+        <ConnectionStatus />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Splash />} />

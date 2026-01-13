@@ -2,40 +2,107 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { barangayBoundaries } from '../config/barangayBoundaries';
-import { ArrowLeft, Save, Plus, MapPin, Calendar, Sprout, Tractor, ShieldCheck, Ruler } from 'lucide-react';
+import { CROP_OPTIONS } from '../config/cropOptions';
+import { ArrowLeft, Save, Plus, MapPin, Calendar, Sprout, Tractor, ShieldCheck, Ruler, Trash2, X } from 'lucide-react';
 
 export default function FarmerFarmsPage() {
     const navigate = useNavigate();
     const { user, token } = useAuth();
     const [farms, setFarms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [editingFarm, setEditingFarm] = useState(null); // null = list view, object = edit/create mode
+    const [formData, setFormData] = useState({});
 
     // Fetch user's farms
-    useEffect(() => {
-        const fetchFarms = async () => {
-            try {
-                const response = await fetch(`${API_URL}/farmer/farms`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setFarms(data);
-                }
-            } catch (error) {
-                console.error("Failed to load farms", error);
-            } finally {
-                setLoading(false);
+    const fetchFarms = async () => {
+        try {
+            const response = await fetch(`${API_URL}/farmer/farms`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setFarms(data);
             }
-        };
+        } catch (error) {
+            console.error("Failed to load farms", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         if (token) fetchFarms();
     }, [token]);
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        // Implement save logic (POST/PUT)
-        alert("Save functionality available soon!");
+    // Initialize form data when entering edit mode
+    useEffect(() => {
+        if (editingFarm) {
+            setFormData({
+                ...editingFarm
+            });
+        }
+    }, [editingFarm]);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const isNew = !formData.id;
+            const url = isNew ? `${API_URL}/farmer/farm` : `${API_URL}/farmer/farm/${formData.id}`;
+            const method = isNew ? 'POST' : 'PUT';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) throw new Error('Failed to save farm');
+
+            // Refresh list and close editor
+            await fetchFarms();
+            setEditingFarm(null);
+            alert(isNew ? 'Farm added successfully!' : 'Farm updated successfully!');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to save farm details. Please try again.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this farm? This action cannot be undone.')) return;
+
+        setSaving(true);
+        try {
+            const response = await fetch(`${API_URL}/farmer/farm/${formData.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete farm');
+
+            await fetchFarms();
+            setEditingFarm(null);
+            alert('Farm deleted successfully.');
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete farm.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>;
@@ -49,12 +116,27 @@ export default function FarmerFarmsPage() {
                         <button onClick={() => setEditingFarm(null)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
                             <ArrowLeft size={24} className="text-gray-700" />
                         </button>
-                        <h1 className="text-lg font-bold text-gray-800">{editingFarm.id ? 'Edit Farm' : 'Add New Farm'}</h1>
+                        <h1 className="text-lg font-bold text-gray-800">{formData.id ? 'Edit Farm' : 'Add New Farm'}</h1>
                     </div>
-                    <button onClick={handleSave} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">
-                        <Save size={18} />
-                        Save
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {formData.id && (
+                            <button
+                                onClick={handleDelete}
+                                disabled={saving}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        )}
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className={`flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md ${saving ? 'opacity-70' : ''}`}
+                        >
+                            <Save size={18} />
+                            {saving ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="p-4 space-y-6 max-w-lg mx-auto">
@@ -62,15 +144,47 @@ export default function FarmerFarmsPage() {
                     <Section title="Location & Size" icon={<MapPin size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
                             <Select
+                                name="location_barangay"
                                 label="Barangay"
                                 options={Object.keys(barangayBoundaries).sort()}
-                                value={editingFarm.location_barangay}
+                                value={formData.location_barangay}
+                                onChange={handleInputChange}
                             />
-                            <Input label="Sitio" value={editingFarm.location_sitio} />
-                            <Input label="Latitude" value={editingFarm.latitude} />
-                            <Input label="Longitude" value={editingFarm.longitude} />
+                            <Input name="location_sitio" label="Sitio" value={formData.location_sitio} onChange={handleInputChange} />
+                            <div className="col-span-2 space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Input name="latitude" label="Latitude" value={formData.latitude} onChange={handleInputChange} />
+                                    <Input name="longitude" label="Longitude" value={formData.longitude} onChange={handleInputChange} />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (navigator.geolocation) {
+                                            navigator.geolocation.getCurrentPosition(
+                                                pos => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        latitude: pos.coords.latitude,
+                                                        longitude: pos.coords.longitude
+                                                    }));
+                                                },
+                                                err => alert("Could not fetch location: " + err.message)
+                                            );
+                                        } else {
+                                            alert("Geolocation is not supported by this browser.");
+                                        }
+                                    }}
+                                    className="w-full py-2.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <MapPin size={16} />
+                                    Use Current Location
+                                </button>
+                                <p className="text-[10px] text-gray-500 italic bg-blue-50 p-2 rounded border border-blue-100">
+                                    <strong>Note:</strong> You can leave these blank and set the precise location later using the "Farm Map" page.
+                                </p>
+                            </div>
                             <div className="col-span-2">
-                                <Input label="Farm Size (ha)" type="number" value={editingFarm.farm_size_hectares} />
+                                <Input name="farm_size_hectares" label="Farm Size (ha)" type="number" value={formData.farm_size_hectares} onChange={handleInputChange} />
                             </div>
                         </div>
                     </Section>
@@ -78,50 +192,66 @@ export default function FarmerFarmsPage() {
                     {/* 2. Boundaries */}
                     <Section title="Boundaries (Adjacent)" icon={<Ruler size={18} />}>
                         <div className="space-y-3">
-                            <Input label="North" placeholder="e.g. Desamero Land" value={editingFarm.boundary_north} />
-                            <Input label="South" placeholder="e.g. River" value={editingFarm.boundary_south} />
-                            <Input label="East" placeholder="e.g. Highway" value={editingFarm.boundary_east} />
-                            <Input label="West" placeholder="e.g. Irrigation Canal" value={editingFarm.boundary_west} />
+                            <Input name="boundary_north" label="North" placeholder="e.g. Desamero Land" value={formData.boundary_north} onChange={handleInputChange} />
+                            <Input name="boundary_south" label="South" placeholder="e.g. River" value={formData.boundary_south} onChange={handleInputChange} />
+                            <Input name="boundary_east" label="East" placeholder="e.g. Highway" value={formData.boundary_east} onChange={handleInputChange} />
+                            <Input name="boundary_west" label="West" placeholder="e.g. Irrigation Canal" value={formData.boundary_west} onChange={handleInputChange} />
                         </div>
                     </Section>
 
                     {/* 3. Planting Details */}
                     <Section title="Planting Details" icon={<Sprout size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
-                            <Select label="Planting Method" options={['Direct Seeding', 'Transplanting']} value={editingFarm.planting_method} />
-                            <Input label="Current Crop" value={editingFarm.current_crop} />
-                            <Input label="Date of Sowing" type="date" value={editingFarm.date_of_sowing} />
-                            {editingFarm.planting_method === 'Transplanting' && (
-                                <Input label="Date Transplanting" type="date" value={editingFarm.date_of_transplanting} />
+                            <Select name="planting_method" label="Planting Method" options={['Direct Seeding', 'Transplanting']} value={formData.planting_method} onChange={handleInputChange} />
+
+                            {/* Current Crop Dropdown */}
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-gray-400 uppercase">Current Crop</label>
+                                <select
+                                    name="current_crop"
+                                    className="w-full bg-white p-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary h-[38px]"
+                                    value={formData.current_crop}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Select Crop</option>
+                                    {CROP_OPTIONS.map(crop => (
+                                        <option key={crop} value={crop}>{crop}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <Input name="date_of_sowing" label="Date of Sowing" type="date" value={formData.date_of_sowing ? formData.date_of_sowing.split('T')[0] : ''} onChange={handleInputChange} />
+                            {formData.planting_method === 'Transplanting' && (
+                                <Input name="date_of_transplanting" label="Date Transplanting" type="date" value={formData.date_of_transplanting ? formData.date_of_transplanting.split('T')[0] : ''} onChange={handleInputChange} />
                             )}
-                            <Input label="Date of Harvest (Est)" type="date" value={editingFarm.date_of_harvest} />
+                            <Input name="date_of_harvest" label="Date of Harvest (Est)" type="date" value={formData.date_of_harvest ? formData.date_of_harvest.split('T')[0] : ''} onChange={handleInputChange} />
                         </div>
                     </Section>
 
                     {/* 4. Land & Irrigation */}
                     <Section title="Land & Irrigation" icon={<Tractor size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
-                            <Select label="Land Category" options={['Irrigated', 'Rainfed', 'Upland']} value={editingFarm.land_category} />
-                            <Select label="Toography" options={['Flat', 'Rolling', 'Hilly']} value={editingFarm.topography} />
-                            <Select label="Soil Type" options={['Clay Loam', 'Silty Clay Loam', 'Silty Loam', 'Sandy Loam', 'Others']} value={editingFarm.soil_type} />
-                            <Select label="Irrigation Source" options={['NIA/CIS', 'Deep Well', 'SWIP', 'STW']} value={editingFarm.irrigation_source} />
-                            <Select label="Tenural Status" options={['Owner', 'Lessee', 'Tenant']} value={editingFarm.tenural_status} />
+                            <Select name="land_category" label="Land Category" options={['Irrigated', 'Rainfed', 'Upland']} value={formData.land_category} onChange={handleInputChange} />
+                            <Select name="topography" label="Toography" options={['Flat', 'Rolling', 'Hilly']} value={formData.topography} onChange={handleInputChange} />
+                            <Select name="soil_type" label="Soil Type" options={['Clay Loam', 'Silty Clay Loam', 'Silty Loam', 'Sandy Loam', 'Others']} value={formData.soil_type} onChange={handleInputChange} />
+                            <Select name="irrigation_source" label="Irrigation Source" options={['NIA/CIS', 'Deep Well', 'SWIP', 'STW']} value={formData.irrigation_source} onChange={handleInputChange} />
+                            <Select name="tenural_status" label="Tenural Status" options={['Owner', 'Lessee', 'Tenant']} value={formData.tenural_status} onChange={handleInputChange} />
                         </div>
                     </Section>
 
                     {/* 5. Insurance Coverage */}
                     <Section title="Insurance Coverage" icon={<ShieldCheck size={18} />}>
                         <div className="space-y-3">
-                            <Input label="Type of Cover" placeholder="Multi-Risk / Natural Disaster" value={editingFarm.cover_type} />
+                            <Input name="cover_type" label="Type of Cover" placeholder="Multi-Risk / Natural Disaster" value={formData.cover_type} onChange={handleInputChange} />
                             <div className="grid grid-cols-2 gap-3">
-                                <Input label="Amount Cover (PHP)" type="number" value={editingFarm.amount_cover} />
-                                <Input label="Premium (PHP)" type="number" value={editingFarm.insurance_premium} />
+                                <Input name="amount_cover" label="Amount Cover (PHP)" type="number" value={formData.amount_cover} onChange={handleInputChange} />
+                                <Input name="insurance_premium" label="Premium (PHP)" type="number" value={formData.insurance_premium} onChange={handleInputChange} />
                             </div>
                             <div className="pt-2 border-t border-dashed">
                                 <label className="text-xs font-bold text-gray-500 uppercase">CLTIP - ADSS</label>
                                 <div className="grid grid-cols-2 gap-3 mt-1">
-                                    <Input label="Sum Insured" type="number" value={editingFarm.cltip_sum_insured} />
-                                    <Input label="Premium" type="number" value={editingFarm.cltip_premium} />
+                                    <Input name="cltip_sum_insured" label="Sum Insured" type="number" value={formData.cltip_sum_insured} onChange={handleInputChange} />
+                                    <Input name="cltip_premium" label="Premium" type="number" value={formData.cltip_premium} onChange={handleInputChange} />
                                 </div>
                             </div>
                         </div>
@@ -145,7 +275,7 @@ export default function FarmerFarmsPage() {
                 </div>
                 <div className="absolute -bottom-6 left-0 right-0 flex justify-center px-4">
                     <button
-                        onClick={() => setEditingFarm({})}
+                        onClick={() => setEditingFarm({})} // Empty object for new farm
                         className="bg-white text-primary px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-2 hover:bg-gray-50 transform active:scale-95 transition-all w-full max-w-sm justify-center"
                     >
                         <Plus size={20} />
@@ -196,22 +326,29 @@ const Section = ({ title, icon, children }) => (
     </div>
 );
 
-const Input = ({ label, type = "text", value, placeholder, onChange }) => (
+const Input = ({ name, label, type = "text", value, placeholder, onChange }) => (
     <div className="flex flex-col">
         <label className="text-xs font-medium text-gray-500 mb-1">{label}</label>
         <input
+            name={name}
             type={type}
-            defaultValue={value}
+            value={value || ''}
+            onChange={onChange}
             placeholder={placeholder}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-gray-50"
         />
     </div>
 );
 
-const Select = ({ label, options, value }) => (
+const Select = ({ name, label, options, value, onChange }) => (
     <div className="flex flex-col">
         <label className="text-xs font-medium text-gray-500 mb-1">{label}</label>
-        <select defaultValue={value} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-gray-50">
+        <select
+            name={name}
+            value={value || ''}
+            onChange={onChange}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-gray-50"
+        >
             <option value="">Select...</option>
             {options.map(opt => (
                 <option key={opt} value={opt}>{opt}</option>

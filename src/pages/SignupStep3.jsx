@@ -32,7 +32,6 @@ export default function SignupStep3() {
                 <p><strong>Email:</strong> {formData.email}</p>
                 <p><strong>Full Name:</strong> {formData.fullName}</p>
                 <p><strong>Address:</strong> {formData.address}</p>
-                <p><strong>Farm Location:</strong> {formData.sitio}, {formData.barangay}</p>
                 <p><strong>Province:</strong> {formData.province}</p>
             </div>
 
