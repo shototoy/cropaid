@@ -163,19 +163,20 @@ export default function AdminReports() {
             <head>
                 <title>CropAid Report Summary #${report.id}</title>
                 <style>
-                    body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-                    .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 20px; margin-bottom: 30px; }
-                    .logo { font-size: 24px; font-weight: bold; color: #16a34a; }
-                    .title { font-size: 18px; margin-top: 10px; font-weight: normal; }
-                    .section { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-                    .section-header { background: #f9fafb; padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; font-size: 14px; text-transform: uppercase; }
-                    .section-content { padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-                    .field { margin-bottom: 5px; }
-                    .label { font-size: 12px; color: #666; display: block; }
-                    .value { font-size: 14px; font-weight: 500; }
+                    @page { size: auto; margin: 5mm; }
+                    body { font-family: 'Arial', sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 20px; width: 100%; box-sizing: border-box; }
+                    .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 15px; margin-bottom: 20px; }
+                    .logo { font-size: 22px; font-weight: bold; color: #16a34a; }
+                    .title { font-size: 16px; margin-top: 5px; font-weight: normal; }
+                    .section { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
+                    .section-header { background: #f9fafb; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; font-size: 13px; text-transform: uppercase; }
+                    .section-content { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+                    .field { margin-bottom: 2px; }
+                    .label { font-size: 11px; color: #666; display: block; }
+                    .value { font-size: 13px; font-weight: 500; }
                     .full-width { grid-column: span 2; }
-                    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
-                    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+                    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
+                    .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
                 </style>
             </head>
             <body>
@@ -266,6 +267,13 @@ export default function AdminReports() {
                         <div class="field">
                             <span class="label">Tenural Status</span>
                             <span class="value">${report.farm_tenural_status || 'N/A'}</span>
+                        </div>
+                        <div class="field full-width">
+                            <span class="label">Boundaries (N / S / E / W)</span>
+                            <span class="value">
+                                ${report.boundary_north || '-'} / ${report.boundary_south || '-'} / 
+                                ${report.boundary_east || '-'} / ${report.boundary_west || '-'}
+                            </span>
                         </div>
                     </div>
                 </div>
