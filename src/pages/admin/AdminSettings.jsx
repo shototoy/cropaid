@@ -31,6 +31,7 @@ function CrudTable({
     onEdit,
     onDelete,
     loading,
+    hideAdd = false,
     emptyMessage = 'No items found'
 }) {
     const [editingId, setEditingId] = useState(null);
@@ -76,13 +77,15 @@ function CrudTable({
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="p-4 border-b flex items-center justify-between">
                 <h3 className="font-bold text-gray-800">{title}</h3>
-                <button
-                    onClick={handleStartAdd}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark transition-colors"
-                >
-                    <Plus size={16} />
-                    Add New
-                </button>
+                {!hideAdd && onAdd && (
+                    <button
+                        onClick={handleStartAdd}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark transition-colors"
+                    >
+                        <Plus size={16} />
+                        Add New
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -501,6 +504,7 @@ export default function AdminSettings() {
                     onEdit={(data) => handleEdit('/admin/users', data, refreshData)}
                     onDelete={(id) => handleDelete('/admin/users', id, refreshData)}
                     emptyMessage="No users found"
+                    hideAdd={true}
                 />
             )}
         </div>

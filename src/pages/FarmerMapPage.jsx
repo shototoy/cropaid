@@ -186,7 +186,8 @@ export default function FarmerMapPage() {
         farm: true,
         pest: true,
         flood: true,
-        drought: true
+        drought: true,
+        mix: true
     });
     const [viewMode, setViewMode] = useState('all');
 
