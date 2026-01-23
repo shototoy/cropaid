@@ -82,11 +82,11 @@ export default function Login() {
                 <button
                     type="button"
                     onClick={() => navigate('/signup/basic-info')}
-                    className="text-primary font-bold cursor-pointer hover:underline m-0 bg-transparent border-none text-base"
+                    className="text-white font-bold cursor-pointer hover:underline m-0 bg-transparent border-none text-base drop-shadow-md"
                 >
                     No account yet? Sign up
                 </button>
-                <p className="text-xs text-text-muted m-0 mt-2 text-center">Municipality of Norala</p>
+                <p className="text-xs text-white m-0 mt-2 text-center drop-shadow-md opacity-80">Municipality of Norala</p>
             </div>
         </Layout>
     );
