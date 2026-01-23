@@ -65,8 +65,10 @@ export default function AdminReports() {
             const normalizedReports = reportsArray.map(r => ({
                 ...r,
                 type: r.report_type || r.type,
-                first_name: r.first_name || 'Unknown',
-                last_name: r.last_name || 'Farmer',
+                first_name: r.farmer_first_name || r.first_name || 'Unknown',
+                last_name: r.farmer_last_name || r.last_name || 'Farmer',
+                rsbsa_id: r.farmer_rsbsa_id || r.rsbsa_id || 'N/A',
+                cellphone: r.farmer_cellphone || r.cellphone || 'N/A',
                 // details is already in r, only populate if missing but description exists (mock data legacy)
                 details: r.details || (r.description ? { description: r.description } : {})
             }));
