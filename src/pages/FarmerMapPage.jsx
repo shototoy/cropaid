@@ -334,9 +334,9 @@ export default function FarmerMapPage() {
                     setIsEditing(false);
                 }
             } else {
-                // UPDATE
+                // UPDATE (Use PATCH for partial update to avoid resetting data)
                 const res = await fetch(`${API_BASE_URL}/farmer/farm/${editingId}`, {
-                    method: 'PUT',
+                    method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(editedFarm)
                 });
