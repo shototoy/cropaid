@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                 const normalizedReports = reportsArray.map(r => ({
                     ...r,
                     type: r.report_type || r.type,
-                    first_name: r.farmer_name?.split(' ')[0] || r.first_name || 'Unknown'
+                    first_name: r.farmer_first_name || r.first_name || 'Unknown'
                 }));
 
                 setStats({
@@ -373,22 +373,24 @@ export default function AdminDashboard() {
                             <div
                                 key={report.id}
                                 onClick={() => navigate('/admin/reports', { state: { openReportId: report.id } })}
-                                className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                             >
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 
-                                    ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100 text-red-600' :
-                                        report.type?.toLowerCase() === 'flood' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}
-                                >
-                                    {report.type?.toLowerCase() === 'pest' ? <Bug size={18} /> :
-                                        report.type?.toLowerCase() === 'flood' ? <Droplets size={18} /> : <Sun size={18} />}
+                                <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 
+                                        ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100 text-red-600' :
+                                            report.type?.toLowerCase() === 'flood' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}
+                                    >
+                                        {report.type?.toLowerCase() === 'pest' ? <Bug size={18} /> :
+                                            report.type?.toLowerCase() === 'flood' ? <Droplets size={18} /> : <Sun size={18} />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-800 truncate">
+                                            <span className="font-bold">{report.first_name || 'Farmer'}</span> reported <span className="font-medium capitalize">{report.type}</span> issue
+                                        </p>
+                                        <p className="text-xs text-gray-400">{report.location || 'Unknown location'}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-800 truncate">
-                                        <span className="font-bold">{report.first_name || 'Farmer'}</span> reported <span className="font-medium capitalize">{report.type}</span> issue
-                                    </p>
-                                    <p className="text-xs text-gray-400">{report.location || 'Unknown location'}</p>
-                                </div>
-                                <div className="text-right flex-shrink-0">
+                                <div className="flex items-center justify-between sm:block sm:text-right w-full sm:w-auto mt-1 sm:mt-0 pl-[52px] sm:pl-0">
                                     <span className={`text-xs px-2 py-1 rounded-full capitalize ${report.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                                         report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
                                             report.status === 'resolved' ? 'bg-primary text-white' :
