@@ -69,7 +69,7 @@ export default function NotificationsPage() {
                 });
 
                 if (!response.ok) throw new Error('Failed to fetch notifications');
-                
+
                 const data = await response.json();
                 setNotifications(data.notifications || data);
             } catch (err) {
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
 
     const markAsRead = async (id) => {
         if (isMockMode) {
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => n.id === id ? { ...n, is_read: true } : n)
             );
             return;
@@ -94,10 +94,10 @@ export default function NotificationsPage() {
 
         try {
             await fetch(`${API_URL}/notifications/${id}/read`, {
-                method: 'PATCH',
+                method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => n.id === id ? { ...n, is_read: true } : n)
             );
         } catch (err) {
@@ -112,8 +112,8 @@ export default function NotificationsPage() {
         }
 
         try {
-            await fetch(`${API_URL}/notifications/read-all`, {
-                method: 'PATCH',
+            await fetch(`${API_URL}/notifications/mark-all-read`, {
+                method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
@@ -191,11 +191,10 @@ export default function NotificationsPage() {
                             <button
                                 key={key}
                                 onClick={() => setFilter(key)}
-                                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
-                                    filter === key
+                                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filter === key
                                         ? 'bg-primary text-white'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {label}
                             </button>
@@ -229,24 +228,21 @@ export default function NotificationsPage() {
                                 <div
                                     key={notification.id}
                                     onClick={() => !notification.is_read && markAsRead(notification.id)}
-                                    className={`bg-white rounded-xl p-4 shadow-sm border transition-all cursor-pointer ${
-                                        notification.is_read
+                                    className={`bg-white rounded-xl p-4 shadow-sm border transition-all cursor-pointer ${notification.is_read
                                             ? 'border-gray-100'
                                             : 'border-primary/20 bg-primary/5'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                            notification.is_read ? 'bg-gray-100' : 'bg-white'
-                                        }`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${notification.is_read ? 'bg-gray-100' : 'bg-white'
+                                            }`}>
                                             {getNotificationIcon(notification.type)}
                                         </div>
-                                        
+
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2">
-                                                <h3 className={`text-sm font-semibold ${
-                                                    notification.is_read ? 'text-gray-700' : 'text-gray-900'
-                                                }`}>
+                                                <h3 className={`text-sm font-semibold ${notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                                                    }`}>
                                                     {notification.title}
                                                 </h3>
                                                 <div className="flex items-center gap-1 flex-shrink-0">
@@ -258,13 +254,12 @@ export default function NotificationsPage() {
                                                     </span>
                                                 </div>
                                             </div>
-                                            
-                                            <p className={`text-xs mt-1 line-clamp-2 ${
-                                                notification.is_read ? 'text-gray-500' : 'text-gray-600'
-                                            }`}>
+
+                                            <p className={`text-xs mt-1 line-clamp-2 ${notification.is_read ? 'text-gray-500' : 'text-gray-600'
+                                                }`}>
                                                 {notification.message}
                                             </p>
-                                            
+
                                             <div className="flex items-center justify-between mt-2">
                                                 {notification.reference_id && (
                                                     <button
