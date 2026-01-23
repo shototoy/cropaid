@@ -272,7 +272,7 @@ export default function FarmerDashboard() {
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
                 <div className="grid grid-cols-5 gap-2 mb-6">
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>
-                        <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm cursor-pointer hover:bg-red-200 transition-colors relative">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm cursor-pointer hover:bg-primary/90 transition-colors relative">
                             <Bell size={24} />
                             {unreadCount > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm scale-110 animate-pulse">
@@ -283,13 +283,13 @@ export default function FarmerDashboard() {
                         <span className="text-[10px] font-medium text-center leading-tight">Notifs</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/news')}>
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm cursor-pointer hover:bg-blue-200 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm cursor-pointer hover:bg-primary/90 transition-colors">
                             <Newspaper size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">News</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-map')}>
-                        <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm cursor-pointer hover:bg-orange-200 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm cursor-pointer hover:bg-primary/90 transition-colors">
                             <MapPin size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">Map</span>
@@ -301,7 +301,7 @@ export default function FarmerDashboard() {
                         <span className="text-[10px] font-medium text-center leading-tight">Farms</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={toggleSidebar}>
-                        <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shadow-sm cursor-pointer hover:bg-gray-200 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm cursor-pointer hover:bg-primary/90 transition-colors">
                             <LayoutGrid size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">More</span>

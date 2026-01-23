@@ -27,6 +27,7 @@ const createReportIcon = (iconSvg, color, size = 32) => {
         'blue': '#3b82f6',
         'orange': '#f97316',
         'green': '#22c55e',
+        'purple': '#a855f7',
         'gray': '#6b7280'
     }[bgColor] || '#3b82f6';
 
