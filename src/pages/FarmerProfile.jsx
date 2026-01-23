@@ -382,7 +382,7 @@ export default function FarmerProfile() {
                             </div>
                         )}
                         {success && (
-                            <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg text-sm">
+                            <div className="mb-4 p-3 bg-primary/10 text-primary rounded-lg text-sm font-bold">
                                 {success}
                             </div>
                         )}

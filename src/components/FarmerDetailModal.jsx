@@ -64,7 +64,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
             });
 
             if (!response.ok) throw new Error('Failed to update status');
-            
+
             setFarmerDetails(prev => ({ ...prev, is_active: newStatus }));
             onStatusUpdate?.(farmer.id, newStatus);
         } catch (err) {
@@ -83,7 +83,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
         const styles = {
             pending: 'bg-amber-100 text-amber-700',
             verified: 'bg-blue-100 text-blue-700',
-            resolved: 'bg-green-100 text-green-700',
+            resolved: 'bg-primary text-white',
             rejected: 'bg-red-100 text-red-700'
         };
         return styles[status] || 'bg-gray-100 text-gray-700';
@@ -91,7 +91,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
 
     const handleDelete = async () => {
         setDeleteLoading(true);
-        
+
         if (isMockMode) {
             setTimeout(() => {
                 onDelete?.(farmer.id);
@@ -125,7 +125,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div 
+            <div
                 className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
@@ -140,7 +140,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                             <p className="text-sm text-white/80">RSBSA: {farmerDetails.rsbsa_id || 'N/A'}</p>
                         </div>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/20 rounded-full transition-colors"
                     >
@@ -161,11 +161,10 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                         <button
                             onClick={handleToggleStatus}
                             disabled={loading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                                farmerDetails.is_active !== false
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${farmerDetails.is_active !== false
                                     ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                     : 'bg-red-100 text-red-700 hover:bg-red-200'
-                            } disabled:opacity-50`}
+                                } disabled:opacity-50`}
                         >
                             {farmerDetails.is_active !== false ? (
                                 <>
@@ -227,8 +226,8 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Farm Size:</span>
                                 <span className="font-medium">
-                                    {farmerDetails.farm_size_hectares 
-                                        ? `${farmerDetails.farm_size_hectares} hectares` 
+                                    {farmerDetails.farm_size_hectares
+                                        ? `${farmerDetails.farm_size_hectares} hectares`
                                         : 'Not set'}
                                 </span>
                             </div>
@@ -252,15 +251,14 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                         ) : (
                             <div className="space-y-2">
                                 {reports.slice(0, 5).map((report) => (
-                                    <div 
-                                        key={report.id} 
+                                    <div
+                                        key={report.id}
                                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${
-                                                report.type === 'pest' ? 'bg-red-500' :
-                                                report.type === 'flood' ? 'bg-blue-500' : 'bg-orange-500'
-                                            }`}></div>
+                                            <div className={`w-2 h-2 rounded-full ${report.type === 'pest' ? 'bg-red-500' :
+                                                    report.type === 'flood' ? 'bg-blue-500' : 'bg-orange-500'
+                                                }`}></div>
                                             <span className="text-sm font-medium capitalize">{report.type} Report</span>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -307,10 +305,10 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                                 <p className="text-sm text-gray-500">This action cannot be undone</p>
                             </div>
                         </div>
-                        
+
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                             <p className="text-sm text-red-800">
-                                You are about to permanently delete <strong>{farmerDetails.first_name} {farmerDetails.last_name}</strong>'s account. 
+                                You are about to permanently delete <strong>{farmerDetails.first_name} {farmerDetails.last_name}</strong>'s account.
                                 This will also delete:
                             </p>
                             <ul className="text-sm text-red-700 mt-2 ml-4 list-disc">
@@ -319,7 +317,7 @@ export default function FarmerDetailModal({ farmer, onClose, onStatusUpdate, onD
                                 <li>User login credentials</li>
                             </ul>
                         </div>
-                        
+
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}

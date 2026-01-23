@@ -12,8 +12,8 @@ function TabButton({ active, onClick, icon: Icon, label }) {
         <button
             onClick={onClick}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${active
-                    ? 'bg-primary text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-primary text-white'
+                : 'text-gray-600 hover:bg-gray-100'
                 }`}
         >
             <Icon size={18} />
@@ -365,8 +365,18 @@ export default function AdminSettings() {
     const barangayColumns = [
         { key: 'id', label: 'ID', editable: false },
         { key: 'name', label: 'Barangay Name', editable: true, placeholder: 'e.g. Poblacion' },
-        { key: 'municipality', label: 'Municipality', editable: true, placeholder: 'e.g. Norala' },
-        { key: 'province', label: 'Province', editable: true, placeholder: 'e.g. South Cotabato' }
+        {
+            key: 'municipality',
+            label: 'Municipality',
+            editable: false,
+            render: () => <span className="text-gray-500">Norala</span>
+        },
+        {
+            key: 'province',
+            label: 'Province',
+            editable: false,
+            render: () => <span className="text-gray-500">South Cotabato</span>
+        }
     ];
 
     const userColumns = [
@@ -474,7 +484,7 @@ export default function AdminSettings() {
                     items={barangays}
                     columns={barangayColumns}
                     loading={loading}
-                    onAdd={(data) => handleAdd('/admin/barangays', data, refreshData)}
+                    onAdd={(data) => handleAdd('/admin/barangays', { ...data, municipality: 'Norala', province: 'South Cotabato' }, refreshData)}
                     onEdit={(data) => handleEdit('/admin/barangays', data, refreshData)}
                     onDelete={(id) => handleDelete('/admin/barangays', id, refreshData)}
                     emptyMessage="No barangays defined yet"

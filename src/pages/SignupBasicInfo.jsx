@@ -140,7 +140,7 @@ export default function SignupBasicInfo() {
 
             <div className="fixed bottom-0 left-0 right-0 z-20 w-full bg-white">
                 {error && <div className="text-red-500 text-[10px] font-bold text-center py-2 bg-red-50 border-t border-red-100">{error}</div>}
-                <Button variant="secondary" onClick={handleNext} className="w-full py-4 text-black font-bold uppercase text-lg bg-primary-bg border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary-bg/90 m-0">
+                <Button variant="secondary" onClick={handleNext} className="w-full py-4 text-white font-bold uppercase text-lg bg-primary-bg border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary-bg/90 m-0">
                     NEXT
                 </Button>
             </div>

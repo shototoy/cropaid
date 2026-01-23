@@ -167,7 +167,7 @@ export default function NewsPage() {
             case 'advisory': return <Megaphone size={18} className="text-amber-500" />;
             case 'weather': return <CloudRain size={18} className="text-blue-500" />;
             case 'alert': return <AlertTriangle size={18} className="text-red-500" />;
-            default: return <Newspaper size={18} className="text-green-500" />;
+            default: return <Newspaper size={18} className="text-primary" />;
         }
     };
 

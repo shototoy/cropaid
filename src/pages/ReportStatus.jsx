@@ -62,7 +62,7 @@ export default function ReportStatus() {
             case 'verified':
                 return { color: 'text-blue-500 bg-blue-50 border-blue-100', icon: CheckCircle, label: 'Verified' };
             case 'resolved':
-                return { color: 'text-emerald-500 bg-emerald-50 border-emerald-100', icon: CheckCircle, label: 'Resolved' };
+                return { color: 'text-primary bg-primary/10 border-primary/20', icon: CheckCircle, label: 'Resolved' };
             default:
                 return { color: 'text-gray-500 bg-gray-50 border-gray-100', icon: AlertCircle, label: status };
         }
@@ -101,19 +101,19 @@ export default function ReportStatus() {
                     {reports.map((report) => {
                         const style = getStatusInfo(report.status?.toLowerCase());
                         const reportType = report.report_type || report.type || 'Unknown';
-                        
+
                         // Parse details if it's a JSON string
                         let details = {};
                         try {
-                            details = typeof report.details === 'string' && report.details.startsWith('{') 
-                                ? JSON.parse(report.details) 
+                            details = typeof report.details === 'string' && report.details.startsWith('{')
+                                ? JSON.parse(report.details)
                                 : (typeof report.details === 'object' ? report.details : {});
                         } catch (e) {
                             details = {};
                         }
-                        
+
                         // Get description from details if not directly on report
-                        const description = report.description || details.description || details.notes || 
+                        const description = report.description || details.description || details.notes ||
                             (typeof report.details === 'string' && !report.details.startsWith('{') ? report.details : '');
                         const cropPlanted = report.crop_planted || details.cropType || details.crop_type;
                         const affectedArea = report.affected_area || details.affectedArea || details.affected_area;

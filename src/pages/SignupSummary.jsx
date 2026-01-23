@@ -84,7 +84,7 @@ export default function SignupSummary() {
 
     if (isSuccess) {
         return (
-            <div className="flex flex-col h-full items-center justify-center bg-primary-bg animate-fade-in relative z-50">
+            <div className="flex flex-col h-full items-center justify-center bg-white animate-fade-in relative z-50">
                 <div className="bg-white p-8 rounded-full shadow-lg mb-6">
                     <Check size={64} className="text-primary stroke-[4]" />
                 </div>

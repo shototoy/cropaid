@@ -132,7 +132,7 @@ export default function DroughtReport() {
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {/* GPS Status Banner */}
-                    <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                    <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-primary text-white' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 

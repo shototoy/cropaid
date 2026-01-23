@@ -187,7 +187,7 @@ export default function AdminMapPage() {
         const styles = {
             pending: 'bg-amber-100 text-amber-700',
             verified: 'bg-blue-100 text-blue-700',
-            resolved: 'bg-green-100 text-green-700',
+            resolved: 'bg-primary text-white',
             rejected: 'bg-red-100 text-red-700'
         };
         return styles[status] || 'bg-gray-100 text-gray-700';
@@ -286,8 +286,8 @@ export default function AdminMapPage() {
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
                         <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Layers</span>
 
-                        <button onClick={() => toggleFilter('farm')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm ? 'bg-green-50 border-green-200 text-green-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
-                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-green-500 text-white' : 'bg-gray-300 text-white'}`}><Home size={12} /></div>
+                        <button onClick={() => toggleFilter('farm')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm ? 'bg-primary border-primary text-white' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.farm ? 'bg-white text-primary' : 'bg-gray-300 text-white'}`}><Home size={12} /></div>
                             <span className="text-[10px] font-bold">Farms</span>
                         </button>
                         <button onClick={() => toggleFilter('pest')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.pest ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>

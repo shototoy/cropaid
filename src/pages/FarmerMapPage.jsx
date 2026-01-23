@@ -486,56 +486,58 @@ export default function FarmerMapPage() {
                 <div className="absolute top-16 left-0 right-0 z-[1000] bg-white shadow-md p-3 animate-slide-down border-b border-gray-100 max-h-[60vh] overflow-y-auto">
                     {!editingId ? (
                         // LIST VIEW
-                        <div className="flex items-center justify-between">
-                            <div className="flex flex-col">
-                                <h3 className="font-bold text-gray-800">Manage Farms</h3>
-                                <p className="text-[10px] text-gray-500">Tap a farm on the map to edit or delete.</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleCancelEdit}
-                                    className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-lg text-xs"
-                                >
-                                    Done
-                                </button>
-                                <button
-                                    onClick={() => setEditingId('new')}
-                                    className="bg-primary text-white text-xs px-3 py-2 rounded-lg flex items-center gap-1 font-bold shadow-sm"
-                                >
-                                    + Add New
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-col gap-2">
-                            {myFarms.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                                    No farms added yet.
+                        <>
+                            <div className="flex items-center justify-between">
+                                <div className="flex flex-col">
+                                    <h3 className="font-bold text-gray-800">Manage Farms</h3>
+                                    <p className="text-[10px] text-gray-500">Tap a farm on the map to edit or delete.</p>
                                 </div>
-                            ) : (
-                                myFarms.map(farm => (
-                                    <div 
-                                        key={farm.id} 
-                                        onClick={() => setEditingId(farm.id)}
-                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleCancelEdit}
+                                        className="bg-gray-100 text-gray-600 font-bold py-2 px-4 rounded-lg text-xs"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(!farm.lat || !farm.lng) ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
-                                                {(!farm.lat || !farm.lng) ? <MapPin size={16} className="opacity-50" /> : <MapPin size={16} />}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-gray-800 text-sm">{farm.location_barangay || farm.barangay || 'Unknown Location'}</span>
-                                                <span className="text-xs text-gray-500">
-                                                    {farm.current_crop || 'No Crop'} • {farm.farm_size_hectares || farm.size || '?'} ha
-                                                    {(!farm.lat || !farm.lng) && <span className="text-amber-600 font-bold ml-1">(No Location)</span>}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Edit2 size={14} className="text-gray-400" />
+                                        Done
+                                    </button>
+                                    <button
+                                        onClick={() => setEditingId('new')}
+                                        className="bg-primary text-white text-xs px-3 py-2 rounded-lg flex items-center gap-1 font-bold shadow-sm"
+                                    >
+                                        + Add New
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 flex flex-col gap-2">
+                                {myFarms.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                        No farms added yet.
                                     </div>
-                                ))
-                            )}
-                        </div>
+                                ) : (
+                                    myFarms.map(farm => (
+                                        <div
+                                            key={farm.id}
+                                            onClick={() => setEditingId(farm.id)}
+                                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${(!farm.lat || !farm.lng) ? 'bg-amber-100 text-amber-600' : 'bg-primary text-white'}`}>
+                                                    {(!farm.lat || !farm.lng) ? <MapPin size={16} className="opacity-50" /> : <MapPin size={16} />}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-gray-800 text-sm">{farm.location_barangay || farm.barangay || 'Unknown Location'}</span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {farm.current_crop || 'No Crop'} • {farm.farm_size_hectares || farm.size || '?'} ha
+                                                        {(!farm.lat || !farm.lng) && <span className="text-amber-600 font-bold ml-1">(No Location)</span>}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <Edit2 size={14} className="text-gray-400" />
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
                     ) : (
                         // EDIT VIEW
                         <div className="flex flex-col gap-3">
@@ -550,70 +552,46 @@ export default function FarmerMapPage() {
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Barangay</label>
-                                    <select
-                                        className="w-full bg-transparent text-sm font-medium outline-none"
-                                        value={editedFarm.barangay}
-                                        onChange={(e) => setEditedFarm({ ...editedFarm, barangay: e.target.value })}
+                            <div className="flex flex-col gap-3 p-1">
+                                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-2">
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Barangay (Auto-detected)</label>
+                                        <div className="font-bold text-gray-700 text-sm">
+                                            {editedFarm.barangay || 'Unknown'}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 border-t border-gray-200 pt-2 mt-1">
+                                        <div>
+                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Size</label>
+                                            <div className="font-bold text-gray-700 text-sm">
+                                                {editedFarm.size ? `${editedFarm.size} ha` : '-'}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Crop</label>
+                                            <div className="font-bold text-gray-700 text-sm">
+                                                {editedFarm.current_crop || '-'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center mt-2 px-1">
+                                    <div className="text-[10px] text-gray-500 italic flex items-center gap-1">
+                                        <Crosshair size={10} />
+                                        Tap map to pin location
+                                    </div>
+                                    <button
+                                        onClick={() => window.location.href = `/my-farms?edit=${editingId}`}
+                                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1"
                                     >
-                                        <option value="">Select</option>
-                                        {Object.keys(barangayBoundaries).sort().map(name => (
-                                            <option key={name} value={name}>{name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                                    <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Size (ha)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        className="w-full bg-transparent text-sm font-medium outline-none"
-                                        placeholder="0.0"
-                                        value={editedFarm.size}
-                                        onChange={(e) => setEditedFarm({ ...editedFarm, size: e.target.value })}
-                                    />
+                                        Edit Full Details <Edit2 size={12} />
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 mt-3">
-                                <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Current Crop</label>
-                                <select
-                                    className="w-full bg-transparent text-sm font-medium outline-none mb-1"
-                                    value={isCustomCrop ? 'Other' : (editedFarm.current_crop || '')}
-                                    onChange={(e) => {
-                                        if (e.target.value === 'Other') {
-                                            setIsCustomCrop(true);
-                                            setEditedFarm({ ...editedFarm, current_crop: '' });
-                                        } else {
-                                            setIsCustomCrop(false);
-                                            setEditedFarm({ ...editedFarm, current_crop: e.target.value });
-                                        }
-                                    }}
-                                >
-                                    <option value="">Select Crop</option>
-                                    {cropOptions.map((c, idx) => (
-                                        <option key={idx} value={c}>{c}</option>
-                                    ))}
-                                    <option value="Other">Specify Other...</option>
-                                </select>
-                                {isCustomCrop && (
-                                    <input
-                                        type="text"
-                                        className="w-full bg-white p-2 text-sm border border-gray-200 rounded"
-                                        placeholder="Enter crop name..."
-                                        value={editedFarm.current_crop}
-                                        onChange={(e) => setEditedFarm({ ...editedFarm, current_crop: e.target.value })}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="text-[10px] text-center text-gray-500 bg-blue-50 p-2 rounded border border-blue-100 mb-2">
-                                Tap on the map to pin location.
-                            </div>
-
-                            <div className="flex gap-2 mb-2">
+                            <div className="flex gap-2 mb-2 mt-2">
                                 <button
                                     onClick={() => setEditingId(null)}
                                     className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-lg hover:bg-gray-200 text-xs transition-colors"
@@ -628,12 +606,6 @@ export default function FarmerMapPage() {
                                     {saving ? 'Saving...' : <><Save size={14} /> Update Location</>}
                                 </button>
                             </div>
-                            <button
-                                onClick={() => window.location.href = '/my-farms'}
-                                className="w-full text-xs text-primary font-bold underline text-center py-2"
-                            >
-                                Edit Full Details (Crops, Soil, etc.)
-                            </button>
                         </div>
                     )}
                 </div>
@@ -805,7 +777,7 @@ export default function FarmerMapPage() {
                             <button
                                 onClick={() => toggleFilter('farm')}
                                 className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.farm
-                                    ? 'bg-green-50 border-green-200 text-green-800'
+                                    ? 'bg-primary border-primary text-white'
                                     : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
                                     }`}
                             >

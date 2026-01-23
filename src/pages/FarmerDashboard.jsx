@@ -295,7 +295,7 @@ export default function FarmerDashboard() {
                         <span className="text-[10px] font-medium text-center leading-tight">Map</span>
                     </div>
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/my-farms')}>
-                        <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm cursor-pointer hover:bg-emerald-200 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-sm cursor-pointer hover:bg-primary/90 transition-colors">
                             <Home size={24} />
                         </div>
                         <span className="text-[10px] font-medium text-center leading-tight">Farms</span>
@@ -323,21 +323,21 @@ export default function FarmerDashboard() {
                     )}
                 </h3>
 
-                <div className="relative overflow-hidden rounded-xl shadow-md min-h-[100px]">
+                <div className="relative overflow-hidden rounded-xl shadow-md min-h-[140px] flex">
                     <div
-                        className="flex transition-transform duration-500 ease-in-out"
+                        className="w-full flex transition-transform duration-500 ease-in-out"
                         style={{ transform: `translateX(-${activeSlide * 100}%)` }}
                     >
                         {carouselItems.map((item, index) => (
                             <div key={index} className="w-full flex-shrink-0">
                                 {item.isDefault ? (
-                                    <div className="bg-emerald-50 text-emerald-800 p-4 h-full flex items-center gap-4">
-                                        <div className="bg-emerald-100 p-3 rounded-full">
-                                            <CheckCircle size={24} className="text-emerald-600" />
+                                    <div className="bg-primary text-white p-4 h-full flex items-center gap-4">
+                                        <div className="bg-white/20 p-3 rounded-full">
+                                            <CheckCircle size={24} className="text-white" />
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-sm">System Monitoring Active</h4>
-                                            <p className="text-xs opacity-80 mt-1">No other critical alerts at this time. Stay safe!</p>
+                                            <p className="text-xs opacity-90 mt-1">No other critical alerts at this time. Stay safe!</p>
                                         </div>
                                     </div>
                                 ) : (

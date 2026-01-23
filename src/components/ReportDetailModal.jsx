@@ -81,7 +81,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
         const styles = {
             pending: 'bg-amber-100 text-amber-700 border-amber-200',
             verified: 'bg-blue-100 text-blue-700 border-blue-200',
-            resolved: 'bg-green-100 text-green-700 border-green-200',
+            resolved: 'bg-primary text-white border-primary',
             rejected: 'bg-red-100 text-red-700 border-red-200'
         };
         return styles[status] || 'bg-gray-100 text-gray-700 border-gray-200';
@@ -115,7 +115,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100' :
-                                    report.type?.toLowerCase() === 'flood' ? 'bg-blue-100' : 'bg-orange-100'
+                                report.type?.toLowerCase() === 'flood' ? 'bg-blue-100' : 'bg-orange-100'
                                 }`}>
                                 {getTypeIcon(report.type)}
                             </div>

@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { barangayBoundaries } from '../config/barangayBoundaries';
-import { CROP_OPTIONS } from '../config/cropOptions';
 import { ArrowLeft, Save, Plus, MapPin, Calendar, Sprout, Tractor, ShieldCheck, Ruler, Trash2, X } from 'lucide-react';
+
+const INITIAL_FARM_DATA = {
+    location_barangay: '', location_sitio: '', latitude: '', longitude: '', farm_size_hectares: '',
+    planting_method: '', current_crop: '', date_of_sowing: '', date_of_transplanting: '', date_of_harvest: '',
+    land_category: '', topography: '', soil_type: '', irrigation_source: '', tenural_status: '',
+    boundary_north: '', boundary_south: '', boundary_east: '', boundary_west: '',
+    cover_type: '', amount_cover: '', insurance_premium: '', cltip_sum_insured: '', cltip_premium: ''
+};
 
 export default function FarmerFarmsPage() {
     const navigate = useNavigate();
@@ -12,7 +19,22 @@ export default function FarmerFarmsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editingFarm, setEditingFarm] = useState(null); // null = list view, object = edit/create mode
+    const [searchParams] = useSearchParams();
     const [formData, setFormData] = useState({});
+    const [cropOptions, setCropOptions] = useState([]);
+
+    // Handle deep linking from Map page
+    useEffect(() => {
+        const editId = searchParams.get('edit');
+        if (editId === 'new') {
+            setEditingFarm(INITIAL_FARM_DATA); // Open create mode
+        } else if (editId && farms.length > 0) {
+            const farmToEdit = farms.find(f => f.id.toString() === editId);
+            if (farmToEdit) {
+                setEditingFarm(farmToEdit);
+            }
+        }
+    }, [searchParams, farms]);
 
     // Fetch user's farms
     const fetchFarms = async () => {
@@ -35,10 +57,28 @@ export default function FarmerFarmsPage() {
         if (token) fetchFarms();
     }, [token]);
 
+    useEffect(() => {
+        const fetchCropTypes = async () => {
+            try {
+                const response = await fetch(`${API_URL}/options`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setCropOptions(data.crops || []);
+                }
+            } catch (error) {
+                console.error("Failed to load crop types", error);
+            }
+        };
+        if (token) fetchCropTypes();
+    }, [token]);
+
     // Initialize form data when entering edit mode
     useEffect(() => {
         if (editingFarm) {
             setFormData({
+                ...INITIAL_FARM_DATA,
                 ...editingFarm
             });
         }
@@ -59,16 +99,27 @@ export default function FarmerFarmsPage() {
             const url = isNew ? `${API_URL}/farmer/farm` : `${API_URL}/farmer/farm/${formData.id}`;
             const method = isNew ? 'POST' : 'PUT';
 
+            // Ensure we send values instead of undefined
+            const payload = Object.fromEntries(
+                Object.entries(formData).map(([key, value]) => [
+                    key,
+                    value === '' || value === undefined ? null : value
+                ])
+            );
+
             const response = await fetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error('Failed to save farm');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.details || errorData.error || errorData.message || 'Failed to save farm');
+            }
 
             // Refresh list and close editor
             await fetchFarms();
@@ -76,7 +127,8 @@ export default function FarmerFarmsPage() {
             alert(isNew ? 'Farm added successfully!' : 'Farm updated successfully!');
         } catch (error) {
             console.error(error);
-            alert('Failed to save farm details. Please try again.');
+            console.error(error);
+            alert(`Error: ${error.message}`);
         } finally {
             setSaving(false);
         }
@@ -214,7 +266,7 @@ export default function FarmerFarmsPage() {
                                     onChange={handleInputChange}
                                 >
                                     <option value="">Select Crop</option>
-                                    {CROP_OPTIONS.map(crop => (
+                                    {cropOptions.map(crop => (
                                         <option key={crop} value={crop}>{crop}</option>
                                     ))}
                                 </select>
@@ -275,7 +327,7 @@ export default function FarmerFarmsPage() {
                 </div>
                 <div className="absolute -bottom-6 left-0 right-0 flex justify-center px-4">
                     <button
-                        onClick={() => setEditingFarm({})} // Empty object for new farm
+                        onClick={() => setEditingFarm(INITIAL_FARM_DATA)} // Empty object for new farm
                         className="bg-white text-primary px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-2 hover:bg-gray-50 transform active:scale-95 transition-all w-full max-w-sm justify-center"
                     >
                         <Plus size={20} />
@@ -298,7 +350,7 @@ export default function FarmerFarmsPage() {
                                     <MapPin size={16} />
                                     <span>{farm.location_barangay || 'Unknown Location'}</span>
                                 </div>
-                                <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                <span className="text-xs font-bold bg-primary text-white px-2 py-0.5 rounded-full">
                                     {farm.farm_size_hectares} ha
                                 </span>
                             </div>

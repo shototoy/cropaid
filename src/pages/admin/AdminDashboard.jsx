@@ -390,7 +390,7 @@ export default function AdminDashboard() {
                                 <div className="text-right flex-shrink-0">
                                     <span className={`text-xs px-2 py-1 rounded-full capitalize ${report.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                                         report.status === 'verified' ? 'bg-blue-100 text-blue-700' :
-                                            report.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                                            report.status === 'resolved' ? 'bg-primary text-white' :
                                                 'bg-gray-100 text-gray-700'
                                         }`}>
                                         {report.status}
