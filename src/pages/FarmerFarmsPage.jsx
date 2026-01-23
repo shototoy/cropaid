@@ -226,7 +226,7 @@ export default function FarmerFarmsPage() {
                                             alert("Geolocation is not supported by this browser.");
                                         }
                                     }}
-                                    className="w-full py-2.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                                    className="w-full py-2.5 bg-white text-primary border border-primary rounded-lg hover:bg-primary/5 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
                                 >
                                     <MapPin size={16} />
                                     Use Current Location

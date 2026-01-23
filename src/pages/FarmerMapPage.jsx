@@ -92,6 +92,9 @@ const Icons = {
     pest: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13a6 6 0 0 0-6-6"/><path d="M18 13a6 6 0 0 1 6-6"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-1.9 3.53-4"/></svg>',
     flood: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 20v4"/><path d="M8 20v4"/><path d="M12 20v4"/></svg>',
     drought: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    mix: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>', // Thumbs up? No, let's use layers or alert.
+    // Better Mix Icon: Layers/Stack
+    mix: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
     farm: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
 };
 
@@ -109,6 +112,7 @@ const reportIcons = (type, zoom) => {
     if (typeKey === 'pest') return createReportIcon(Icons.pest, 'red', size);
     if (typeKey === 'flood') return createReportIcon(Icons.flood, 'blue', size);
     if (typeKey === 'drought') return createReportIcon(Icons.drought, 'orange', size);
+    if (typeKey === 'mix') return createReportIcon(Icons.mix, 'purple', size);
     return createReportIcon(Icons.pest, 'gray', size);
 };
 
@@ -825,6 +829,19 @@ export default function FarmerMapPage() {
                                 </div>
                                 <span className="text-[10px] font-bold">Drought</span>
                             </button>
+
+                            <button
+                                onClick={() => toggleFilter('mix')}
+                                className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.mix
+                                    ? 'bg-purple-50 border-purple-200 text-purple-800'
+                                    : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'
+                                    }`}
+                            >
+                                <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.mix ? 'bg-purple-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                    <div dangerouslySetInnerHTML={{ __html: Icons.mix.replace('width="24"', 'width="12"').replace('height="24"', 'height="12"') }} style={{ display: 'flex' }} />
+                                </div>
+                                <span className="text-[10px] font-bold">Mixed</span>
+                            </button>
                         </div>
 
 
@@ -839,11 +856,13 @@ export default function FarmerMapPage() {
                             <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-xl text-white shadow-sm ${(selectedReport.type || selectedReport.report_type) === 'pest' ? 'bg-red-500' :
                                     (selectedReport.type || selectedReport.report_type) === 'flood' ? 'bg-blue-500' :
-                                        'bg-orange-500'
+                                        (selectedReport.type || selectedReport.report_type) === 'mix' ? 'bg-purple-500' :
+                                            'bg-orange-500'
                                     }`}>
                                     {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={24} /> :
                                         (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={24} /> :
-                                            <Sun size={24} />}
+                                            (selectedReport.type || selectedReport.report_type) === 'mix' ? <div dangerouslySetInnerHTML={{ __html: Icons.mix }} style={{ width: 24, height: 24, display: 'flex' }} /> :
+                                                <Sun size={24} />}
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg text-gray-900 capitalize">{selectedReport.type || selectedReport.report_type} Alert</h3>

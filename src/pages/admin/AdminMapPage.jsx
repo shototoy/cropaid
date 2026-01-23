@@ -302,6 +302,12 @@ export default function AdminMapPage() {
                             <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.drought ? 'bg-orange-500 text-white' : 'bg-gray-300 text-white'}`}><Sun size={12} /></div>
                             <span className="text-[10px] font-bold">Drought</span>
                         </button>
+                        <button onClick={() => toggleFilter('mix')} className={`flex items-center gap-2 p-1.5 rounded-md border transition-all ${activeFilters.mix ? 'bg-purple-50 border-purple-200 text-purple-800' : 'bg-gray-50 border-gray-300 text-gray-400 grayscale'}`}>
+                            <div className={`w-5 h-5 rounded flex items-center justify-center ${activeFilters.mix ? 'bg-purple-500 text-white' : 'bg-gray-300 text-white'}`}>
+                                <div dangerouslySetInnerHTML={{ __html: Icons.mix.replace('width="24"', 'width="12"').replace('height="24"', 'height="12"') }} style={{ display: 'flex' }} />
+                            </div>
+                            <span className="text-[10px] font-bold">Mixed</span>
+                        </button>
                     </div>
                 </div>
 
@@ -317,7 +323,7 @@ export default function AdminMapPage() {
                                     }`}>
                                     {(selectedReport.type || selectedReport.report_type) === 'pest' ? <Bug size={20} /> :
                                         (selectedReport.type || selectedReport.report_type) === 'flood' ? <CloudRain size={20} /> :
-                                            (selectedReport.type || selectedReport.report_type) === 'mix' ? <Filter size={20} /> : // Mix icon?
+                                            (selectedReport.type || selectedReport.report_type) === 'mix' ? <div dangerouslySetInnerHTML={{ __html: Icons.mix }} style={{ width: 20, height: 20, display: 'flex' }} /> :
                                                 <Sun size={20} />}
                                 </div>
                                 <div>

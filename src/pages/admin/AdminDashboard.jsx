@@ -229,7 +229,8 @@ export default function AdminDashboard() {
     const typeChartData = [
         { label: 'Pest', value: reportsByType.find(r => r.type === 'pest')?.count || 0, color: 'bg-red-500' },
         { label: 'Flood', value: reportsByType.find(r => r.type === 'flood')?.count || 0, color: 'bg-blue-500' },
-        { label: 'Drought', value: reportsByType.find(r => r.type === 'drought')?.count || 0, color: 'bg-orange-500' }
+        { label: 'Drought', value: reportsByType.find(r => r.type === 'drought')?.count || 0, color: 'bg-orange-500' },
+        { label: 'Mixed', value: reportsByType.find(r => r.type === 'mix')?.count || 0, color: 'bg-purple-500' }
     ];
 
     // Status donut chart - show all statuses for the chart (filter 0s in component)
