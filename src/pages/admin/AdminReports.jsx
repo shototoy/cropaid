@@ -164,7 +164,7 @@ export default function AdminReports() {
                 <title>CropAid Report Summary #${report.id}</title>
                 <style>
                     @page { size: auto; margin: 3mm; }
-                    body { font-family: 'Arial', sans-serif; line-height: 1.1; color: #333; margin: 0; padding: 10px; width: 100%; box-sizing: border-box; }
+                    body { font-family: 'Arial', sans-serif; line-height: 1.3; color: #333; margin: 0; padding: 10px; width: 100%; box-sizing: border-box; }
                     .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 5px; margin-bottom: 10px; }
                     .logo { font-size: 18px; font-weight: bold; color: #16a34a; }
                     .title { font-size: 12px; margin-top: 2px; font-weight: normal; }
