@@ -1,4 +1,4 @@
-// Debounce utility for search inputs and other frequent operations
+
 export function debounce(func, wait = 300) {
     let timeout;
     return function executedFunction(...args) {
@@ -9,9 +9,7 @@ export function debounce(func, wait = 300) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
-}
-
-// React hook for debounced values
+}
 import { useState, useEffect } from 'react';
 
 export function useDebounce(value, delay = 300) {

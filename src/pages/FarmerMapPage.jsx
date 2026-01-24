@@ -9,17 +9,13 @@ import { MapPin, Bug, CloudRain, Sun, Home, Crosshair, Edit2, Save, X } from 'lu
 import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
 import { barangayBoundaries } from '../config/barangayBoundaries';
 import { API_BASE_URL } from '../services/api';
-import * as turf from '@turf/turf';
-
-// Fix for default marker icons in React-Leaflet
+import * as turf from '@turf/turf';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom Icons - Reports (Circular)
+});
 const createReportIcon = (iconSvg, color, size = 32) => {
     const bgColor = color.replace('text-', '').replace('-500', '');
     const hexColor = {
@@ -52,9 +48,7 @@ const createReportIcon = (iconSvg, color, size = 32) => {
         iconAnchor: [size / 2, size / 2], // Center anchor for circular
         popupAnchor: [0, -size / 2]
     });
-};
-
-// Custom Icons - Farms (Rounded Square, Original Style)
+};
 const createFarmIcon = (iconSvg, color, size = 32) => {
     const bgColor = color.replace('text-', '').replace('-500', '');
     const hexColor = {
@@ -85,25 +79,17 @@ const createFarmIcon = (iconSvg, color, size = 32) => {
         iconAnchor: [size / 2, size], // Bottom anchor
         popupAnchor: [0, -size]
     });
-};
-
-// SVG Strings for Icons
-// SVG Strings for Icons (Standard 24x24 for consistent scaling)
+};
 const Icons = {
     pest: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13a6 6 0 0 0-6-6"/><path d="M18 13a6 6 0 0 1 6-6"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-1.9 3.53-4"/></svg>',
     flood: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 20v4"/><path d="M8 20v4"/><path d="M12 20v4"/></svg>',
     drought: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
     mix: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>', // Star/Mix icon
     farm: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
-};
-
-// Report Marker Icons (80% of Farm Size)
-const reportIcons = (type, zoom) => {
-    // Farm Size Logic (reused to calculate proportion)
+};
+const reportIcons = (type, zoom) => {
     const farmSizeRaw = 22 + (zoom - 12) * 3;
-    const farmSize = Math.max(18, Math.min(40, farmSizeRaw));
-
-    // Reports = 90% of Farm Size
+    const farmSize = Math.max(18, Math.min(40, farmSizeRaw));
     const size = farmSize * 0.9;
 
     const typeKey = type?.toLowerCase();
@@ -113,17 +99,12 @@ const reportIcons = (type, zoom) => {
     if (typeKey === 'drought') return createReportIcon(Icons.drought, 'orange', size);
     if (typeKey === 'mix') return createReportIcon(Icons.mix, 'purple', size);
     return createReportIcon(Icons.pest, 'gray', size);
-};
-
-// Farm Marker Icon
-const farmIcon = (zoom, color = 'green') => {
-    // Base 22px at Zoom 12 + 3px per level. Min 18px, Max 40px.
+};
+const farmIcon = (zoom, color = 'green') => {
     const calculatedSize = 22 + (zoom - 12) * 3;
     const size = Math.max(18, Math.min(40, calculatedSize));
     return createFarmIcon(Icons.farm, color, size);
-};
-
-// Delete Badge Icon
+};
 const deleteFarmIcon = () => {
     return L.divIcon({
         className: 'delete-badge',
@@ -132,9 +113,7 @@ const deleteFarmIcon = () => {
         iconAnchor: [-10, 10], // Offset to upper right relative to center of a 32px icon roughly
         popupAnchor: [0, 0]
     });
-};
-
-// Component to handle map clicks for editing and zoom events
+};
 function MapController({ isEditing, onLocationSelect, setZoom }) {
     useMapEvents({
         click(e) {
@@ -147,14 +126,11 @@ function MapController({ isEditing, onLocationSelect, setZoom }) {
         }
     });
     return null;
-}
-
-// Component to center map on user location
+}
 const LocationMarker = ({ farmLocation, setUserLocation }) => {
     const map = useMapEvents({
         locationfound(e) {
-            setUserLocation(e.latlng);
-            // Removed auto-flyTo to keep map centered on Norala by default
+            setUserLocation(e.latlng);
         },
     });
 
@@ -174,12 +150,8 @@ const LocationMarker = ({ farmLocation, setUserLocation }) => {
 
 
 export default function FarmerMapPage() {
-    const { user, token, isMockMode } = useAuth();
-
-    // Default Center (Norala)
-    const defaultCenter = [6.5206, 124.6623];
-
-    // User Interaction States
+    const { user, token, isMockMode } = useAuth();
+    const defaultCenter = [6.5206, 124.6623];
     const [userLocation, setUserLocation] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
     const [activeFilters, setActiveFilters] = useState({
@@ -189,9 +161,7 @@ export default function FarmerMapPage() {
         drought: true,
         mix: true
     });
-    const [viewMode, setViewMode] = useState('all');
-
-    // Editing States
+    const [viewMode, setViewMode] = useState('all');
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editedFarm, setEditedFarm] = useState({
@@ -199,18 +169,14 @@ export default function FarmerMapPage() {
         lng: null,
         barangay: '',
         size: ''
-    });
-
-    // Data States
+    });
     const [reports, setReports] = useState([]);
     const [myFarms, setMyFarms] = useState([]); // Array of my farms
     const [otherFarms, setOtherFarms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [zoom, setZoom] = useState(11);
     const [cropOptions, setCropOptions] = useState([]);
-    const [isCustomCrop, setIsCustomCrop] = useState(false);
-
-    // Manage Mode State
+    const [isCustomCrop, setIsCustomCrop] = useState(false);
     const [editingId, setEditingId] = useState(null); // null = not editing, 'new' = adding, number = editing specific id
 
     useEffect(() => {
@@ -229,8 +195,7 @@ export default function FarmerMapPage() {
                         planting_method: 'Transplanting'
                     }]);
                 } else {
-                    try {
-                        // Pass token from context
+                    try {
                         const reportRes = await fetch(`${API_BASE_URL}/public/reports`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
@@ -241,8 +206,7 @@ export default function FarmerMapPage() {
                     } catch (e) { console.error("Error fetching reports", e); }
 
                     if (user?.id) {
-                        try {
-                            // Use /farms endpoint to get array
+                        try {
                             const farmsRes = await fetch(`${API_BASE_URL}/farmer/farms`, {
                                 headers: { 'Authorization': `Bearer ${token}` }
                             });
@@ -250,16 +214,13 @@ export default function FarmerMapPage() {
                                 const farms = await farmsRes.json();
                                 setMyFarms(farms);
                             }
-                        } catch (e) { console.error("Error fetching farms", e); }
-
-                        // Fetch ALL other farms for community map
+                        } catch (e) { console.error("Error fetching farms", e); }
                         try {
                             const farmsRes = await fetch(`${API_BASE_URL}/public/farms`, {
                                 headers: { 'Authorization': `Bearer ${token}` }
                             });
                             if (farmsRes.ok) {
-                                const farmsData = await farmsRes.json();
-                                // Filter out my own farm from this list to avoid duplicate markers if needed.
+                                const farmsData = await farmsRes.json();
                                 setOtherFarms(farmsData.filter(f => f.owner !== user.name));
                             }
                         } catch (e) { console.error("Error fetching community farms", e); }
@@ -273,9 +234,7 @@ export default function FarmerMapPage() {
         };
 
         fetchData();
-    }, [user, isMockMode]);
-
-    // Fetch Options
+    }, [user, isMockMode]);
     useEffect(() => {
         const fetchOptions = async () => {
             try {
@@ -301,14 +260,9 @@ export default function FarmerMapPage() {
                     size: farmToEdit.size || '',
                     current_crop: farmToEdit.current_crop || ''
                 });
-                setIsCustomCrop(false);
-                // Logic to check if existing crop is in options... if not, set custom?
-                // But options might not be loaded yet.
-                // Simplified: If not in options, set custom? 
-                // For now just initialize.
+                setIsCustomCrop(false);
             }
-        } else if (editingId === 'new') {
-            // Reset for new farm
+        } else if (editingId === 'new') {
             setEditedFarm({
                 lat: defaultCenter[0],
                 lng: defaultCenter[1],
@@ -318,14 +272,11 @@ export default function FarmerMapPage() {
             });
             setIsCustomCrop(false);
         }
-    }, [editingId, myFarms]);
-
-    // Save (Create or Update)
+    }, [editingId, myFarms]);
     const handleSaveFarm = async () => {
         setSaving(true);
         try {
-            if (editingId === 'new') {
-                // CREATE
+            if (editingId === 'new') {
                 const res = await fetch(`${API_BASE_URL}/farmer/farm`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -337,8 +288,7 @@ export default function FarmerMapPage() {
                     setEditingId(null); // Go back to list or close? Close manager for now.
                     setIsEditing(false);
                 }
-            } else {
-                // UPDATE (Use PATCH for partial update to avoid resetting data)
+            } else {
                 const res = await fetch(`${API_BASE_URL}/farmer/farm/${editingId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -428,23 +378,19 @@ export default function FarmerMapPage() {
     };
 
     const filteredReports = useMemo(() => {
-        return reports.filter(r => {
-            // Ensure valid coordinates and type exist
+        return reports.filter(r => {
             if (r.latitude === null || r.latitude === undefined || r.longitude === null || r.longitude === undefined) return false;
 
             const rawType = r.type || r.report_type;
             if (!rawType) return false;
 
-            const type = rawType.trim().toLowerCase();
-            // Check if the type is actively validated
+            const type = rawType.trim().toLowerCase();
             if (!activeFilters[type]) return false;
 
             if (viewMode === 'personal') {
                 if (isMockMode) return r.user_id === 'my-id';
                 return user?.id && r.user_id === user.id;
-            }
-
-            // Community View: Includes ALL valid reports (Mine + Others)
+            }
             return true;
         });
     }, [reports, activeFilters, viewMode, user, isMockMode]);
@@ -488,8 +434,7 @@ export default function FarmerMapPage() {
 
             {isEditing && (
                 <div className="absolute top-16 left-0 right-0 z-[1000] bg-white shadow-md p-3 animate-slide-down border-b border-gray-100 max-h-[60vh] overflow-y-auto">
-                    {!editingId ? (
-                        // LIST VIEW
+                    {!editingId ? (
                         <>
                             <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
@@ -542,8 +487,7 @@ export default function FarmerMapPage() {
                                 )}
                             </div>
                         </>
-                    ) : (
-                        // EDIT VIEW
+                    ) : (
                         <div className="flex flex-col gap-3">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
@@ -623,13 +567,13 @@ export default function FarmerMapPage() {
                     </div>
                 ) : (
                     <MapContainer
-                        center={defaultCenter} // Always start at default center (Norala)
+                        center={defaultCenter}
                         zoom={12}
                         style={{ height: '100%', width: '100%' }}
                         zoomControl={false}
-                        preferCanvas={true} // Enable Canvas rendering for smoother mask panning
-                        maxBounds={[[6.43, 124.58], [6.62, 124.75]]} // Tighly constrained to Norala
-                        maxBoundsViscosity={1.0} // Hard limit on panning
+                        preferCanvas={true}
+                        maxBounds={[[6.43, 124.58], [6.62, 124.75]]}
+                        maxBoundsViscosity={1.0}
                         minZoom={12}
                         maxZoom={18}
                     >
@@ -640,7 +584,7 @@ export default function FarmerMapPage() {
 
 
 
-                        {/* Norala Municipality Boundary (Border Only) */}
+                        {}
                         <Polygon
                             positions={noralaBoundaryCoordinates}
                             pathOptions={{
@@ -651,7 +595,7 @@ export default function FarmerMapPage() {
                             }}
                         />
 
-                        {/* Inter-Barangay Boundaries (Voronoi) */}
+                        {}
                         {Object.entries(barangayBoundaries).map(([name, data]) => (
                             <Polygon
                                 key={name}
@@ -672,18 +616,18 @@ export default function FarmerMapPage() {
 
                         {!isEditing && (
                             <LocationMarker
-                                farmLocation={null} // Don't auto-fly to farm on load either, stick to Norala center
+                                farmLocation={null}
                                 setUserLocation={setUserLocation}
                             />
                         )}
 
-                        {/* Community Farms (Only in Community Mode) */}
+                        {}
                         {viewMode === 'all' && activeFilters.farm && otherFarms.map(farm => (
                             <Marker
                                 key={farm.id}
                                 position={[farm.lat, farm.lng]}
-                                icon={farmIcon(zoom, 'gray')} // Gray for others
-                                opacity={0.7} // Slightly transparent to distinguish from own farm
+                                icon={farmIcon(zoom, 'gray')}
+                                opacity={0.7}
                             >
                                 <Popup>
                                     <div className="text-center p-1">
@@ -694,16 +638,15 @@ export default function FarmerMapPage() {
                             </Marker>
                         ))}
 
-                        {/* Editable Farm Marker */}
+                        {}
                         {(editingId && editedFarm.lat) ? (
                             <Marker position={[editedFarm.lat, editedFarm.lng]} icon={farmIcon(zoom, 'green')}>
                                 <Popup>New Location</Popup>
                             </Marker>
                         ) : null}
 
-                        {/* Render My Farms */}
-                        {!editingId && activeFilters.farm && myFarms.map(farm => {
-                            // SKIP rendering if no coordinates set (fix for Map Crash)
+                        {}
+                        {!editingId && activeFilters.farm && myFarms.map(farm => {
                             if (!farm.lat || !farm.lng) return null;
 
                             return (
@@ -715,12 +658,11 @@ export default function FarmerMapPage() {
                                             click: () => {
                                                 if (isEditing) {
                                                     setEditingId(farm.id); // Only edit if manager is already open
-                                                }
-                                                // Else do nothing, let popup open naturally
+                                                }
                                             }
                                         }}
                                     >
-                                        {/* Show popup if NOT in editing mode OR if we just want details */}
+                                        {}
                                         {!isEditing && (
                                             <Popup>
                                                 <div className="text-center p-1">
@@ -733,12 +675,12 @@ export default function FarmerMapPage() {
                                         )}
                                     </Marker>
 
-                                    {/* Delete Badge - Only in Edit Mode */}
+                                    {}
                                     {isEditing && (
                                         <Marker
                                             position={[farm.lat, farm.lng]}
                                             icon={deleteFarmIcon()}
-                                            zIndexOffset={1000} // Ensure it's on top
+                                            zIndexOffset={1000}
                                             eventHandlers={{
                                                 click: (e) => {
                                                     L.DomEvent.stopPropagation(e); // Prevent map click
@@ -753,12 +695,12 @@ export default function FarmerMapPage() {
                         })}
 
                         <MapController
-                            isEditing={!!editingId} // Only capture clicks if actively editing a specific farm
+                            isEditing={!!editingId}
                             onLocationSelect={handleLocationSelect}
                             setZoom={setZoom}
                         />
 
-                        {/* Report Markers */}
+                        {}
                         {!isEditing && filteredReports.map((report) => (
                             <Marker
                                 key={report.id}

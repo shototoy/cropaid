@@ -17,9 +17,7 @@ export default function AdminLayout() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
-    }
-
-    // Determine page title based on path
+    }
     const getPageHeader = () => {
         const path = location.pathname;
         if (path.includes('dashboard')) return { title: 'Dashboard Overview', subtitle: 'Summary of farm activities and reports.' };
@@ -38,9 +36,9 @@ export default function AdminLayout() {
             <AdminSidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
 
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Top Bar - Fixed at top of content area */}
+                {}
                 <header className="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between shrink-0">
-                    {/* Mobile Menu Button */}
+                    {}
                     <div className="flex items-center gap-4">
                         <button
                             className="p-2 text-gray-500 hover:bg-gray-100 rounded-md lg:hidden"
@@ -55,14 +53,14 @@ export default function AdminLayout() {
                         </div>
                     </div>
 
-                    {/* Right Side Actions */}
+                    {}
                     <div className="flex items-center gap-3">
                         {headerAction}
                         <NotificationBell />
                     </div>
                 </header>
 
-                {/* Main Content Area - Scrollable */}
+                {}
                 <main className="flex-1 overflow-hidden relative flex flex-col">
                     <div className={`flex-1 ${location.pathname.includes('map') ? 'p-0 overflow-hidden' : 'p-4 lg:p-8 overflow-y-auto'}`}>
                         <div className={`mx-auto h-full ${location.pathname.includes('map') ? 'max-w-none' : 'max-w-7xl'}`}>

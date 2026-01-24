@@ -12,12 +12,9 @@ export default function NotificationBell() {
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
     const pollingRef = useRef(null);
-    const navigate = useNavigate();
-
-    // Start polling on mount
+    const navigate = useNavigate();
     useEffect(() => {
-        if (token) {
-            // Callback when new notifications arrive
+        if (token) {
             const handleNewNotifications = (data) => {
                 if (data.notifications) {
                     setNotifications(data.notifications);
@@ -25,21 +22,15 @@ export default function NotificationBell() {
                 if (typeof data.unreadCount === 'number') {
                     setUnreadCount(data.unreadCount);
                 }
-            };
-
-            // Start polling every 5 seconds (Live)
+            };
             pollingRef.current = startNotificationPolling(token, handleNewNotifications, 5000);
-        }
-
-        // Cleanup on unmount
+        }
         return () => {
             if (pollingRef.current) {
                 stopNotificationPolling(pollingRef.current);
             }
         };
-    }, [token]);
-
-    // Close dropdown when clicking outside
+    }, [token]);
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -137,14 +128,14 @@ export default function NotificationBell() {
 
     return (
         <div className="relative" ref={dropdownRef}>
-            {/* Bell Button */}
+            {}
             <button
                 onClick={handleToggle}
                 className="relative p-2 rounded-full hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
                 <Bell size={22} className="text-gray-600" />
 
-                {/* Unread Badge */}
+                {}
                 {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full animate-pulse">
                         {unreadCount > 99 ? '99+' : unreadCount}
@@ -152,10 +143,10 @@ export default function NotificationBell() {
                 )}
             </button>
 
-            {/* Dropdown Panel */}
+            {}
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                    {/* Header */}
+                    {}
                     <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
                         <h3 className="font-bold text-gray-800">Notifications</h3>
                         {unreadCount > 0 && (
@@ -168,7 +159,7 @@ export default function NotificationBell() {
                         )}
                     </div>
 
-                    {/* Notification List */}
+                    {}
                     <div className="max-h-80 overflow-y-auto">
                         {loading ? (
                             <div className="p-8 text-center">
@@ -219,7 +210,7 @@ export default function NotificationBell() {
                         )}
                     </div>
 
-                    {/* Footer */}
+                    {}
                     {notifications.length > 0 && (
                         <div className="px-4 py-2 bg-gray-50 border-t text-center">
                             <button className="text-xs text-primary hover:text-primary-dark font-medium">

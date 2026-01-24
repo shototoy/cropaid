@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom marker styles */
+
 .custom-marker {
   background: transparent;
   border: none;
@@ -18,7 +18,7 @@
   margin: 12px;
 }
 
-/* Fix Leaflet z-index to not overlay modals */
+
 .leaflet-pane,
 .leaflet-tile,
 .leaflet-marker-icon,
@@ -56,7 +56,7 @@
   z-index: 10 !important;
 }
 
-/* Map container should stay behind modals */
+
 .leaflet-container {
   z-index: 0 !important;
 }
@@ -68,7 +68,7 @@
   #root {
     @apply h-full w-full overflow-hidden m-0 p-0 overscroll-none;
     height: 100%;
-    /* Fallback for browsers */
+    
     width: 100%;
   }
 

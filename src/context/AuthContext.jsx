@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MOCK_CREDENTIALS } from '../config/mockData';
 import { setApiMockMode } from '../services/api';
 
-const AuthContext = createContext(null);
-
-// Use environment variable for API URL, fallback to localhost for development
+const AuthContext = createContext(null);
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const AuthProvider = ({ children }) => {
@@ -17,25 +15,19 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkConnection = async () => {
-            try {
-                // Try to reach a specific API endpoint to verify backend is ready
-                const response = await fetch(`${API_URL}/health`, { method: 'GET' });
-
-                // Only consider it "connected" if we get a successful response
+            try {
+                const response = await fetch(`${API_URL}/health`, { method: 'GET' });
                 if (response.ok) {
                     setIsMockMode(false);
                     setApiMockMode(false);
-                } else {
-                    // Backend exists but API not ready (404, 500, etc.)
+                } else {
                     setIsMockMode(true);
                     setApiMockMode(true);
                 }
-            } catch (err) {
-                // Network error - backend unreachable, use mock mode silently
+            } catch (err) {
                 setIsMockMode(true);
                 setApiMockMode(true);
-            } finally {
-                // Hydrate user
+            } finally {
                 const storedUser = localStorage.getItem('user');
                 if (localStorage.getItem('token') && storedUser) {
                     setUser(JSON.parse(storedUser));
@@ -77,18 +69,14 @@ export const AuthProvider = ({ children }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password })
-            });
-
-            // Handle unsuccessful login without throwing
+            });
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Login failed' }));
                 return { success: false, error: errorData.error || 'Invalid credentials' };
             }
 
             const data = await response.json();
-            setToken(data.token);
-
-            // Critical: Backend returns role separate from user object, so we merge it
+            setToken(data.token);
             const userWithRole = { ...data.user, role: data.role };
             setUser(userWithRole);
 
@@ -98,8 +86,7 @@ export const AuthProvider = ({ children }) => {
             if (data.role === 'admin') navigate('/admin-dashboard');
             else navigate('/dashboard');
             return { success: true };
-        } catch (error) {
-            // Only network errors reach here (connection refused, etc.)
+        } catch (error) {
             console.error("Network error during login:", error);
             return { success: false, error: 'Unable to connect to server' };
         }

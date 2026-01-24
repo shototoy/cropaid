@@ -111,7 +111,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                     className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200"
                     onClick={e => e.stopPropagation()}
                 >
-                    {/* Header */}
+                    {}
                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${report.type?.toLowerCase() === 'pest' ? 'bg-red-100' :
@@ -132,9 +132,9 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                         </button>
                     </div>
 
-                    {/* Content */}
+                    {}
                     <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-                        {/* Status Badge */}
+                        {}
                         <div className="flex items-center gap-2 mb-6">
                             <span className="text-sm font-medium text-gray-500">Status:</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize border ${getStatusBadge(report.status)}`}>
@@ -142,7 +142,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             </span>
                         </div>
 
-                        {/* Info Grid */}
+                        {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                                 <User size={18} className="text-gray-400 mt-0.5" />
@@ -183,7 +183,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             </div>
                         </div>
 
-                        {/* Report Details */}
+                        {}
                         {Object.keys(details).length > 0 && (
                             <div className="mb-6">
                                 <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Report Details</h3>
@@ -228,7 +228,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             </div>
                         )}
 
-                        {/* Photo Evidence Section */}
+                        {}
                         <div className="mb-6">
                             <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Photo Evidence</h3>
                             {(report.has_photo || photoData) ? (
@@ -258,7 +258,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                             )}
                         </div>
 
-                        {/* Admin Notes */}
+                        {}
                         <div className="mb-6">
                             <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Admin Notes</h3>
                             <textarea
@@ -271,7 +271,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                         </div>
                     </div>
 
-                    {/* Actions Footer */}
+                    {}
                     <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-wrap gap-2 justify-end">
                         {report.status !== 'rejected' && (
                             <button
@@ -307,7 +307,7 @@ export default function ReportDetailModal({ report, onClose, onStatusUpdate }) {
                 </div>
             </div>
 
-            {/* Photo Modal */}
+            {}
             {showPhotoModal && photoData && (
                 <div
                     className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"

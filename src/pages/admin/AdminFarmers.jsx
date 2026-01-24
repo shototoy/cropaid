@@ -16,9 +16,7 @@ export default function AdminFarmers() {
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
     const [selectedFarmer, setSelectedFarmer] = useState(null);
-    const [showAddModal, setShowAddModal] = useState(false);
-
-    // Inject "Add New Farmer" button into header
+    const [showAddModal, setShowAddModal] = useState(false);
     useEffect(() => {
         setHeaderAction(
             <button
@@ -40,8 +38,7 @@ export default function AdminFarmers() {
             setLoading(true);
             setError(null);
 
-            if (isMockMode) {
-                // Use Mock Data
+            if (isMockMode) {
                 setTimeout(() => {
                     setFarmers(MOCK_DATA.admin.Farmers);
                     setLoading(false);
@@ -57,8 +54,7 @@ export default function AdminFarmers() {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to fetch farmers');
                 }
-                const data = await response.json();
-                // Backend returns { farmers: [...] }
+                const data = await response.json();
                 const farmersArray = data.farmers || data;
                 setFarmers(farmersArray);
             } catch (err) {
@@ -78,8 +74,7 @@ export default function AdminFarmers() {
         ));
     };
 
-    const handleDeleteFarmer = (farmerId) => {
-        // Filter by both id and user_id to handle both integer and UUID
+    const handleDeleteFarmer = (farmerId) => {
         setFarmers(prev => prev.filter(f => f.id !== farmerId && f.user_id !== farmerId));
         setSelectedFarmer(null);
     };
@@ -103,7 +98,7 @@ export default function AdminFarmers() {
                 </div>
             </div>
 
-            {/* Filters */}
+            {}
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -121,7 +116,7 @@ export default function AdminFarmers() {
                 </button>
             </div>
 
-            {/* Data Table - Desktop */}
+            {}
             <div className="hidden md:block bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -194,7 +189,7 @@ export default function AdminFarmers() {
                     </table>
                 </div>
 
-                {/* Pagination Mock */}
+                {}
                 <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
                     <p>Showing <span className="font-bold text-gray-900">1</span> to <span className="font-bold text-gray-900">{filteredFarmers.length}</span> of <span className="font-bold text-gray-900">{farmers.length}</span> entries</p>
                     <div className="flex gap-2">
@@ -204,7 +199,7 @@ export default function AdminFarmers() {
                 </div>
             </div>
 
-            {/* Mobile Card View */}
+            {}
             <div className="md:hidden space-y-3">
                 {loading && <p className="text-center py-8 text-gray-500">Loading farmers...</p>}
                 {!loading && error && <p className="text-center py-8 text-red-500">{error}</p>}
@@ -240,7 +235,7 @@ export default function AdminFarmers() {
                 </p>
             </div>
 
-            {/* Farmer Detail Modal */}
+            {}
             {selectedFarmer && (
                 <FarmerDetailModal
                     farmer={selectedFarmer}
@@ -250,7 +245,7 @@ export default function AdminFarmers() {
                 />
             )}
 
-            {/* Add Farmer Modal */}
+            {}
             {showAddModal && (
                 <AddFarmerModal
                     onClose={() => setShowAddModal(false)}

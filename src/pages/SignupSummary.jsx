@@ -18,13 +18,10 @@ export default function SignupSummary() {
         setLoading(true);
         setError(null);
 
-        const payload = {
-            // App Info
+        const payload = {
             email: formData.email,
             username: formData.username,
-            password: formData.password,
-
-            // Basic Info
+            password: formData.password,
             rsbsaId: formData.rsbsaIdBasic,
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -38,9 +35,7 @@ export default function SignupSummary() {
             dobMonth: formData.dobMonth,
             dobDay: formData.dobDay,
             dobYear: formData.dobYear,
-            civilStatus: formData.civilStatus,
-
-            // Farm Info - Defaulting to basic location or empty since removed from signup flow
+            civilStatus: formData.civilStatus,
             farmSitio: '',
             farmBarangay: '',
             farmMunicipality: 'Norala',

@@ -45,9 +45,7 @@ export default function SignupBasicInfo() {
         if (missing.length > 0) {
             setError(`Please fill in required fields: ${missing.map(f => f.label).join(', ')}`);
             return;
-        }
-
-        // Basic format checks
+        }
         if (formData.rsbsaIdBasic.length < 5) {
             setError("RSBSA Number must be at least 5 characters.");
             return;
@@ -74,7 +72,7 @@ export default function SignupBasicInfo() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Name Fields */}
+                            {}
                             <div className="w-[65%] flex flex-col gap-1.5 justify-center">
                                 <Input className="grid-layout" placeholder="LAST NAME" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
                                 <Input className="grid-layout" placeholder="FIRST NAME" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />

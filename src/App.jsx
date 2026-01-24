@@ -1,19 +1,14 @@
 
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-
-// Eager load critical components (needed immediately)
+import { AuthProvider } from './context/AuthContext';
 import FarmerLayout from './components/FarmerLayout';
 import AdminLayout from './components/AdminLayout';
 import MockModeOverlay from './components/MockModeOverlay';
 import Splash from './pages/Splash';
-import Login from './pages/Login';
-
-// Lazy load all other routes
+import Login from './pages/Login';
 const AdminLogin = lazy(() => import('./pages/AdminLogin'));
-const SignupBasicInfo = lazy(() => import('./pages/SignupBasicInfo'));
-// const SignupFarmInfo = lazy(() => import('./pages/SignupFarmInfo')); // Removed
+const SignupBasicInfo = lazy(() => import('./pages/SignupBasicInfo'));
 const SignupAppInfo = lazy(() => import('./pages/SignupAppInfo'));
 const SignupSummary = lazy(() => import('./pages/SignupSummary'));
 const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard'));
@@ -38,9 +33,7 @@ const AdminFarmReports = lazy(() => import('./pages/AdminFarmReports'));
 const AdminDailySummary = lazy(() => import('./pages/AdminDailySummary'));
 const AdminOrganizedReport = lazy(() => import('./pages/AdminOrganizedReport'));
 const AdminMapPage = lazy(() => import('./pages/admin/AdminMapPage'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
-
-// Loading fallback component
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen bg-bg-surface">
     <div className="flex flex-col items-center gap-3">
@@ -63,11 +56,11 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/signup/basic-info" element={<SignupBasicInfo />} />
-            {/* Farm Info removed from flow */}
+            {}
             <Route path="/signup/app-info" element={<SignupAppInfo />} />
             <Route path="/signup/summary" element={<SignupSummary />} />
 
-            {/* Farmer Routes with Persistent Navbar */}
+            {}
             <Route element={<FarmerLayout />}>
               <Route path="/dashboard" element={<FarmerDashboard />} />
               <Route path="/report" element={<UnifiedReport />} />
@@ -79,7 +72,7 @@ function App() {
               <Route path="/news" element={<NewsPage />} />
             </Route>
 
-            {/* Admin Routes with Sidebar Layout */}
+            {}
             <Route element={<AdminLayout />}>
               <Route path="/admin-dashboard" element={<AdminDashboardNew />} />
               <Route path="/admin/farmers" element={<AdminFarmers />} />

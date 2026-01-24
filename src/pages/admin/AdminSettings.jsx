@@ -4,9 +4,7 @@ import { useAuth, API_URL } from '../../context/AuthContext';
 import {
     Settings, Bug, Leaf, MapPin, Users, Plus, Pencil, Trash2,
     Save, X, ChevronRight, Check, AlertTriangle
-} from 'lucide-react';
-
-// Tab Component
+} from 'lucide-react';
 function TabButton({ active, onClick, icon: Icon, label }) {
     return (
         <button
@@ -20,9 +18,7 @@ function TabButton({ active, onClick, icon: Icon, label }) {
             {label}
         </button>
     );
-}
-
-// Generic CRUD Table Component
+}
 function CrudTable({
     title,
     items,
@@ -101,7 +97,7 @@ function CrudTable({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {/* Add New Row */}
+                        {}
                         {isAdding && (
                             <tr className="bg-green-50">
                                 {columns.map(col => (
@@ -138,7 +134,7 @@ function CrudTable({
                             </tr>
                         )}
 
-                        {/* Data Rows */}
+                        {}
                         {loading ? (
                             <tr>
                                 <td colSpan={columns.length + 1} className="px-4 py-8 text-center">
@@ -224,9 +220,7 @@ export default function AdminSettings() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-    // Fetch data based on active tab
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -248,9 +242,7 @@ export default function AdminSettings() {
 
                 if (!response.ok) throw new Error('Failed to fetch data');
 
-                const data = await response.json();
-
-                // Backend returns arrays directly, but we support object wrapper for compatibility
+                const data = await response.json();
                 switch (activeTab) {
                     case 'pest': setPestCategories(Array.isArray(data) ? data : data.categories || []); break;
                     case 'crop': setCropTypes(Array.isArray(data) ? data : data.cropTypes || []); break;
@@ -266,9 +258,7 @@ export default function AdminSettings() {
         };
 
         if (token) fetchData();
-    }, [token, activeTab, refreshTrigger]);
-
-    // Generic CRUD handlers
+    }, [token, activeTab, refreshTrigger]);
     const handleAdd = async (endpoint, data, refreshFn) => {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, {
@@ -325,14 +315,10 @@ export default function AdminSettings() {
         } catch (err) {
             setMessage({ type: 'error', text: err.message });
         }
-    };
-
-    // Refresh function
+    };
     const refreshData = () => {
         setRefreshTrigger(prev => prev + 1);
-    };
-
-    // Column definitions
+    };
     const pestColumns = [
         { key: 'id', label: 'ID', editable: false },
         { key: 'name', label: 'Pest Name', editable: true, placeholder: 'e.g. Black Bug' },
@@ -411,7 +397,7 @@ export default function AdminSettings() {
 
     return (
         <div className="space-y-6">
-            {/* Message Banner */}
+            {}
             {message.text && (
                 <div className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                     }`}>
@@ -426,7 +412,7 @@ export default function AdminSettings() {
                 </div>
             )}
 
-            {/* Tab Navigation */}
+            {}
             <div className="bg-white rounded-xl shadow-sm p-2 flex flex-wrap gap-2">
                 <TabButton
                     active={activeTab === 'pest'}
@@ -454,7 +440,7 @@ export default function AdminSettings() {
                 />
             </div>
 
-            {/* Content Area */}
+            {}
             {activeTab === 'pest' && (
                 <CrudTable
                     title="Pest Categories"

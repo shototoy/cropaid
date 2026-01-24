@@ -21,9 +21,7 @@ export default function FarmerFarmsPage() {
     const [editingFarm, setEditingFarm] = useState(null); // null = list view, object = edit/create mode
     const [searchParams] = useSearchParams();
     const [formData, setFormData] = useState({});
-    const [cropOptions, setCropOptions] = useState([]);
-
-    // Handle deep linking from Map page
+    const [cropOptions, setCropOptions] = useState([]);
     useEffect(() => {
         const editId = searchParams.get('edit');
         if (editId === 'new') {
@@ -34,9 +32,7 @@ export default function FarmerFarmsPage() {
                 setEditingFarm(farmToEdit);
             }
         }
-    }, [searchParams, farms]);
-
-    // Fetch user's farms
+    }, [searchParams, farms]);
     const fetchFarms = async () => {
         try {
             const response = await fetch(`${API_URL}/farmer/farms`, {
@@ -72,9 +68,7 @@ export default function FarmerFarmsPage() {
             }
         };
         if (token) fetchCropTypes();
-    }, [token]);
-
-    // Initialize form data when entering edit mode
+    }, [token]);
     useEffect(() => {
         if (editingFarm) {
             setFormData({
@@ -97,9 +91,7 @@ export default function FarmerFarmsPage() {
         try {
             const isNew = !formData.id;
             const url = isNew ? `${API_URL}/farmer/farm` : `${API_URL}/farmer/farm/${formData.id}`;
-            const method = isNew ? 'POST' : 'PUT';
-
-            // Ensure we send values instead of undefined
+            const method = isNew ? 'POST' : 'PUT';
             const payload = Object.fromEntries(
                 Object.entries(formData).map(([key, value]) => [
                     key,
@@ -119,9 +111,7 @@ export default function FarmerFarmsPage() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.details || errorData.error || errorData.message || 'Failed to save farm');
-            }
-
-            // Refresh list and close editor
+            }
             await fetchFarms();
             setEditingFarm(null);
             alert(isNew ? 'Farm added successfully!' : 'Farm updated successfully!');
@@ -157,9 +147,7 @@ export default function FarmerFarmsPage() {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>;
-
-    // --- FORM VIEW ---
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading...</div>;
     if (editingFarm) {
         return (
             <div className="min-h-screen bg-gray-50 pb-20">
@@ -192,7 +180,7 @@ export default function FarmerFarmsPage() {
                 </div>
 
                 <div className="p-4 space-y-6 max-w-lg mx-auto">
-                    {/* 1. Basic Location & Size */}
+                    {}
                     <Section title="Location & Size" icon={<MapPin size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
                             <Select
@@ -241,7 +229,7 @@ export default function FarmerFarmsPage() {
                         </div>
                     </Section>
 
-                    {/* 2. Boundaries */}
+                    {}
                     <Section title="Boundaries (Adjacent)" icon={<Ruler size={18} />}>
                         <div className="space-y-3">
                             <Input name="boundary_north" label="North" placeholder="e.g. Desamero Land" value={formData.boundary_north} onChange={handleInputChange} />
@@ -251,12 +239,12 @@ export default function FarmerFarmsPage() {
                         </div>
                     </Section>
 
-                    {/* 3. Planting Details */}
+                    {}
                     <Section title="Planting Details" icon={<Sprout size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
                             <Select name="planting_method" label="Planting Method" options={['Direct Seeding', 'Transplanting']} value={formData.planting_method} onChange={handleInputChange} />
 
-                            {/* Current Crop Dropdown */}
+                            {}
                             <div className="flex flex-col gap-1">
                                 <label className="text-xs font-bold text-gray-400 uppercase">Current Crop</label>
                                 <select
@@ -280,7 +268,7 @@ export default function FarmerFarmsPage() {
                         </div>
                     </Section>
 
-                    {/* 4. Land & Irrigation */}
+                    {}
                     <Section title="Land & Irrigation" icon={<Tractor size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
                             <Select name="land_category" label="Land Category" options={['Irrigated', 'Rainfed', 'Upland']} value={formData.land_category} onChange={handleInputChange} />
@@ -291,7 +279,7 @@ export default function FarmerFarmsPage() {
                         </div>
                     </Section>
 
-                    {/* 5. Insurance Coverage */}
+                    {}
                     <Section title="Insurance Coverage" icon={<ShieldCheck size={18} />}>
                         <div className="space-y-3">
                             <Input name="cover_type" label="Type of Cover" placeholder="Multi-Risk / Natural Disaster" value={formData.cover_type} onChange={handleInputChange} />
@@ -312,9 +300,7 @@ export default function FarmerFarmsPage() {
                 </div>
             </div>
         );
-    }
-
-    // --- LIST VIEW ---
+    }
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             <div className="bg-primary px-6 pt-8 pb-12 rounded-b-[2.5rem] shadow-lg relative">
@@ -323,11 +309,11 @@ export default function FarmerFarmsPage() {
                         <ArrowLeft size={20} />
                     </button>
                     <h1 className="text-2xl font-bold">My Farms</h1>
-                    <div className="w-9"></div> {/* Spacer */}
+                    <div className="w-9"></div> {}
                 </div>
                 <div className="absolute -bottom-6 left-0 right-0 flex justify-center px-4">
                     <button
-                        onClick={() => setEditingFarm(INITIAL_FARM_DATA)} // Empty object for new farm
+                        onClick={() => setEditingFarm(INITIAL_FARM_DATA)}
                         className="bg-white text-primary px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-2 hover:bg-gray-50 transform active:scale-95 transition-all w-full max-w-sm justify-center"
                     >
                         <Plus size={20} />
@@ -365,9 +351,7 @@ export default function FarmerFarmsPage() {
             </div>
         </div>
     );
-}
-
-// UI Components
+}
 const Section = ({ title, icon, children }) => (
     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="flex items-center gap-2 mb-3 text-secondary border-b border-gray-100 pb-2">

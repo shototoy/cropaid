@@ -29,9 +29,7 @@ export default function PestReport() {
         photoBase64: null
     });
     const [pestOptions, setPestOptions] = useState([]);
-    const [isCustomPest, setIsCustomPest] = useState(false);
-
-    // Capture GPS on component mount
+    const [isCustomPest, setIsCustomPest] = useState(false);
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -48,9 +46,7 @@ export default function PestReport() {
             }
         };
         getLocation();
-    }, []);
-
-    // Fetch Options on Mount
+    }, []);
     useEffect(() => {
         const fetchOptions = async () => {
             try {
@@ -66,9 +62,7 @@ export default function PestReport() {
         };
 
         fetchOptions();
-    }, [token]);
-
-    // Handle photo capture from file input
+    }, [token]);
     const handlePhotoCapture = async (e) => {
         try {
             const file = e.target.files?.[0];
@@ -83,9 +77,7 @@ export default function PestReport() {
             setError('Failed to capture photo');
             console.error(err);
         }
-    };
-
-    // Remove photo
+    };
     const handleRemovePhoto = () => {
         setPhotoPreview(null);
         setFormData(prev => ({ ...prev, photoBase64: null }));
@@ -148,12 +140,12 @@ export default function PestReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {/* GPS Status Banner */}
+                    {}
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    {/* Photo Capture Section */}
+                    {}
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Photo Evidence</label>
                         <input

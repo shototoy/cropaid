@@ -10,24 +10,15 @@ export default function ReportStatus() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        // Wait for Auth Context to finish initialization (checking connection)
+    useEffect(() => {
         if (authLoading) return;
 
         const fetchReports = async () => {
-            if (isMockMode) {
-                // Combine active and history for the status view
+            if (isMockMode) {
                 const username = user?.username || 'james';
-                const data = MOCK_DATA.getFarmerDashboard(username);
-                // Ensure array existence
+                const data = MOCK_DATA.getFarmerDashboard(username);
                 const active = data?.activeReports || [];
-                const history = data?.history || [];
-
-                // Avoid duplicates if history contains active (depends on mock logic implementation)
-                // My mock implementation: "history: myReports" (contains ALL).
-                // So I should just use history?
-                // Yes, getFarmerDashboard returns `history: myReports` which is ALL reports.
-                // So just use `history`.
+                const history = data?.history || [];
                 setReports(history);
                 setLoading(false);
                 return;
@@ -40,8 +31,7 @@ export default function ReportStatus() {
 
                 if (!response.ok) throw new Error('Failed to fetch reports');
 
-                const data = await response.json();
-                // Handle both array and object with reports property
+                const data = await response.json();
                 const reportsArray = Array.isArray(data) ? data : (data.reports || data.history || []);
                 setReports(reportsArray);
             } catch (err) {
@@ -100,9 +90,7 @@ export default function ReportStatus() {
                 <div className="space-y-3">
                     {reports.map((report) => {
                         const style = getStatusInfo(report.status?.toLowerCase());
-                        const reportType = report.report_type || report.type || 'Unknown';
-
-                        // Parse details if it's a JSON string
+                        const reportType = report.report_type || report.type || 'Unknown';
                         let details = {};
                         try {
                             details = typeof report.details === 'string' && report.details.startsWith('{')
@@ -110,9 +98,7 @@ export default function ReportStatus() {
                                 : (typeof report.details === 'object' ? report.details : {});
                         } catch (e) {
                             details = {};
-                        }
-
-                        // Get description from details if not directly on report
+                        }
                         const description = report.description || details.description || details.notes ||
                             (typeof report.details === 'string' && !report.details.startsWith('{') ? report.details : '');
                         const cropPlanted = report.crop_planted || details.cropType || details.crop_type;

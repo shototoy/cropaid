@@ -1,4 +1,4 @@
-// API Service with geolocation, photo upload, and real-time notifications
+
 
 import { MOCK_DATA, MOCK_DB } from '../config/mockData';
 
@@ -9,9 +9,7 @@ let isGloballyMockMode = false;
 export const setApiMockMode = (mode) => {
     isGloballyMockMode = mode;
     console.log(`API Mock Mode set to: ${mode}`);
-};
-
-// ============ GEOLOCATION ============
+};
 
 export const getCurrentPosition = () => {
     return new Promise((resolve, reject) => {
@@ -50,16 +48,11 @@ export const getCurrentPosition = () => {
             }
         );
     });
-};
-
-// ============ PHOTO CAPTURE (Base64) ============
-
-// Process a file from an existing input element
+};
 export const processFileInput = async (file) => {
     if (!file) return null;
 
-    try {
-        // Compress if needed
+    try {
         const compressedFile = await compressImage(file);
         const base64 = await fileToBase64(compressedFile);
         return {
@@ -119,8 +112,7 @@ export const selectPhoto = () => {
                 return;
             }
 
-            try {
-                // Compress image if too large
+            try {
                 const compressedFile = await compressImage(file);
                 const base64 = await fileToBase64(compressedFile);
                 resolve({
@@ -180,9 +172,7 @@ const compressImage = (file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) =
             };
         };
     });
-};
-
-// ============ WEATHER API ============
+};
 
 export const fetchWeather = async (lat, lon) => {
     if (isGloballyMockMode) {
@@ -198,8 +188,7 @@ export const fetchWeather = async (lat, lon) => {
         if (!response.ok) throw new Error('Weather fetch failed');
         return await response.json();
     } catch (error) {
-        console.error('Weather API error:', error);
-        // Return default weather data
+        console.error('Weather API error:', error);
         return {
             temperature: 32,
             condition: 'Sunny',
@@ -207,9 +196,7 @@ export const fetchWeather = async (lat, lon) => {
             location: 'Norala, South Cotabato'
         };
     }
-};
-
-// ============ NOTIFICATIONS (AJAX Polling) ============
+};
 
 let notificationPollInterval = null;
 let lastNotificationCheck = null;
@@ -234,20 +221,15 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
                 }
             );
             if (response.ok) {
-                const data = await response.json();
-                // Always update count to sync (e.g. if notifications were read elsewhere)
+                const data = await response.json();
                 onNewNotifications({ unreadCount: data.count });
                 lastNotificationCheck = new Date().toISOString();
             }
         } catch (error) {
             console.error('Notification polling error:', error);
         }
-    };
-
-    // Initial check
-    checkNotifications();
-
-    // Start polling
+    };
+    checkNotifications();
     notificationPollInterval = setInterval(checkNotifications, intervalMs);
 
     return () => {
@@ -302,9 +284,7 @@ export const markAllNotificationsRead = async (token) => {
     } catch (error) {
         console.error('Mark all notifications read error:', error);
     }
-};
-
-// ============ REPORTS API ============
+};
 
 export const submitReport = async (token, reportData) => {
     if (isGloballyMockMode) {
@@ -337,9 +317,7 @@ export const fetchReportHistory = async (token, params = {}) => {
 
     if (!response.ok) throw new Error('Failed to fetch reports');
     return await response.json();
-};
-
-// ============ ADMIN API ============
+};
 
 export const fetchAdminStats = async (token) => {
     if (isGloballyMockMode) return MOCK_DATA.admin.Stats;
@@ -397,9 +375,7 @@ export const fetchReportPhoto = async (token, reportId) => {
     if (!response.ok) return null;
     const data = await response.json();
     return data.photo;
-};
-
-// ============ SETTINGS API ============
+};
 
 export const fetchPestCategories = async (token) => {
     if (isGloballyMockMode) return [];

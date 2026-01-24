@@ -123,8 +123,7 @@ export const MOCK_DATA = {
                 weatherAlerts: 1
             };
         }
-    },
-    // Helper for Farmer Dashboard fetching specific user data
+    },
     getFarmerDashboard: (username) => {
         const farmer = MOCK_DB.farmers.find(f => f.username === username);
         const myReports = MOCK_DB.reports.filter(r => r.farmer_username === username);
@@ -138,8 +137,7 @@ export const MOCK_DATA = {
             activeReports: active, // For ReportStatus page active section
             history: myReports     // For ReportStatus page history
         };
-    },
-    // Legacy support object structure (optional, if direct access needed)
+    },
     farmer: {
         dashboard: {
             activeReports: [], // Should be empty by default, accessed via getFarmerDashboard

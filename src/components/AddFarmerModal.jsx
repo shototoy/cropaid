@@ -22,8 +22,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
         password: ''
     });
 
-    useEffect(() => {
-        // Fetch barangays for dropdowns
+    useEffect(() => {
         const fetchBarangays = async () => {
             if (isMockMode) {
                 setBarangays([
@@ -58,9 +57,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
-
-        // Basic validation
+        setError(null);
         if (!formData.firstName || !formData.lastName || !formData.username || !formData.password) {
             setError('Please fill in all required fields');
             setLoading(false);
@@ -128,7 +125,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                 className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Header */}
+                {}
                 <div className="bg-primary px-6 py-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                         <User size={20} />
@@ -142,7 +139,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                     </button>
                 </div>
 
-                {/* Form */}
+                {}
                 <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
@@ -150,7 +147,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                         </div>
                     )}
 
-                    {/* Personal Info Section */}
+                    {}
                     <div className="mb-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
                             <User size={14} />
@@ -234,7 +231,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                         </div>
                     </div>
 
-                    {/* Farm Info Section */}
+                    {}
                     <div className="mb-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
                             <MapPin size={14} />
@@ -281,7 +278,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                         </div>
                     </div>
 
-                    {/* Account Info Section */}
+                    {}
                     <div className="mb-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase mb-3 flex items-center gap-2">
                             <FileText size={14} />
@@ -314,7 +311,7 @@ export default function AddFarmerModal({ onClose, onSuccess }) {
                     </div>
                 </form>
 
-                {/* Footer */}
+                {}
                 <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
                     <button
                         type="button"

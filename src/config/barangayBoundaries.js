@@ -1,8 +1,5 @@
 import * as turf from '@turf/turf';
-import { noralaBoundaryCoordinates } from './noralaBoundary';
-
-// Actual Barangay Center Coordinates for Norala, South Cotabato
-// Source: PhilAtlas / Google Maps (Approximate Centers)
+import { noralaBoundaryCoordinates } from './noralaBoundary';
 
 const barangayCenters = {
     'Benigno Aquino, Jr.': { lat: 6.5282, lng: 124.6848, color: '#FF5733' },
@@ -19,11 +16,8 @@ const barangayCenters = {
     'San Miguel': { lat: 6.4944, lng: 124.7187, color: '#33A1FF' },
     'Simsiman': { lat: 6.5592, lng: 124.6527, color: '#A1FF33' },
     'Tinago': { lat: 6.5523, lng: 124.7054, color: '#FF33F5' }
-};
-
-// Generate Voronoi Polygons seeded by centers and clipped to Norala boundary
-const generateVoronoiBoundaries = () => {
-    // 1. Prepare Data in GeoJSON format (Lng, Lat)
+};
+const generateVoronoiBoundaries = () => {
     const noralaPoly = turf.polygon([
         noralaBoundaryCoordinates.map(c => [c[1], c[0]])
     ]);
@@ -32,24 +26,14 @@ const generateVoronoiBoundaries = () => {
         Object.entries(barangayCenters).map(([name, data]) =>
             turf.point([data.lng, data.lat], { name, color: data.color })
         )
-    );
-
-    // 2. Generate Voronoi
-    // We use a bbox slightly larger than Norala to ensure coverage before clipping
+    );
     const bbox = turf.bbox(noralaPoly);
     const options = { bbox };
-    const voronoiPolygons = turf.voronoi(points, options);
-
-    // 3. Clip each Voronoi polygon to the Norala boundary
+    const voronoiPolygons = turf.voronoi(points, options);
     const boundaries = {};
 
     voronoiPolygons.features.forEach(vp => {
-        if (!vp) return;
-
-        // Find which point this polygon belongs to (spatial joinish logic, or iterating points to find contained)
-        // Voronoi features don't preserve properties by default in all versions, 
-        // but typically index matches points index if points are unique.
-        // Let's rely on point-in-polygon check to identify the label.
+        if (!vp) return;
 
         let centerPoint = null;
         for (const p of points.features) {
@@ -63,15 +47,10 @@ const generateVoronoiBoundaries = () => {
             try {
                 const intersection = turf.intersect(turf.featureCollection([vp, noralaPoly]));
                 if (intersection) {
-                    const name = centerPoint.properties.name;
-                    // Handles MultiPolygon or Polygon result
+                    const name = centerPoint.properties.name;
                     const coords = intersection.geometry.type === 'MultiPolygon'
                         ? intersection.geometry.coordinates.flat(1)
-                        : intersection.geometry.coordinates;
-
-                    // 4. Convert back to Leaflet [Lat, Lng]
-                    // Note: Coordinates might be nested. We just need the outer ring usually.
-                    // For safety, we take the first ring of the polygon.
+                        : intersection.geometry.coordinates;
                     const leafletCoords = coords[0].map(c => [c[1], c[0]]);
 
                     boundaries[name] = {

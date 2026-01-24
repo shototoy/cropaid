@@ -9,17 +9,13 @@ import Input from '../components/Input';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { User, MapPin, Phone, Mail, Calendar, Edit2, Save, X, Camera, Crosshair } from 'lucide-react';
 import { MOCK_DATA } from '../config/mockData';
-import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
-
-// Fix for default marker icons
+import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-// Custom farm marker
+});
 const farmIcon = new L.DivIcon({
     className: 'custom-marker',
     html: `<div style="
@@ -36,9 +32,7 @@ const farmIcon = new L.DivIcon({
     ">🌾</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
-});
-
-// Map click handler component
+});
 function LocationPicker({ position, setPosition, isEditing }) {
     useMapEvents({
         click(e) {
@@ -79,9 +73,7 @@ export default function FarmerProfile() {
     });
 
     const [editedProfile, setEditedProfile] = useState({ ...profile });
-    const [mapPosition, setMapPosition] = useState(null);
-
-    // Norala center
+    const [mapPosition, setMapPosition] = useState(null);
     const defaultCenter = [6.5294, 124.6647];
 
     useEffect(() => {
@@ -294,18 +286,14 @@ export default function FarmerProfile() {
             <Header title="My Profile" showBack onBack={() => navigate(-1)} />
 
             <div className="flex-1 overflow-y-auto pb-24">
-                {/* Hidden file input */}
+                {}
                 <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                />
-
-                {/* Profile Header */}
-                {/* Profile Header - Redesigned to be a single cohesive card */}
-                {/* Profile Header - Redesigned to be a single cohesive card */}
+                    accept="image}
+                {}
+                {}
                 <div className="bg-primary text-white pt-8 pb-6 px-6 rounded-b-[40px] shadow-sm">
                     <div className="flex flex-col items-center gap-4 text-center">
                         <div
@@ -341,10 +329,10 @@ export default function FarmerProfile() {
                     </div>
                 </div>
 
-                {/* Profile Card */}
+                {}
                 <div className="px-4 mt-4">
                     <div className="bg-white rounded-xl shadow-lg p-5">
-                        {/* Action Buttons */}
+                        {}
                         <div className="flex justify-end mb-4">
                             {isEditing ? (
                                 <div className="flex gap-2">
@@ -375,7 +363,7 @@ export default function FarmerProfile() {
                             )}
                         </div>
 
-                        {/* Messages */}
+                        {}
                         {error && (
                             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
                                 {error}
@@ -387,7 +375,7 @@ export default function FarmerProfile() {
                             </div>
                         )}
 
-                        {/* Personal Info Section */}
+                        {}
                         <h3 className="text-xs font-bold uppercase text-gray-400 mb-3">Personal Information</h3>
                         <div className="space-y-4 mb-6">
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -439,7 +427,7 @@ export default function FarmerProfile() {
 
                     </div>
 
-                    {/* Logout Button */}
+                    {}
                     <button
                         onClick={handleLogout}
                         className="w-full mt-4 p-4 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors"

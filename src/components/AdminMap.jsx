@@ -3,17 +3,13 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-l
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useAuth, API_URL } from '../context/AuthContext';
-import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
-
-// Fix for default marker icons in React-Leaflet
+import { noralaBoundaryCoordinates } from '../config/noralaBoundary';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-// Custom marker icons for different report types with emoji icons
+});
 const createReportIcon = (emoji, bgColor) => {
     return new L.DivIcon({
         className: 'custom-report-marker',
@@ -40,9 +36,7 @@ const reportIcons = {
     flood: createReportIcon('🌊', '#3b82f6'),     // Blue with wave emoji
     drought: createReportIcon('☀️', '#f59e0b'),   // Orange with sun emoji
     default: createReportIcon('📍', '#6b7280')    // Gray with pin emoji
-};
-
-// Map bounds updater component
+};
 function MapBoundsUpdater({ reports }) {
     const map = useMap();
     
@@ -71,13 +65,9 @@ export default function AdminMap({ onReportClick }) {
         status: '',
         barangay: ''
     });
-    const [barangays, setBarangays] = useState([]);
-
-    // Default center: Norala, South Cotabato, Philippines
+    const [barangays, setBarangays] = useState([]);
     const defaultCenter = [6.5294, 124.6647];
-    const defaultZoom = 13;
-
-    // Fetch reports with geolocation
+    const defaultZoom = 13;
     useEffect(() => {
         const fetchMapReports = async () => {
             try {
@@ -92,8 +82,7 @@ export default function AdminMap({ onReportClick }) {
 
                 if (!response.ok) throw new Error('Failed to fetch map data');
                 
-                const data = await response.json();
-                // Handle both array response and object with reports property
+                const data = await response.json();
                 const reportsArray = Array.isArray(data) ? data : (data.reports || []);
                 setReports(reportsArray);
             } catch (err) {
@@ -105,9 +94,7 @@ export default function AdminMap({ onReportClick }) {
         };
 
         if (token) fetchMapReports();
-    }, [token, filter]);
-
-    // Fetch barangays for filter
+    }, [token, filter]);
     useEffect(() => {
         const fetchBarangays = async () => {
             try {
@@ -163,7 +150,7 @@ export default function AdminMap({ onReportClick }) {
 
     return (
         <div className="h-full flex flex-col">
-            {/* Filter Bar - Stack on mobile */}
+            {}
             <div className="bg-white p-3 md:p-4 rounded-t-lg border-b">
                 <div className="flex flex-wrap gap-2 md:gap-4 items-center">
                     <div className="flex items-center gap-1 md:gap-2">
@@ -215,7 +202,7 @@ export default function AdminMap({ onReportClick }) {
                 </div>
             </div>
 
-            {/* Legend - Scrollable on mobile */}
+            {}
             <div className="bg-white px-3 md:px-4 py-2 flex gap-3 md:gap-6 border-b text-xs md:text-sm overflow-x-auto">
                 <span className="font-medium text-gray-600 flex-shrink-0">Legend:</span>
                 <span className="flex items-center gap-1 flex-shrink-0">
@@ -229,7 +216,7 @@ export default function AdminMap({ onReportClick }) {
                 </span>
             </div>
 
-            {/* Map Container */}
+            {}
             <div className="flex-1 min-h-[400px]">
                 <MapContainer
                     center={defaultCenter}
@@ -242,7 +229,7 @@ export default function AdminMap({ onReportClick }) {
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
 
-                    {/* Norala Municipality Boundary */}
+                    {}
                     <Polygon
                         positions={noralaBoundaryCoordinates}
                         pathOptions={{
@@ -254,8 +241,7 @@ export default function AdminMap({ onReportClick }) {
                         }}
                     />
 
-                    {reports.map((report) => {
-                        // Parse details if it's a string
+                    {reports.map((report) => {
                         const details = typeof report.details === 'string' 
                             ? JSON.parse(report.details || '{}') 
                             : (report.details || {});

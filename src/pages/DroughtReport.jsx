@@ -18,8 +18,7 @@ export default function DroughtReport() {
 
     const [formData, setFormData] = useState({
         farmId: null,
-        location: '',
-        // farmArea removed
+        location: '',
         affectedArea: '',
         crop: '',
         cropStage: '',
@@ -29,9 +28,7 @@ export default function DroughtReport() {
         latitude: null,
         longitude: null,
         photoBase64: null
-    });
-
-    // Capture GPS on component mount
+    });
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -48,9 +45,7 @@ export default function DroughtReport() {
             }
         };
         getLocation();
-    }, []);
-
-    // Handle photo capture from file input
+    }, []);
     const handlePhotoCapture = async (e) => {
         try {
             const file = e.target.files?.[0];
@@ -65,9 +60,7 @@ export default function DroughtReport() {
             setError('Failed to capture photo');
             console.error(err);
         }
-    };
-
-    // Remove photo
+    };
     const handleRemovePhoto = () => {
         setPhotoPreview(null);
         setFormData(prev => ({ ...prev, photoBase64: null }));
@@ -91,8 +84,7 @@ export default function DroughtReport() {
                 details: {
                     cropType: formData.crop,
                     cropStage: formData.cropStage,
-                    affectedArea: formData.affectedArea,
-                    // farmArea removed
+                    affectedArea: formData.affectedArea,
                     waterSource: formData.waterSource,
                     daysSinceRain: formData.daysSinceRain,
                     description: formData.description
@@ -131,12 +123,12 @@ export default function DroughtReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {/* GPS Status Banner */}
+                    {}
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-primary text-white' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    {/* Photo Capture Section */}
+                    {}
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Photo Evidence</label>
                         <input

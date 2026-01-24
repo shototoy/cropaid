@@ -16,27 +16,21 @@ export default function AdminReports() {
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
-    const location = useLocation();
-
-    // Initialize Active Tab from URL param
+    const location = useLocation();
     useEffect(() => {
         const statusParam = searchParams.get('status');
-        if (statusParam) {
-            // Capitalize first letter to match tab names (e.g. 'pending' -> 'Pending')
+        if (statusParam) {
             const tabName = statusParam.charAt(0).toUpperCase() + statusParam.slice(1);
             if (['All', 'Pending', 'Verified', 'Resolved'].includes(tabName)) {
                 setActiveTab(tabName);
             }
         }
-    }, [searchParams]);
-
-    // Auto-open modal if navigated from notification
+    }, [searchParams]);
     useEffect(() => {
         if (location.state?.openReportId && reports.length > 0) {
             const reportToOpen = reports.find(r => r.id.toString() === location.state.openReportId.toString());
             if (reportToOpen) {
-                setSelectedReport(reportToOpen);
-                // Clear state so it doesn't re-open on refresh/nav
+                setSelectedReport(reportToOpen);
                 window.history.replaceState({}, document.title);
             }
         }
@@ -44,8 +38,7 @@ export default function AdminReports() {
 
     const fetchReports = async () => {
         setLoading(true);
-        if (isMockMode) {
-            // Mock Data
+        if (isMockMode) {
             setTimeout(() => {
                 setReports(MOCK_DATA.admin.Reports);
                 setLoading(false);
@@ -58,18 +51,15 @@ export default function AdminReports() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to fetch reports');
-            const data = await response.json();
-            // Backend returns { reports: [...] } or array directly
-            const reportsArray = data.reports || data;
-            // Normalize field names
+            const data = await response.json();
+            const reportsArray = data.reports || data;
             const normalizedReports = reportsArray.map(r => ({
                 ...r,
                 type: r.report_type || r.type,
                 first_name: r.farmer_first_name || r.first_name || 'Unknown',
                 last_name: r.farmer_last_name || r.last_name || 'Farmer',
                 rsbsa_id: r.farmer_rsbsa_id || r.rsbsa_id || 'N/A',
-                cellphone: r.farmer_cellphone || r.cellphone || 'N/A',
-                // details is already in r, only populate if missing but description exists (mock data legacy)
+                cellphone: r.farmer_cellphone || r.cellphone || 'N/A',
                 details: r.details || (r.description ? { description: r.description } : {})
             }));
             setReports(normalizedReports);
@@ -86,8 +76,7 @@ export default function AdminReports() {
     }, [token, isMockMode]);
 
     const handleStatusUpdate = async (id, newStatus) => {
-        if (isMockMode) {
-            // Mock Update - just update local state for visual feedback
+        if (isMockMode) {
             setReports(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
             return;
         }
@@ -102,9 +91,7 @@ export default function AdminReports() {
                 body: JSON.stringify({ status: newStatus })
             });
 
-            if (!response.ok) throw new Error('Failed to update status');
-
-            // Refresh list
+            if (!response.ok) throw new Error('Failed to update status');
             fetchReports();
         } catch (err) {
             alert('Error updating status: ' + err.message);
@@ -113,8 +100,7 @@ export default function AdminReports() {
 
     const filteredReports = reports.filter(r => {
         const matchesTab = activeTab === 'All' || r.status === activeTab.toLowerCase();
-        const searchLower = debouncedSearchTerm.toLowerCase();
-        // Safe access checks
+        const searchLower = debouncedSearchTerm.toLowerCase();
         const matchesSearch =
             (r.type && r.type.toLowerCase().includes(searchLower)) ||
             (r.first_name && r.first_name.toLowerCase().includes(searchLower)) ||
@@ -352,9 +338,9 @@ export default function AdminReports() {
 
     return (
         <div className="space-y-6">
-            {/* Redundant header removed */}
+            {}
 
-            {/* Tabs & Search */}
+            {}
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md self-start md:self-auto">
                     {['All', 'Pending', 'Verified', 'Resolved'].map((tab) => (
@@ -383,7 +369,7 @@ export default function AdminReports() {
                 </div>
             </div>
 
-            {/* Reports List */}
+            {}
             <div className="space-y-4">
                 {loading && <p className="text-center py-8 text-gray-500">Loading reports...</p>}
 
@@ -398,12 +384,10 @@ export default function AdminReports() {
                     if (report.details) {
                         try {
                             details = typeof report.details === 'string' ? JSON.parse(report.details) : report.details;
-                        } catch (e) {
-                            // Fallback for plain string details
+                        } catch (e) {
                             details = { description: report.details };
                         }
-                    }
-                    // Ensure details is an object to prevent crashes
+                    }
                     if (!details || typeof details !== 'object') details = {};
 
                     return (
@@ -447,7 +431,7 @@ export default function AdminReports() {
                                 </div>
 
                                 <div className="flex items-center gap-3 md:border-l md:border-gray-100 md:pl-6 shrink-0 pt-4 md:pt-0 border-t border-gray-100 mt-2 md:mt-0">
-                                    {/* View Button */}
+                                    {}
                                     <button
                                         onClick={() => setSelectedReport(report)}
                                         className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-700 transition-colors p-2 rounded-md hover:bg-gray-100"
@@ -456,7 +440,7 @@ export default function AdminReports() {
                                         <span className="text-[10px] uppercase font-bold">View</span>
                                     </button>
 
-                                    {/* Export Button - Always Visible */}
+                                    {}
                                     <button
                                         onClick={() => handleExport(report)}
                                         className="flex flex-col items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors p-2 rounded-md hover:bg-indigo-50"
@@ -499,7 +483,7 @@ export default function AdminReports() {
                 })}
             </div>
 
-            {/* Report Detail Modal */}
+            {}
             {selectedReport && (
                 <ReportDetailModal
                     report={selectedReport}

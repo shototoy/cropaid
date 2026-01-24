@@ -6,8 +6,7 @@ export default function ConnectionStatus() {
     const { isMockMode } = useAuth();
     const [isDisconnected, setIsDisconnected] = useState(false);
 
-    useEffect(() => {
-        // If we are in mock mode, we don't care about the server connection
+    useEffect(() => {
         if (isMockMode) return;
 
         let intervalId;
@@ -29,16 +28,11 @@ export default function ConnectionStatus() {
                 } else {
                     if (!isDisconnected) setIsDisconnected(true);
                 }
-            } catch (error) {
-                // Fetch failed (network error, timeout, server down)
+            } catch (error) {
                 if (!isDisconnected) setIsDisconnected(true);
             }
-        };
-
-        // Check every 5 seconds
-        intervalId = setInterval(checkConnection, 5000);
-
-        // Initial check immediately
+        };
+        intervalId = setInterval(checkConnection, 5000);
         checkConnection();
 
         return () => clearInterval(intervalId);

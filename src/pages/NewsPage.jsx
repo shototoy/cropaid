@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { useAuth, API_URL } from '../context/AuthContext';
-import { Newspaper, AlertTriangle, Leaf, Bug, CloudRain, Sun, Calendar, ChevronRight, Bell, Megaphone } from 'lucide-react';
-
-// Mock news/advisory data
+import { Newspaper, AlertTriangle, Leaf, Bug, CloudRain, Sun, Calendar, ChevronRight, Bell, Megaphone } from 'lucide-react';
 const MOCK_NEWS = [
     {
         id: 1,
@@ -76,18 +74,13 @@ export default function NewsPage() {
 
     useEffect(() => {
         const fetchNews = async () => {
-            if (isMockMode) {
-                // In mock mode, generate dynamic news based on mock reports
+            if (isMockMode) {
                 const mockReports = [
                     { type: 'pest', location: 'San Jose', status: 'verified' },
                     { type: 'pest', location: 'Liberty', status: 'verified' },
                     { type: 'flood', location: 'Poblacion', status: 'verified' },
-                ];
-
-                // Generate auto-news from mock reports
-                const autoNews = generateNewsFromReports(mockReports);
-
-                // Combine with static mock news
+                ];
+                const autoNews = generateNewsFromReports(mockReports);
                 const allNews = [...autoNews, ...MOCK_NEWS].sort((a, b) =>
                     new Date(b.date) - new Date(a.date)
                 );
@@ -99,18 +92,14 @@ export default function NewsPage() {
                 return;
             }
 
-            try {
-                // Fetch from backend - it handles both manual advisories and auto-generated ones
+            try {
                 const response = await fetch(`${API_URL}/news`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
-                    // Backend returns array directly or { news: [...] }
-                    const newsItems = Array.isArray(data) ? data : data.news || [];
-
-                    // Normalize the data format
+                    const data = await response.json();
+                    const newsItems = Array.isArray(data) ? data : data.news || [];
                     const normalizedNews = newsItems.map(a => ({
                         ...a,
                         date: a.created_at || a.date,
@@ -131,9 +120,7 @@ export default function NewsPage() {
         };
 
         fetchNews();
-    }, [token, isMockMode]);
-
-    // Generate news from verified reports (for mock mode)
+    }, [token, isMockMode]);
     const generateNewsFromReports = (reports) => {
         if (!reports || reports.length === 0) return [];
 
@@ -211,7 +198,7 @@ export default function NewsPage() {
         <div className="flex flex-col h-full bg-gray-50">
             <Header title="News & Advisories" showBack />
 
-            {/* Filter Tabs */}
+            {}
             <div className="px-4 py-3 bg-white border-b border-gray-200 flex gap-2 overflow-x-auto">
                 {[
                     { key: 'all', label: 'All', icon: Newspaper },
@@ -234,7 +221,7 @@ export default function NewsPage() {
                 ))}
             </div>
 
-            {/* News List */}
+            {}
             <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
@@ -278,7 +265,7 @@ export default function NewsPage() {
                 )}
             </div>
 
-            {/* Article Detail Modal */}
+            {}
             {selectedArticle && (
                 <div
                     className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
@@ -288,7 +275,7 @@ export default function NewsPage() {
                         className="bg-white rounded-t-2xl w-full max-w-[480px] max-h-[80vh] overflow-hidden animate-slide-up"
                         onClick={e => e.stopPropagation()}
                     >
-                        {/* Header */}
+                        {}
                         <div className={`p-4 ${selectedArticle.type === 'alert' ? 'bg-red-500' :
                             selectedArticle.type === 'advisory' ? 'bg-blue-500' : 'bg-primary'
                             } text-white`}>
@@ -301,7 +288,7 @@ export default function NewsPage() {
                             <h2 className="text-lg font-bold">{selectedArticle.title}</h2>
                         </div>
 
-                        {/* Content */}
+                        {}
                         <div className="p-4 overflow-y-auto max-h-[60vh]">
                             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                                 {selectedArticle.content}
@@ -317,7 +304,7 @@ export default function NewsPage() {
                             )}
                         </div>
 
-                        {/* Footer */}
+                        {}
                         <div className="p-4 border-t border-gray-200">
                             <button
                                 onClick={() => setSelectedArticle(null)}

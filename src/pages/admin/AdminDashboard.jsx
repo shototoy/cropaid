@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, AlertTriangle, CheckCircle, CloudRain, ArrowUp, ArrowDown, Bug, Droplets, Sun, TrendingUp, Cloud, CloudLightning } from 'lucide-react';
 import { useAuth, API_URL } from '../../context/AuthContext';
 import { MOCK_DATA } from '../../config/mockData';
-import { fetchWeather } from '../../services/api';
-
-// Simple Bar Chart Component
+import { fetchWeather } from '../../services/api';
 function SimpleBarChart({ data, title }) {
     const maxValue = Math.max(...data.map(d => d.value), 1);
 
@@ -26,11 +24,8 @@ function SimpleBarChart({ data, title }) {
             ))}
         </div>
     );
-}
-
-// Donut Chart Component
-function DonutChart({ data, centerLabel, centerValue }) {
-    // Handle empty data
+}
+function DonutChart({ data, centerLabel, centerValue }) {
     if (!data || data.length === 0) {
         return (
             <div className="flex items-center justify-center h-40 text-gray-400">
@@ -39,9 +34,7 @@ function DonutChart({ data, centerLabel, centerValue }) {
         );
     }
 
-    const total = data.reduce((sum, d) => sum + Number(d.value || 0), 0);
-
-    // If all values are 0, show empty state
+    const total = data.reduce((sum, d) => sum + Number(d.value || 0), 0);
     if (total === 0) {
         return (
             <div className="flex items-center justify-center h-40 text-gray-400">
@@ -123,8 +116,7 @@ export default function AdminDashboard() {
         const fetchData = async () => {
             setLoading(true);
 
-            if (isMockMode) {
-                // Enhanced Mock Data with realistic values
+            if (isMockMode) {
                 const mockStats = {
                     totalFarmers: MOCK_DATA.admin.Stats?.totalFarmers || 45,
                     pendingReports: 4,
@@ -152,14 +144,11 @@ export default function AdminDashboard() {
                 return;
             }
 
-            try {
-                // Fetch Stats (includes reportsByType and reportsByBarangay)
+            try {
                 const statsRes = await fetch(`${API_URL}/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const statsData = await statsRes.json();
-
-                // Fetch Recent Activity (Reports)
+                const statsData = await statsRes.json();
                 const reportsRes = await fetch(`${API_URL}/admin/reports?limit=5`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -192,9 +181,7 @@ export default function AdminDashboard() {
         };
 
         if (token || isMockMode) fetchData();
-    }, [token, isMockMode]);
-
-    // Fetch Weather Logic
+    }, [token, isMockMode]);
     const [weather, setWeather] = useState(null);
     useEffect(() => {
         const loadWeather = async () => {
@@ -223,25 +210,19 @@ export default function AdminDashboard() {
     const formatDate = (dateString) => {
         const d = new Date(dateString);
         return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString();
-    };
-
-    // Prepare chart data
+    };
     const typeChartData = [
         { label: 'Pest', value: reportsByType.find(r => r.type === 'pest')?.count || 0, color: 'bg-red-500' },
         { label: 'Flood', value: reportsByType.find(r => r.type === 'flood')?.count || 0, color: 'bg-blue-500' },
         { label: 'Drought', value: reportsByType.find(r => r.type === 'drought')?.count || 0, color: 'bg-orange-500' },
         { label: 'Mixed', value: reportsByType.find(r => r.type === 'mix')?.count || 0, color: 'bg-purple-500' }
-    ];
-
-    // Status donut chart - show all statuses for the chart (filter 0s in component)
+    ];
     const statusDonutData = [
         { label: 'Pending', value: stats.pendingReports || 0, color: '#f59e0b' },
         { label: 'Verified', value: stats.verifiedReports || 0, color: '#3b82f6' },
         { label: 'Resolved', value: stats.resolvedReports || 0, color: '#10b981' },
         { label: 'Rejected', value: stats.rejectedReports || 0, color: '#ef4444' }
-    ];
-
-    // Calculate total for center display
+    ];
     const totalReportsCount = stats.totalReports ||
         (stats.pendingReports + stats.verifiedReports + stats.resolvedReports + stats.rejectedReports);
 
@@ -265,7 +246,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-6">
-            {/* Stats Grid */}
+            {}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {statCards.map((stat, index) => {
                     if (stat.label === 'Weather Alerts') {
@@ -314,7 +295,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Reports by Type Chart */}
+                {}
                 <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                         <Bug size={18} className="text-gray-400" />
@@ -327,7 +308,7 @@ export default function AdminDashboard() {
                     )}
                 </div>
 
-                {/* Status Donut Chart */}
+                {}
                 <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                         <TrendingUp size={18} className="text-gray-400" />
@@ -344,7 +325,7 @@ export default function AdminDashboard() {
                     )}
                 </div>
 
-                {/* Reports by Barangay */}
+                {}
                 <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                         <Users size={18} className="text-gray-400" />
@@ -360,7 +341,7 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Recent Activity Feed */}
+            {}
             <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Incident Reports</h3>
                 <div className="space-y-4">

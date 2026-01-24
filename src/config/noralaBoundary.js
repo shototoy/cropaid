@@ -1,6 +1,4 @@
-// Norala, South Cotabato municipality boundary coordinates
-// Source: OpenStreetMap (OSM relation ID: 20011843)
-// Retrieved: January 3, 2026
+
 
 export const noralaBoundaryCoordinates = [
     [6.5157594, 124.6072411],

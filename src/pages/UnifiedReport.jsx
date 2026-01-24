@@ -78,7 +78,7 @@ export default function UnifiedReport() {
                 })}
             </div>
 
-            {/* Info Card */}
+            {}
             <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
                 <div className="flex items-start gap-3">
                     <AlertTriangle size={20} className="text-amber-500 mt-0.5 flex-shrink-0" />

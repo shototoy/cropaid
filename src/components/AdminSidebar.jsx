@@ -30,7 +30,7 @@ export default function AdminSidebar({ isOpen, toggle }) {
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {}
             {isOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-30 lg:hidden"
@@ -38,14 +38,14 @@ export default function AdminSidebar({ isOpen, toggle }) {
                 />
             )}
 
-            {/* Sidebar */}
+            {}
             <aside className={`
                 fixed inset-0 z-50 h-screen w-full lg:w-64 bg-white border-r border-gray-200 shadow-xl transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                 lg:sticky lg:top-0 lg:z-0 lg:h-screen lg:shadow-none
             `}>
                 <div className="flex flex-col h-full">
-                    {/* Header */}
+                    {}
                     <div className="p-6 flex items-center justify-between border-b border-gray-100">
                         <div className="flex items-center gap-3">
                             <img src={logo} alt="CropAid Logo" className="w-8 h-8 object-contain" />
@@ -62,7 +62,7 @@ export default function AdminSidebar({ isOpen, toggle }) {
                         </button>
                     </div>
 
-                    {/* Navigation */}
+                    {}
                     <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                         {filteredNavItems.map((item) => (
                             <NavLink
@@ -88,7 +88,7 @@ export default function AdminSidebar({ isOpen, toggle }) {
                         ))}
                     </nav>
 
-                    {/* Footer */}
+                    {}
                     <div className="p-4 border-t border-gray-100">
                         <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-md">
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">

@@ -8,17 +8,13 @@ import { MapPin, Bug, CloudRain, Sun, Home, Crosshair, X, Filter } from 'lucide-
 import { noralaBoundaryCoordinates } from '../../config/noralaBoundary';
 import { barangayBoundaries } from '../../config/barangayBoundaries';
 import { API_BASE_URL } from '../../services/api';
-import * as turf from '@turf/turf';
-
-// Fix for default marker icons in React-Leaflet
+import * as turf from '@turf/turf';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom Icons - Reports (Circular)
+});
 const createReportIcon = (iconSvg, color, size = 32) => {
     const bgColor = color.replace('text-', '').replace('-500', '');
     const hexColor = {
@@ -51,11 +47,8 @@ const createReportIcon = (iconSvg, color, size = 32) => {
         iconAnchor: [size / 2, size / 2],
         popupAnchor: [0, -size / 2]
     });
-};
-
-// Custom Icons - Farms (Rounded Square)
-const createFarmIcon = (iconSvg, color, size = 32) => {
-    // Gray is standard for community farms
+};
+const createFarmIcon = (iconSvg, color, size = 32) => {
     const hexColor = '#6b7280';
 
     return L.divIcon({
@@ -78,9 +71,7 @@ const createFarmIcon = (iconSvg, color, size = 32) => {
         iconAnchor: [size / 2, size],
         popupAnchor: [0, -size]
     });
-};
-
-// SVG Strings
+};
 const Icons = {
     pest: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13a6 6 0 0 0-6-6"/><path d="M18 13a6 6 0 0 1 6-6"/><path d="M17.47 9c1.93-.2 3.53-1.9 3.53-1.9 3.53-4"/></svg>',
     flood: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 20v4"/><path d="M8 20v4"/><path d="M12 20v4"/></svg>',
@@ -119,12 +110,8 @@ function MapController({ setZoom }) {
 }
 
 export default function AdminMapPage() {
-    const { token, isMockMode } = useAuth();
-
-    // Default Center (Norala)
-    const defaultCenter = [6.5206, 124.6623];
-
-    // State
+    const { token, isMockMode } = useAuth();
+    const defaultCenter = [6.5206, 124.6623];
     const [selectedReport, setSelectedReport] = useState(null);
     const [activeFilters, setActiveFilters] = useState({
         farm: true,
@@ -144,10 +131,8 @@ export default function AdminMapPage() {
             setLoading(true);
             try {
                 if (isMockMode) {
-                    setReports(MOCK_DATA.reports);
-                    // Use mock farms locally if needed
-                } else {
-                    // Fetch Public Reports
+                    setReports(MOCK_DATA.reports);
+                } else {
                     try {
                         const reportRes = await fetch(`${API_BASE_URL}/public/reports`, {
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -156,9 +141,7 @@ export default function AdminMapPage() {
                             const reportData = await reportRes.json();
                             setReports(reportData);
                         }
-                    } catch (e) { console.error("Error fetching reports", e); }
-
-                    // Fetch Public Farms
+                    } catch (e) { console.error("Error fetching reports", e); }
                     try {
                         const farmsRes = await fetch(`${API_BASE_URL}/public/farms`, {
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -232,7 +215,7 @@ export default function AdminMapPage() {
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         />
 
-                        {/* Boundaries */}
+                        {}
                         <Polygon
                             positions={noralaBoundaryCoordinates}
                             pathOptions={{ color: '#15803d', weight: 5, fill: false }}
@@ -251,7 +234,7 @@ export default function AdminMapPage() {
 
                         <MapController setZoom={setZoom} />
 
-                        {/* Farms */}
+                        {}
                         {activeFilters.farm && farms.map(farm => (
                             <Marker
                                 key={farm.id}
@@ -268,7 +251,7 @@ export default function AdminMapPage() {
                             </Marker>
                         ))}
 
-                        {/* Reports */}
+                        {}
                         {filteredReports.map((report) => (
                             <Marker
                                 key={report.id}
@@ -281,7 +264,7 @@ export default function AdminMapPage() {
                     </MapContainer>
                 )}
 
-                {/* Filters */}
+                {}
                 <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-2 flex flex-col gap-2 w-32">
                         <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-1">Filters</span>
@@ -311,7 +294,7 @@ export default function AdminMapPage() {
                     </div>
                 </div>
 
-                {/* Selected Report Popup */}
+                {}
                 {selectedReport && (
                     <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-auto md:w-80 md:bottom-6 md:right-6 bg-white rounded-xl shadow-2xl p-4 z-[1100] animate-slide-up border border-gray-100">
                         <div className="flex justify-between items-start mb-3">

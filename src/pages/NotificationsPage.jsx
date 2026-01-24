@@ -9,9 +9,7 @@ export default function NotificationsPage() {
     const { token, isMockMode } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, unread, read
-
-    // Mock notifications for demo
+    const [filter, setFilter] = useState('all'); // all, unread, read
     const mockNotifications = [
         {
             id: 1,
@@ -73,8 +71,7 @@ export default function NotificationsPage() {
                 const data = await response.json();
                 setNotifications(data.notifications || data);
             } catch (err) {
-                console.error(err);
-                // Fall back to mock data if API fails
+                console.error(err);
                 setNotifications(mockNotifications);
             } finally {
                 setLoading(false);
@@ -180,7 +177,7 @@ export default function NotificationsPage() {
             <Header title="Notifications" showBack onBack={() => navigate(-1)} />
 
             <div className="flex-1 overflow-y-auto">
-                {/* Filter Tabs */}
+                {}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
                     <div className="flex gap-2">
                         {[
@@ -211,7 +208,7 @@ export default function NotificationsPage() {
                     )}
                 </div>
 
-                {/* Notifications List */}
+                {}
                 <div className="p-4">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">

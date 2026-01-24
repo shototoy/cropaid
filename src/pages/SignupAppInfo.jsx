@@ -33,9 +33,7 @@ export default function SignupAppInfo() {
         if (missing.length > 0) {
             setError(`Please fill in required fields: ${missing.map(f => f.label).join(', ')}`);
             return;
-        }
-
-        // Email Format Validation
+        }
         const emailRegex = /\S+@\S+\.\S+/;
         if (!emailRegex.test(formData.email)) {
             setError("Please enter a valid email address.");

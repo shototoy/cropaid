@@ -17,8 +17,7 @@ export default function FarmSelector({ onSelect, selectedFarmId, required = true
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setFarms(data);
-                    // If only one farm exists, auto-select it
+                    setFarms(data);
                     if (data.length === 1 && !selectedFarmId) {
                         onSelect(data[0]);
                     }

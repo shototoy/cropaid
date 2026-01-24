@@ -40,7 +40,7 @@ export default function AdminOrganizedReport() {
 
     return (
         <div className="p-4 min-h-screen bg-gray-50 flex flex-col items-center">
-            {/* Action Buttons - Fixed at Top or separate from print area */}
+            {}
             <div className="w-full max-w-[816px] flex flex-col sm:flex-row gap-3 mb-6">
                 <button
                     onClick={handleDownload}
@@ -59,7 +59,7 @@ export default function AdminOrganizedReport() {
                 </button>
             </div>
 
-            {/* Letter Sized Container for Export */}
+            {}
             <div
                 ref={reportRef}
                 id="report-summary-export"

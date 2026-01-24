@@ -8,8 +8,7 @@ export default function WeatherWidget() {
 
     useEffect(() => {
         const getWeather = async () => {
-            try {
-                // Try to get user's current position
+            try {
                 let lat = 7.0731; // Default: General Santos City
                 let lon = 125.6128;
 
@@ -17,8 +16,7 @@ export default function WeatherWidget() {
                     const coords = await getCurrentPosition();
                     lat = coords.latitude;
                     lon = coords.longitude;
-                } catch (geoErr) {
-                    // Silent fallback to default location
+                } catch (geoErr) {
                 }
 
                 const data = await fetchWeather(lat, lon);
@@ -31,13 +29,10 @@ export default function WeatherWidget() {
             }
         };
 
-        getWeather();
-        // Refresh weather every 30 minutes
+        getWeather();
         const interval = setInterval(getWeather, 30 * 60 * 1000);
         return () => clearInterval(interval);
-    }, []);
-
-    // Weather icon mapping
+    }, []);
     const getWeatherIcon = (condition) => {
         const icons = {
             'Clear': '☀️',
@@ -95,7 +90,7 @@ export default function WeatherWidget() {
                 </div>
             </div>
             
-            {/* Weather Advisory */}
+            {}
             {weather?.advisory && (
                 <div className="mt-3 bg-white/10 rounded-lg p-2 text-xs">
                     <span className="font-semibold">🌾 Farm Advisory: </span>
@@ -103,7 +98,7 @@ export default function WeatherWidget() {
                 </div>
             )}
             
-            {/* Additional weather info */}
+            {}
             <div className="mt-3 flex justify-between text-xs opacity-80">
                 <span>🌅 Sunrise: {weather?.sunrise || '5:30 AM'}</span>
                 <span>🌇 Sunset: {weather?.sunset || '6:15 PM'}</span>

@@ -14,9 +14,7 @@ export default function AdminNews() {
         content: '',
         type: 'news', // news, advisory, weather, alert
         priority: 'normal' // low, normal, medium, high, critical
-    });
-
-    // Inject "Post Update" button into header
+    });
     useEffect(() => {
         setHeaderAction(
             <button
@@ -34,8 +32,7 @@ export default function AdminNews() {
 
     const fetchNews = async () => {
         setLoading(true);
-        if (isMockMode) {
-            // Mock Data
+        if (isMockMode) {
             setTimeout(() => {
                 setNews([
                     { id: 1, title: 'El Nino Advisory', content: 'Prepare for dry season. Conserve water.', type: 'advisory', priority: 'high', created_at: new Date().toISOString() },
@@ -145,7 +142,7 @@ export default function AdminNews() {
 
     return (
         <div className="space-y-6">
-            {/* Mobile Header (Hidden on Desktop) */}
+            {}
             <div className="flex justify-between items-center lg:hidden">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">News & Advisories</h1>
