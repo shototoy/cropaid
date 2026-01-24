@@ -163,20 +163,20 @@ export default function AdminReports() {
             <head>
                 <title>CropAid Report Summary #${report.id}</title>
                 <style>
-                    @page { size: auto; margin: 5mm; }
-                    body { font-family: 'Arial', sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 20px; width: 100%; box-sizing: border-box; }
-                    .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 15px; margin-bottom: 20px; }
-                    .logo { font-size: 22px; font-weight: bold; color: #16a34a; }
-                    .title { font-size: 16px; margin-top: 5px; font-weight: normal; }
-                    .section { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
-                    .section-header { background: #f9fafb; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; font-size: 13px; text-transform: uppercase; }
-                    .section-content { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                    .field { margin-bottom: 2px; }
-                    .label { font-size: 11px; color: #666; display: block; }
-                    .value { font-size: 13px; font-weight: 500; }
+                    @page { size: auto; margin: 3mm; }
+                    body { font-family: 'Arial', sans-serif; line-height: 1.1; color: #333; margin: 0; padding: 10px; width: 100%; box-sizing: border-box; }
+                    .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 5px; margin-bottom: 10px; }
+                    .logo { font-size: 18px; font-weight: bold; color: #16a34a; }
+                    .title { font-size: 12px; margin-top: 2px; font-weight: normal; }
+                    .section { margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; page-break-inside: avoid; }
+                    .section-header { background: #f9fafb; padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; font-size: 10px; text-transform: uppercase; }
+                    .section-content { padding: 6px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+                    .field { margin-bottom: 0px; }
+                    .label { font-size: 9px; color: #666; display: block; margin-bottom: 0px; }
+                    .value { font-size: 10px; font-weight: 600; }
                     .full-width { grid-column: span 2; }
-                    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
-                    .footer { margin-top: 30px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 15px; }
+                    .status-badge { display: inline-block; padding: 1px 6px; border-radius: 99px; font-size: 9px; font-weight: bold; text-transform: uppercase; border: 1px solid #ccc; }
+                    .footer { margin-top: 15px; text-align: center; font-size: 9px; color: #888; border-top: 1px solid #eee; padding-top: 5px; }
                 </style>
             </head>
             <body>
