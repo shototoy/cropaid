@@ -9,55 +9,17 @@ export default function NotificationsPage() {
     const { token, isMockMode } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, unread, read
-    const mockNotifications = [
-        {
-            id: 1,
-            type: 'status_change',
-            title: 'Report Verified',
-            message: 'Your pest report has been verified by the admin. An agricultural officer will visit soon.',
-            is_read: false,
-            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-            reference_id: '101'
-        },
-        {
-            id: 2,
-            type: 'advisory',
-            title: 'Weather Advisory',
-            message: 'Heavy rainfall expected in the next 48 hours. Please secure your crops and drainage systems.',
-            is_read: false,
-            created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-            reference_id: null
-        },
-        {
-            id: 3,
-            type: 'system',
-            title: 'Welcome to CropAid!',
-            message: 'Thank you for registering. Start by submitting your first farm report.',
-            is_read: true,
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-            reference_id: null
-        },
-        {
-            id: 4,
-            type: 'status_change',
-            title: 'Report Resolved',
-            message: 'Your drought report has been marked as resolved. Thank you for your patience.',
-            is_read: true,
-            created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
-            reference_id: '102'
-        }
-    ];
+    const [filter, setFilter] = useState('all'); // all, unread, read
+
+
 
     useEffect(() => {
         const fetchNotifications = async () => {
             setLoading(true);
 
             if (isMockMode) {
-                setTimeout(() => {
-                    setNotifications(mockNotifications);
-                    setLoading(false);
-                }, 500);
+                setNotifications([]);
+                setLoading(false);
                 return;
             }
 
@@ -71,8 +33,9 @@ export default function NotificationsPage() {
                 const data = await response.json();
                 setNotifications(data.notifications || data);
             } catch (err) {
-                console.error(err);
-                setNotifications(mockNotifications);
+                console.error(err);
+
+                setNotifications([]);
             } finally {
                 setLoading(false);
             }
@@ -177,7 +140,7 @@ export default function NotificationsPage() {
             <Header title="Notifications" showBack onBack={() => navigate(-1)} />
 
             <div className="flex-1 overflow-y-auto">
-                {}
+                { }
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
                     <div className="flex gap-2">
                         {[
@@ -189,8 +152,8 @@ export default function NotificationsPage() {
                                 key={key}
                                 onClick={() => setFilter(key)}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filter === key
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {label}
@@ -208,7 +171,7 @@ export default function NotificationsPage() {
                     )}
                 </div>
 
-                {}
+                { }
                 <div className="p-4">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
@@ -226,8 +189,8 @@ export default function NotificationsPage() {
                                     key={notification.id}
                                     onClick={() => !notification.is_read && markAsRead(notification.id)}
                                     className={`bg-white rounded-xl p-4 shadow-sm border transition-all cursor-pointer ${notification.is_read
-                                            ? 'border-gray-100'
-                                            : 'border-primary/20 bg-primary/5'
+                                        ? 'border-gray-100'
+                                        : 'border-primary/20 bg-primary/5'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">

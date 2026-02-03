@@ -9,7 +9,8 @@ let isGloballyMockMode = false;
 export const setApiMockMode = (mode) => {
     isGloballyMockMode = mode;
     console.log(`API Mock Mode set to: ${mode}`);
-};
+};
+
 
 export const getCurrentPosition = () => {
     return new Promise((resolve, reject) => {
@@ -48,11 +49,14 @@ export const getCurrentPosition = () => {
             }
         );
     });
-};
+};
+
+
 export const processFileInput = async (file) => {
     if (!file) return null;
 
-    try {
+    try {
+
         const compressedFile = await compressImage(file);
         const base64 = await fileToBase64(compressedFile);
         return {
@@ -73,7 +77,7 @@ export const capturePhoto = () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
-        input.capture = 'environment'; // Use rear camera on mobile
+        input.capture = 'environment';
 
         input.onchange = async (e) => {
             const file = e.target.files[0];
@@ -112,7 +116,8 @@ export const selectPhoto = () => {
                 return;
             }
 
-            try {
+            try {
+
                 const compressedFile = await compressImage(file);
                 const base64 = await fileToBase64(compressedFile);
                 resolve({
@@ -172,7 +177,8 @@ const compressImage = (file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) =
             };
         };
     });
-};
+};
+
 
 export const fetchWeather = async (lat, lon) => {
     if (isGloballyMockMode) {
@@ -188,7 +194,8 @@ export const fetchWeather = async (lat, lon) => {
         if (!response.ok) throw new Error('Weather fetch failed');
         return await response.json();
     } catch (error) {
-        console.error('Weather API error:', error);
+        console.error('Weather API error:', error);
+
         return {
             temperature: 32,
             condition: 'Sunny',
@@ -196,7 +203,8 @@ export const fetchWeather = async (lat, lon) => {
             location: 'Norala, South Cotabato'
         };
     }
-};
+};
+
 
 let notificationPollInterval = null;
 let lastNotificationCheck = null;
@@ -215,21 +223,25 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
     const checkNotifications = async () => {
         try {
             const response = await fetch(
-                `${API_BASE_URL}/notifications/unread-count${lastNotificationCheck ? `?since=${lastNotificationCheck}` : ''}`,
+                `${API_BASE_URL}/notifications${lastNotificationCheck ? `?since=${lastNotificationCheck}` : ''}`,
                 {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }
             );
             if (response.ok) {
-                const data = await response.json();
-                onNewNotifications({ unreadCount: data.count });
+                const data = await response.json();
+                const newNotifications = data.notifications || data || [];
+                if (Array.isArray(newNotifications) && newNotifications.length > 0) {
+                    onNewNotifications({ notifications: newNotifications });
+                }
                 lastNotificationCheck = new Date().toISOString();
             }
         } catch (error) {
             console.error('Notification polling error:', error);
         }
-    };
-    checkNotifications();
+    };
+
+    checkNotifications();
     notificationPollInterval = setInterval(checkNotifications, intervalMs);
 
     return () => {
@@ -284,7 +296,8 @@ export const markAllNotificationsRead = async (token) => {
     } catch (error) {
         console.error('Mark all notifications read error:', error);
     }
-};
+};
+
 
 export const submitReport = async (token, reportData) => {
     if (isGloballyMockMode) {
@@ -317,7 +330,8 @@ export const fetchReportHistory = async (token, params = {}) => {
 
     if (!response.ok) throw new Error('Failed to fetch reports');
     return await response.json();
-};
+};
+
 
 export const fetchAdminStats = async (token) => {
     if (isGloballyMockMode) return MOCK_DATA.admin.Stats;
@@ -375,7 +389,8 @@ export const fetchReportPhoto = async (token, reportId) => {
     if (!response.ok) return null;
     const data = await response.json();
     return data.photo;
-};
+};
+
 
 export const fetchPestCategories = async (token) => {
     if (isGloballyMockMode) return [];

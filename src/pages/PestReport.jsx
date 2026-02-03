@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Camera, Image, Check } from 'lucide-react';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -20,7 +21,7 @@ export default function PestReport() {
         farmId: null,
         location: '',
         crop: '',
-        pestType: '',
+        pestType: [],
         severity: '',
         damage: '',
         description: '',
@@ -29,7 +30,20 @@ export default function PestReport() {
         photoBase64: null
     });
     const [pestOptions, setPestOptions] = useState([]);
-    const [isCustomPest, setIsCustomPest] = useState(false);
+    const [isCustomPest, setIsCustomPest] = useState(false);
+    const [customPestName, setCustomPestName] = useState('');
+
+    const togglePest = (pestName) => {
+        setFormData(prev => {
+            const current = prev.pestType;
+            if (current.includes(pestName)) {
+                return { ...prev, pestType: current.filter(p => p !== pestName) };
+            } else {
+                return { ...prev, pestType: [...current, pestName] };
+            }
+        });
+    };
+
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -46,7 +60,8 @@ export default function PestReport() {
             }
         };
         getLocation();
-    }, []);
+    }, []);
+
     useEffect(() => {
         const fetchOptions = async () => {
             try {
@@ -62,7 +77,8 @@ export default function PestReport() {
         };
 
         fetchOptions();
-    }, [token]);
+    }, [token]);
+
     const handlePhotoCapture = async (e) => {
         try {
             const file = e.target.files?.[0];
@@ -77,7 +93,8 @@ export default function PestReport() {
             setError('Failed to capture photo');
             console.error(err);
         }
-    };
+    };
+
     const handleRemovePhoto = () => {
         setPhotoPreview(null);
         setFormData(prev => ({ ...prev, photoBase64: null }));
@@ -101,7 +118,10 @@ export default function PestReport() {
                 location: formData.location,
                 details: {
                     cropType: formData.crop,
-                    pestType: formData.pestType,
+                    pestType: [
+                        ...formData.pestType,
+                        ...(isCustomPest && customPestName ? [customPestName] : [])
+                    ].join(', '),
                     severity: formData.severity,
                     affectedArea: formData.damage,
                     description: formData.description
@@ -140,22 +160,15 @@ export default function PestReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {}
+                    { }
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    {}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Photo Evidence</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            ref={fileInputRef}
-                            onChange={handlePhotoCapture}
-                            className="hidden"
-                        />
+                    { }
+                    <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                        <label className="block text-xs font-bold uppercase text-gray-500 mb-3">Photo Evidence</label>
+
                         {photoPreview ? (
                             <div className="relative">
                                 <img
@@ -166,20 +179,47 @@ export default function PestReport() {
                                 <button
                                     type="button"
                                     onClick={handleRemovePhoto}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-red-600"
+                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-red-600 shadow-md"
                                 >
                                     ×
                                 </button>
                             </div>
                         ) : (
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-8 bg-gray-50 hover:bg-gray-100 rounded-lg flex flex-col items-center gap-2 transition-colors"
-                            >
-                                <span className="text-3xl">📷</span>
-                                <span className="text-sm text-gray-600">Tap to capture photo</span>
-                            </button>
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    id="camera-input"
+                                    className="hidden"
+                                    onChange={handlePhotoCapture}
+                                />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    id="gallery-input"
+                                    className="hidden"
+                                    onChange={handlePhotoCapture}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => document.getElementById('camera-input').click()}
+                                    className="flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 active:scale-95 transition-all text-primary"
+                                >
+                                    <Camera size={24} />
+                                    <span className="text-xs font-bold">Take Photo</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => document.getElementById('gallery-input').click()}
+                                    className="flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 active:scale-95 transition-all text-gray-600"
+                                >
+                                    <Image size={24} />
+                                    <span className="text-xs font-bold">Upload File</span>
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -202,34 +242,45 @@ export default function PestReport() {
                         onChange={(e) => setFormData({ ...formData, crop: e.target.value })}
                     />
 
-                    <div>
-                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Type of Pest</label>
-                        <select
-                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-sm text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 mb-2"
-                            value={isCustomPest ? 'Other' : formData.pestType}
-                            onChange={(e) => {
-                                if (e.target.value === 'Other') {
-                                    setIsCustomPest(true);
-                                    setFormData({ ...formData, pestType: '' });
-                                } else {
-                                    setIsCustomPest(false);
-                                    setFormData({ ...formData, pestType: e.target.value });
-                                }
-                            }}
-                            required
-                        >
-                            <option value="">Select Pest</option>
+                    <div className="space-y-2">
+                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Type of Pest (Select all that apply)</label>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
                             {pestOptions.map((p, idx) => (
-                                <option key={idx} value={p.name}>{p.name}</option>
+                                <div
+                                    key={idx}
+                                    onClick={() => togglePest(p.name)}
+                                    className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${formData.pestType.includes(p.name)
+                                            ? 'bg-primary/10 border-primary text-primary font-bold'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                        }`}
+                                >
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.pestType.includes(p.name) ? 'bg-primary border-primary' : 'border-gray-300'
+                                        }`}>
+                                        {formData.pestType.includes(p.name) && <Check size={12} className="text-white" />}
+                                    </div>
+                                    <span className="text-sm">{p.name}</span>
+                                </div>
                             ))}
-                            <option value="Other">Specify Other...</option>
-                        </select>
+                            <div
+                                onClick={() => setIsCustomPest(!isCustomPest)}
+                                className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${isCustomPest
+                                        ? 'bg-primary/10 border-primary text-primary font-bold'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                    }`}
+                            >
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${isCustomPest ? 'bg-primary border-primary' : 'border-gray-300'
+                                    }`}>
+                                    {isCustomPest && <Check size={12} className="text-white" />}
+                                </div>
+                                <span className="text-sm">Other</span>
+                            </div>
+                        </div>
+
                         {isCustomPest && (
                             <Input
-                                placeholder="Enter specific pest name..."
-                                value={formData.pestType}
-                                onChange={(e) => setFormData({ ...formData, pestType: e.target.value })}
-                                required
+                                placeholder="Specify other pest name..."
+                                value={customPestName}
+                                onChange={(e) => setCustomPestName(e.target.value)}
                             />
                         )}
                     </div>
