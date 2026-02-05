@@ -15,7 +15,7 @@ export default function FarmerDashboard() {
     const navigate = useNavigate();
     const { user, logout, token, isMockMode } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [dashboardProfile, setDashboardProfile] = useState(null); // Local profile state from API
+    const [dashboardProfile, setDashboardProfile] = useState(null);
     const [weather, setWeather] = useState(null);
     const [liveWeather, setLiveWeather] = useState(null);
     const [activeSlide, setActiveSlide] = useState(0);
@@ -48,7 +48,7 @@ export default function FarmerDashboard() {
 
     const getWeather = async () => {
         try {
-            let lat = 6.5294; // Default: Norala, South Cotabato, Philippines
+            let lat = 6.5294;
             let lon = 124.6647;
 
             try {
@@ -308,7 +308,6 @@ export default function FarmerDashboard() {
 
     return (
         <>
-            { }
             <div className="bg-primary pb-20 pt-12 px-6 rounded-b-[2.5rem] relative shadow-lg">
                 <div className="flex justify-between items-center text-white mb-6">
                     <div className="flex items-center gap-3" onClick={toggleSidebar}>
@@ -322,7 +321,6 @@ export default function FarmerDashboard() {
                     </div>
                 </div>
 
-                { }
                 <div className="bg-white text-text-main p-4 rounded-xl shadow-lg flex justify-between items-center mb-[-40px]">
                     <div className="flex flex-col">
                         <span className="text-xs text-text-muted font-bold uppercase tracking-wider">Current Weather</span>
@@ -347,9 +345,7 @@ export default function FarmerDashboard() {
                 </div>
             </div>
 
-            { }
             <div className="mt-2 px-5 py-4">
-                { }
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Quick Services</h3>
                 <div className="grid grid-cols-5 gap-2 mb-6">
                     <div className="flex flex-col items-center gap-2" onClick={() => navigate('/notifications')}>

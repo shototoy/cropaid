@@ -16,67 +16,78 @@ export default function AdminReports() {
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [error, setError] = useState(null);
     const [selectedReport, setSelectedReport] = useState(null);
-    const location = useLocation();
+    const location = useLocation();
+
     useEffect(() => {
         const statusParam = searchParams.get('status');
-        if (statusParam) {
+        if (statusParam) {
+
             const tabName = statusParam.charAt(0).toUpperCase() + statusParam.slice(1);
             if (['All', 'Pending', 'Verified', 'Resolved'].includes(tabName)) {
                 setActiveTab(tabName);
             }
         }
-    }, [searchParams]);
+    }, [searchParams]);
+
     useEffect(() => {
         if (location.state?.openReportId && reports.length > 0) {
             const reportToOpen = reports.find(r => r.id.toString() === location.state.openReportId.toString());
             if (reportToOpen) {
-                setSelectedReport(reportToOpen);
+                setSelectedReport(reportToOpen);
                 window.history.replaceState({}, document.title);
             }
         }
     }, [reports, location.state]);
 
-    const fetchReports = async () => {
-        setLoading(true);
-        if (isMockMode) {
+    const fetchReports = async (showLoading = true) => {
+        if (showLoading) setLoading(true);
+        if (isMockMode) {
             setTimeout(() => {
                 setReports(MOCK_DATA.admin.Reports);
-                setLoading(false);
+                if (showLoading) setLoading(false);
             }, 500);
             return;
         }
 
         try {
-            const response = await fetch(`${API_URL}/admin/reports`, {
+            const response = await fetch(`${API_URL}/admin/reports?t=${Date.now()}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to fetch reports');
-            const data = await response.json();
-            const reportsArray = data.reports || data;
+            const data = await response.json();
+            const reportsArray = data.reports || data;
             const normalizedReports = reportsArray.map(r => ({
                 ...r,
                 type: r.report_type || r.type,
                 first_name: r.farmer_first_name || r.first_name || 'Unknown',
                 last_name: r.farmer_last_name || r.last_name || 'Farmer',
                 rsbsa_id: r.farmer_rsbsa_id || r.rsbsa_id || 'N/A',
-                cellphone: r.farmer_cellphone || r.cellphone || 'N/A',
+                cellphone: r.farmer_cellphone || r.cellphone || 'N/A',
                 details: r.details || (r.description ? { description: r.description } : {})
             }));
             setReports(normalizedReports);
         } catch (err) {
             console.error(err);
-            setError('Failed to load reports');
+            if (showLoading) setError('Failed to load reports');
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (token || isMockMode) fetchReports();
+        if (!token && !isMockMode) return;
+
+        fetchReports(true);
+
+        const interval = setInterval(() => {
+            fetchReports(false);
+        }, 2000);
+
+        return () => clearInterval(interval);
     }, [token, isMockMode]);
 
     const handleStatusUpdate = async (id, newStatus) => {
-        if (isMockMode) {
+        if (isMockMode) {
             setReports(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
             return;
         }
@@ -91,7 +102,8 @@ export default function AdminReports() {
                 body: JSON.stringify({ status: newStatus })
             });
 
-            if (!response.ok) throw new Error('Failed to update status');
+            if (!response.ok) throw new Error('Failed to update status');
+
             fetchReports();
         } catch (err) {
             alert('Error updating status: ' + err.message);
@@ -100,7 +112,8 @@ export default function AdminReports() {
 
     const filteredReports = reports.filter(r => {
         const matchesTab = activeTab === 'All' || r.status === activeTab.toLowerCase();
-        const searchLower = debouncedSearchTerm.toLowerCase();
+        const searchLower = debouncedSearchTerm.toLowerCase();
+
         const matchesSearch =
             (r.type && r.type.toLowerCase().includes(searchLower)) ||
             (r.first_name && r.first_name.toLowerCase().includes(searchLower)) ||
@@ -338,9 +351,9 @@ export default function AdminReports() {
 
     return (
         <div className="space-y-6">
-            {}
+            { }
 
-            {}
+            { }
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-md self-start md:self-auto">
                     {['All', 'Pending', 'Verified', 'Resolved'].map((tab) => (
@@ -369,7 +382,7 @@ export default function AdminReports() {
                 </div>
             </div>
 
-            {}
+            { }
             <div className="space-y-4">
                 {loading && <p className="text-center py-8 text-gray-500">Loading reports...</p>}
 
@@ -384,10 +397,12 @@ export default function AdminReports() {
                     if (report.details) {
                         try {
                             details = typeof report.details === 'string' ? JSON.parse(report.details) : report.details;
-                        } catch (e) {
+                        } catch (e) {
+
                             details = { description: report.details };
                         }
-                    }
+                    }
+
                     if (!details || typeof details !== 'object') details = {};
 
                     return (
@@ -431,7 +446,7 @@ export default function AdminReports() {
                                 </div>
 
                                 <div className="flex items-center gap-3 md:border-l md:border-gray-100 md:pl-6 shrink-0 pt-4 md:pt-0 border-t border-gray-100 mt-2 md:mt-0">
-                                    {}
+                                    { }
                                     <button
                                         onClick={() => setSelectedReport(report)}
                                         className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-700 transition-colors p-2 rounded-md hover:bg-gray-100"
@@ -440,7 +455,7 @@ export default function AdminReports() {
                                         <span className="text-[10px] uppercase font-bold">View</span>
                                     </button>
 
-                                    {}
+                                    { }
                                     <button
                                         onClick={() => handleExport(report)}
                                         className="flex flex-col items-center gap-1 text-indigo-600 hover:text-indigo-700 transition-colors p-2 rounded-md hover:bg-indigo-50"
@@ -483,7 +498,7 @@ export default function AdminReports() {
                 })}
             </div>
 
-            {}
+            { }
             {selectedReport && (
                 <ReportDetailModal
                     report={selectedReport}

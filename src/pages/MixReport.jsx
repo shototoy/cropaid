@@ -23,17 +23,17 @@ export default function MixReport() {
         farmId: null,
         location: '',
         affectedArea: '',
-        damageTypes: [], // Array of selected damage types
+        damageTypes: [],
         description: '',
         latitude: null,
         longitude: null,
         photoBase64: null,
-        // Pest specific
         pestType: [],
         pestSeverity: '',
-        // Flood specific
         floodDepth: '',
-        floodDuration: ''
+        floodDuration: '',
+        daysSinceRain: '',
+        waterSource: ''
     });
     const [pestOptions, setPestOptions] = useState([]);
     const [isCustomPest, setIsCustomPest] = useState(false);
@@ -178,13 +178,10 @@ export default function MixReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    { }
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    { }
-                    {/* Unified Photo Upload */}
                     <PhotoUpload
                         photoBase64={formData.photoBase64}
                         onPhotoChange={(base64) => {
@@ -305,6 +302,34 @@ export default function MixReport() {
                                     value={formData.floodDuration}
                                     onChange={(e) => setFormData({ ...formData, floodDuration: e.target.value })}
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.damageTypes.includes('Drought') && (
+                        <div className="space-y-4 p-4 bg-orange-50 rounded-lg border border-orange-100">
+                            <h3 className="font-bold text-sm text-orange-700 uppercase">Drought Details</h3>
+                            <div className="grid grid-cols-1 gap-3">
+                                <Input
+                                    label="Days Since Last Rain"
+                                    type="number"
+                                    placeholder="e.g. 15"
+                                    value={formData.daysSinceRain || ''}
+                                    onChange={(e) => setFormData({ ...formData, daysSinceRain: e.target.value })}
+                                />
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold uppercase text-gray-500">Water Source Status</label>
+                                    <select
+                                        className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                        value={formData.waterSource || ''}
+                                        onChange={(e) => setFormData({ ...formData, waterSource: e.target.value })}
+                                    >
+                                        <option value="">Select Status</option>
+                                        <option value="Available">Available / Normal</option>
+                                        <option value="Low">Low / Critical</option>
+                                        <option value="Dried Up">Dried Up</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     )}

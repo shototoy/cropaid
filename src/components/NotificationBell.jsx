@@ -115,12 +115,10 @@ export default function NotificationBell() {
     useEffect(() => {
         if (token) {
             const initializeNotifications = async () => {
-                // Fetch initial state without triggering push
                 const initialNotifs = await fetchAllNotifications();
                 const maxId = initialNotifs.length > 0 ? Math.max(...initialNotifs.map(n => n.id)) : 0;
 
                 const handleNewNotifications = async (data) => {
-                    // Update Unread Count from Server Truth
                     if (data.unreadCount !== undefined) {
                         setUnreadCount(data.unreadCount);
                     }
@@ -132,7 +130,6 @@ export default function NotificationBell() {
                             return [...data.notifications, ...filteredPrev];
                         });
 
-                        // Calculate new unread items *specifically from this batch* for PUSH
                         const newUnreadItems = data.notifications.filter(n => !n.is_read);
 
                         if (newUnreadItems.length > 0) {
@@ -147,7 +144,7 @@ export default function NotificationBell() {
                                         sound: 'beep.wav',
                                         smallIcon: 'ic_stat_icon',
                                         actionTypeId: '',
-                                        channelId: 'cropaid_v2', // Use the new channel
+                                        channelId: 'cropaid_v2',
                                         extra: {
                                             reference_id: n.reference_id
                                         }
