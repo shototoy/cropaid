@@ -24,12 +24,14 @@ export default function NotificationBell() {
             if (Capacitor.isNativePlatform()) {
                 await LocalNotifications.requestPermissions();
                 await LocalNotifications.createChannel({
-                    id: 'default',
-                    name: 'General Notifications',
+                    id: 'cropaid_v2',
+                    name: 'CropAid Updates',
                     importance: 5,
                     visibility: 1,
                     vibration: true,
                     sound: 'beep.wav',
+                    lights: true,
+                    lightColor: '#FF0000'
                 });
             } else if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -118,37 +120,43 @@ export default function NotificationBell() {
                 const maxId = initialNotifs.length > 0 ? Math.max(...initialNotifs.map(n => n.id)) : 0;
 
                 const handleNewNotifications = async (data) => {
-                    if (data.notifications && Array.isArray(data.notifications)) {
+                    // Update Unread Count from Server Truth
+                    if (data.unreadCount !== undefined) {
+                        setUnreadCount(data.unreadCount);
+                    }
+
+                    if (data.notifications && Array.isArray(data.notifications) && data.notifications.length > 0) {
                         setNotifications(prev => {
                             const newIds = new Set(data.notifications.map(n => n.id));
                             const filteredPrev = prev.filter(n => !newIds.has(n.id));
                             return [...data.notifications, ...filteredPrev];
                         });
 
-                        const newUnread = data.notifications.filter(n => !n.is_read).length;
-                        setUnreadCount(prev => prev + newUnread);
+                        // Calculate new unread items *specifically from this batch* for PUSH
+                        const newUnreadItems = data.notifications.filter(n => !n.is_read);
 
-                        const unreadNotifications = data.notifications.filter(n => !n.is_read);
-
-                        if (unreadNotifications.length > 0) {
+                        if (newUnreadItems.length > 0) {
+                            console.log('[NOTIF BELL] Scheduling PUSH notification for:', newUnreadItems.length, 'items');
                             if (Capacitor.isNativePlatform()) {
                                 await LocalNotifications.schedule({
-                                    notifications: unreadNotifications.map(n => ({
-                                        title: n.title || 'New Notification',
+                                    notifications: newUnreadItems.map(n => ({
+                                        title: n.title || 'CropAid Alert',
                                         body: n.message,
                                         id: typeof n.id === 'number' ? n.id : Math.floor(Math.random() * 100000),
-                                        schedule: { at: new Date(Date.now() + 100) },
+                                        schedule: { at: new Date(Date.now() + 100), allowWhileIdle: true },
                                         sound: 'beep.wav',
+                                        smallIcon: 'ic_stat_icon',
                                         actionTypeId: '',
-                                        channelId: 'default',
+                                        channelId: 'cropaid_v2', // Use the new channel
                                         extra: {
                                             reference_id: n.reference_id
                                         }
                                     }))
                                 });
+                                console.log('[NOTIF BELL] PUSH TRIGGERED (High Priority)');
                             } else if (Notification.permission === 'granted') {
-                                unreadNotifications.forEach(n => {
-                                    new Notification(n.title || 'New Notification', {
+                                newUnreadItems.forEach(n => {
+                                    new Notification(n.title || 'CropAid Alert', {
                                         body: n.message,
                                         icon: '/icon.png'
                                     });
@@ -158,7 +166,7 @@ export default function NotificationBell() {
                     }
                 };
 
-                pollingRef.current = startNotificationPolling(token, handleNewNotifications, 10000, maxId);
+                pollingRef.current = startNotificationPolling(token, handleNewNotifications, 2000, maxId);
             };
 
             initializeNotifications();

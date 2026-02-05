@@ -7,7 +7,9 @@ import Layout from '../components/Layout';
 import BottomNavbar from '../components/BottomNavbar';
 import { API_URL, useAuth } from '../context/AuthContext';
 import { MOCK_DATA } from '../config/mockData';
-import { fetchWeather, getCurrentPosition } from '../services/api';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
+import { fetchWeather, getCurrentPosition, startNotificationPolling, stopNotificationPolling } from '../services/api';
 
 export default function FarmerDashboard() {
     const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function FarmerDashboard() {
     const [stats, setStats] = useState({ active_reports: 0 });
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedAdvisory, setSelectedAdvisory] = useState(null);
+    const pollingRef = React.useRef(null);
 
     const profile = dashboardProfile || user;
 
@@ -182,6 +185,98 @@ export default function FarmerDashboard() {
         }, 5000);
         return () => clearInterval(interval);
     }, [carouselItems.length]);
+
+    // Notification Logic for Farmer Dashboard
+    useEffect(() => {
+        if (!token) return;
+
+        const initNotifications = async () => {
+            // 1. Ensure Permissions & Channel
+            if (Capacitor.isNativePlatform()) {
+                await LocalNotifications.requestPermissions();
+                await LocalNotifications.createChannel({
+                    id: 'cropaid_v2',
+                    name: 'CropAid Updates',
+                    importance: 5,
+                    visibility: 1,
+                    vibration: true,
+                    sound: 'beep.wav',
+                    lights: true,
+                    lightColor: '#FF0000'
+                });
+            } else if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // 2. Fetch Initial State (to get maxId and unreadCount)
+            try {
+                const response = await fetch(`${API_URL}/notifications?limit=20&t=${Date.now()}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                let maxId = 0;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.unreadCount !== undefined) setUnreadCount(data.unreadCount);
+
+                    const notifs = data.notifications || data || [];
+                    if (notifs.length > 0) {
+                        maxId = Math.max(...notifs.map(n => n.id));
+                    }
+                }
+
+                // 3. Start Polling
+                const handleNewNotifications = async (pd) => {
+                    // Update Unread Count
+                    if (pd.unreadCount !== undefined) setUnreadCount(pd.unreadCount);
+
+                    // Handle Push for NEW items
+                    if (pd.notifications?.length > 0) {
+                        const newUnread = pd.notifications.filter(n => !n.is_read);
+
+                        if (newUnread.length > 0) {
+                            if (Capacitor.isNativePlatform()) {
+                                await LocalNotifications.schedule({
+                                    notifications: newUnread.map(n => ({
+                                        title: n.title || 'CropAid Update',
+                                        body: n.message,
+                                        id: n.id,
+                                        schedule: { at: new Date(Date.now() + 100), allowWhileIdle: true },
+                                        sound: 'beep.wav',
+                                        smallIcon: 'ic_stat_icon',
+                                        channelId: 'cropaid_v2'
+                                    }))
+                                });
+                            } else if (Notification.permission === 'granted') {
+                                newUnread.forEach(n => {
+                                    new Notification(n.title || 'CropAid Update', {
+                                        body: n.message,
+                                        icon: '/icon.png'
+                                    });
+                                });
+                            }
+                        }
+                    }
+                };
+
+                pollingRef.current = startNotificationPolling(token, handleNewNotifications, 2000, maxId);
+
+            } catch (err) {
+                console.error('Dashboard polling init error:', err);
+            }
+        };
+
+        if (!isMockMode) {
+            initNotifications();
+        } else {
+            // Mock mode logic if needed, but for now just silence
+        }
+
+        return () => {
+            if (pollingRef.current) stopNotificationPolling(pollingRef.current);
+        };
+    }, [token, isMockMode]);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 

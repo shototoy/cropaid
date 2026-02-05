@@ -231,7 +231,7 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
 
     const checkNotifications = async () => {
         try {
-            const query = lastNotificationId ? `?after_id=${lastNotificationId}` : '';
+            const query = lastNotificationId ? `?after_id=${lastNotificationId}&t=${Date.now()}` : `?t=${Date.now()}`;
             const response = await fetch(`${API_BASE_URL}/notifications${query}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -239,15 +239,28 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
             if (response.ok) {
                 const data = await response.json();
                 const newNotifications = data.notifications || data || [];
+                const currentUnreadCount = data.unreadCount || 0;
 
+                // Always callback with unreadCount to update badge
+                // But only pass notifications if there are actually new ones
                 if (Array.isArray(newNotifications) && newNotifications.length > 0) {
-                    onNewNotifications({ notifications: newNotifications });
+                    onNewNotifications({
+                        notifications: newNotifications,
+                        unreadCount: currentUnreadCount
+                    });
 
                     // Update last ID to the max ID found
                     const maxId = Math.max(...newNotifications.map(n => n.id));
                     if (maxId > lastNotificationId) {
                         lastNotificationId = maxId;
                     }
+                } else {
+                    // Even if no NEW notifications, we might need to update the unread count
+                    // e.g. if messages were read elsewhere
+                    onNewNotifications({
+                        notifications: [],
+                        unreadCount: currentUnreadCount
+                    });
                 }
             }
         } catch (error) {
