@@ -15,29 +15,52 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         const fetchNotifications = async () => {
+            console.log('[NOTIF PAGE] Starting fetch, isMockMode:', isMockMode);
+            console.log('[NOTIF PAGE] Token:', token ? 'EXISTS' : 'MISSING');
+            console.log('[NOTIF PAGE] API_URL:', API_URL);
+
             setLoading(true);
 
-            if (isMockMode) {
-                setNotifications([]);
-                setLoading(false);
-                return;
-            }
-
             try {
-                const response = await fetch(`${API_URL}/notifications`, {
+                const url = `${API_URL}/notifications`;
+                console.log('[NOTIF PAGE] Fetching from:', url);
+
+                const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) throw new Error('Failed to fetch notifications');
+                console.log('[NOTIF PAGE] Response status:', response.status);
+                console.log('[NOTIF PAGE] Response ok:', response.ok);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('[NOTIF PAGE] Error response:', errorText);
+                    throw new Error('Failed to fetch notifications');
+                }
 
                 const data = await response.json();
-                setNotifications(data.notifications || data);
-            } catch (err) {
-                console.error(err);
+                console.log('[NOTIF PAGE] Raw response data:', data);
+                console.log('[NOTIF PAGE] Data type:', typeof data);
+                console.log('[NOTIF PAGE] Is array?', Array.isArray(data));
+                console.log('[NOTIF PAGE] Has notifications?', data.notifications);
 
+                // Handle different response structures
+                if (data.notifications && Array.isArray(data.notifications)) {
+                    console.log('[NOTIF PAGE] Setting notifications from data.notifications, count:', data.notifications.length);
+                    setNotifications(data.notifications);
+                } else if (Array.isArray(data)) {
+                    console.log('[NOTIF PAGE] Setting notifications from array, count:', data.length);
+                    setNotifications(data);
+                } else {
+                    console.warn("[NOTIF PAGE] Unexpected notification data format", data);
+                    setNotifications([]);
+                }
+            } catch (err) {
+                console.error('[NOTIF PAGE] Fetch error:', err);
                 setNotifications([]);
             } finally {
                 setLoading(false);
+                console.log('[NOTIF PAGE] Fetch complete');
             }
         };
 

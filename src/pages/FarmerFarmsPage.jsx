@@ -157,7 +157,7 @@ export default function FarmerFarmsPage() {
     if (editingFarm) {
         return (
             <div className="min-h-screen bg-gray-50 pb-20">
-                <div className="bg-white px-4 py-4 shadow-sm sticky top-0 z-10 flex justify-between items-center">
+                <div className="bg-white px-4 py-4 pt-8 shadow-sm sticky top-0 z-10 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <button onClick={() => setEditingFarm(null)} className="p-2 -ml-2 hover:bg-gray-100 rounded-full">
                             <ArrowLeft size={24} className="text-gray-700" />
@@ -185,7 +185,7 @@ export default function FarmerFarmsPage() {
                     </div>
                 </div>
 
-                <div className="p-4 space-y-6 max-w-lg mx-auto">
+                <div className="p-4 pb-8 space-y-6 max-w-lg mx-auto">
                     { }
                     <Section title="Location & Size" icon={<MapPin size={18} />}>
                         <div className="grid grid-cols-2 gap-3">
@@ -267,8 +267,11 @@ export default function FarmerFarmsPage() {
                             </div>
 
                             <Input name="date_of_sowing" label="Date of Sowing" type="date" value={formData.date_of_sowing ? formData.date_of_sowing.split('T')[0] : ''} onChange={handleInputChange} />
+                            <Input name="date_of_transplanting" label="Date of Transplanting" type="date" value={formData.date_of_transplanting ? formData.date_of_transplanting.split('T')[0] : ''} onChange={handleInputChange} />
 
-                            <Input name="date_of_harvest" label="Date of Harvest (Est)" type="date" value={formData.date_of_harvest ? formData.date_of_harvest.split('T')[0] : ''} onChange={handleInputChange} />
+                            <div className="col-span-2">
+                                <Input name="date_of_harvest" label="Date of Harvest (Est)" type="date" value={formData.date_of_harvest ? formData.date_of_harvest.split('T')[0] : ''} onChange={handleInputChange} />
+                            </div>
                         </div>
                     </Section>
 
@@ -308,7 +311,7 @@ export default function FarmerFarmsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            <div className="bg-primary px-6 pt-8 pb-12 rounded-b-[2.5rem] shadow-lg relative">
+            <div className="bg-primary px-6 pt-12 pb-12 rounded-b-[2.5rem] shadow-lg relative">
                 <div className="flex justify-between items-center text-white mb-4">
                     <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 bg-white/20 rounded-full hover:bg-white/30 backdrop-blur-sm">
                         <ArrowLeft size={20} />

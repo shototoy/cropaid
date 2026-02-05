@@ -18,10 +18,12 @@ export default function SignupSummary() {
         setLoading(true);
         setError(null);
 
-        const payload = {
+        const payload = {
+
             email: formData.email,
             username: formData.username,
-            password: formData.password,
+            password: formData.password,
+
             rsbsaId: formData.rsbsaIdBasic,
             firstName: formData.firstName,
             lastName: formData.lastName,
@@ -35,7 +37,8 @@ export default function SignupSummary() {
             dobMonth: formData.dobMonth,
             dobDay: formData.dobDay,
             dobYear: formData.dobYear,
-            civilStatus: formData.civilStatus,
+            civilStatus: formData.civilStatus,
+
             farmSitio: '',
             farmBarangay: '',
             farmMunicipality: 'Norala',
@@ -155,7 +158,7 @@ export default function SignupSummary() {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 z-20 w-full">
-                <Button variant="primary" onClick={handleRegister} disabled={loading} className="w-full py-4 text-white font-bold uppercase text-lg bg-primary border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary/90 m-0 disabled:opacity-70 disabled:cursor-not-allowed">
+                <Button variant="primary" onClick={handleRegister} disabled={loading} className="w-full py-4 pb-8 text-white font-bold uppercase text-lg bg-primary border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary/90 m-0 disabled:opacity-70 disabled:cursor-not-allowed">
                     {loading ? 'REGISTERING...' : 'REGISTER'}
                 </Button>
             </div>

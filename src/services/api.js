@@ -207,9 +207,10 @@ export const fetchWeather = async (lat, lon) => {
 
 
 let notificationPollInterval = null;
-let lastNotificationCheck = null;
+let lastNotificationId = 0;
+let lastToken = null;
 
-export const startNotificationPolling = (token, onNewNotifications, intervalMs = 30000) => {
+export const startNotificationPolling = (token, onNewNotifications, intervalMs = 10000, initialLastId = 0) => {
     if (isGloballyMockMode) {
         return () => { };
     }
@@ -218,29 +219,43 @@ export const startNotificationPolling = (token, onNewNotifications, intervalMs =
         clearInterval(notificationPollInterval);
     }
 
-    lastNotificationCheck = new Date().toISOString();
+    // Handle session/ID sync
+    if (token !== lastToken) {
+        // New session/user: reset logic
+        lastNotificationId = initialLastId; // Start from scratch or initial ID
+        lastToken = token;
+    } else if (initialLastId > lastNotificationId) {
+        // Same session but newer known ID provided
+        lastNotificationId = initialLastId;
+    }
 
     const checkNotifications = async () => {
         try {
-            const response = await fetch(
-                `${API_BASE_URL}/notifications${lastNotificationCheck ? `?since=${lastNotificationCheck}` : ''}`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }
-            );
+            const query = lastNotificationId ? `?after_id=${lastNotificationId}` : '';
+            const response = await fetch(`${API_BASE_URL}/notifications${query}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
             if (response.ok) {
                 const data = await response.json();
                 const newNotifications = data.notifications || data || [];
+
                 if (Array.isArray(newNotifications) && newNotifications.length > 0) {
                     onNewNotifications({ notifications: newNotifications });
+
+                    // Update last ID to the max ID found
+                    const maxId = Math.max(...newNotifications.map(n => n.id));
+                    if (maxId > lastNotificationId) {
+                        lastNotificationId = maxId;
+                    }
                 }
-                lastNotificationCheck = new Date().toISOString();
             }
         } catch (error) {
             console.error('Notification polling error:', error);
         }
     };
 
+    // First check immediately
     checkNotifications();
     notificationPollInterval = setInterval(checkNotifications, intervalMs);
 

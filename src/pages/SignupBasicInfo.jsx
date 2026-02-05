@@ -20,7 +20,8 @@ export default function SignupBasicInfo() {
         tribe: '',
         streetSitio: '',
         barangay: '',
-        province: '',
+        municipality: 'Norala',
+        province: 'South Cotabato',
         cellphone: '',
         sex: '',
         dobMonth: '',
@@ -36,8 +37,7 @@ export default function SignupBasicInfo() {
             { key: 'lastName', label: 'Last Name' },
             { key: 'firstName', label: 'First Name' },
             { key: 'rsbsaIdBasic', label: 'RSBSA Number' },
-            { key: 'barangay', label: 'Barangay' },
-            { key: 'province', label: 'Province' }
+            { key: 'barangay', label: 'Barangay' }
         ];
 
         const missing = requiredFields.filter(field => !formData[field.key]?.trim());
@@ -45,7 +45,7 @@ export default function SignupBasicInfo() {
         if (missing.length > 0) {
             setError(`Please fill in required fields: ${missing.map(f => f.label).join(', ')}`);
             return;
-        }
+        }
         if (formData.rsbsaIdBasic.length < 5) {
             setError("RSBSA Number must be at least 5 characters.");
             return;
@@ -72,7 +72,7 @@ export default function SignupBasicInfo() {
                                 </div>
                             </div>
 
-                            {}
+                            { }
                             <div className="w-[65%] flex flex-col gap-1.5 justify-center">
                                 <Input className="grid-layout" placeholder="LAST NAME" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
                                 <Input className="grid-layout" placeholder="FIRST NAME" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
@@ -85,7 +85,6 @@ export default function SignupBasicInfo() {
                             <Input className="grid-layout" label="Tribe" value={formData.tribe} onChange={(e) => setFormData({ ...formData, tribe: e.target.value })} />
                             <Input className="grid-layout" label="Street/Sitio" value={formData.streetSitio} onChange={(e) => setFormData({ ...formData, streetSitio: e.target.value })} />
                             <Input className="grid-layout" label="Barangay" value={formData.barangay} onChange={(e) => setFormData({ ...formData, barangay: e.target.value })} />
-                            <Input className="grid-layout" label="Province" value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value })} />
                             <Input className="grid-layout" label="Cellphone #" type="tel" value={formData.cellphone} onChange={(e) => setFormData({ ...formData, cellphone: e.target.value })} />
                         </div>
 
@@ -138,7 +137,7 @@ export default function SignupBasicInfo() {
 
             <div className="fixed bottom-0 left-0 right-0 z-20 w-full bg-white">
                 {error && <div className="text-red-500 text-[10px] font-bold text-center py-2 bg-red-50 border-t border-red-100">{error}</div>}
-                <Button variant="secondary" onClick={handleNext} className="w-full py-4 text-white font-bold uppercase text-lg bg-primary-bg border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary-bg/90 m-0">
+                <Button variant="secondary" onClick={handleNext} className="w-full py-4 pb-8 text-white font-bold uppercase text-lg bg-primary-bg border-t border-primary-light/50 rounded-none shadow-none hover:bg-primary-bg/90 m-0">
                     NEXT
                 </Button>
             </div>

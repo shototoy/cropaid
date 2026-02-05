@@ -300,7 +300,7 @@ export default function FarmerProfile() {
                 />
                 { }
                 { }
-                <div className="bg-primary text-white pt-8 pb-6 px-6 rounded-b-[40px] shadow-sm">
+                <div className="bg-primary text-white pt-12 pb-6 px-6 rounded-b-[40px] shadow-sm">
                     <div className="flex flex-col items-center gap-4 text-center">
                         <div
                             className={`relative w-28 h-28 rounded-full border-4 border-white shadow-lg overflow-hidden ${isEditing ? 'cursor-pointer' : ''}`}

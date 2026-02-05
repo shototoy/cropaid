@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Check } from 'lucide-react';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import FarmSelector from '../components/FarmSelector';
+import PhotoUpload from '../components/PhotoUpload';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
@@ -25,8 +27,18 @@ export default function MixReport() {
         description: '',
         latitude: null,
         longitude: null,
-        photoBase64: null
-    });
+        photoBase64: null,
+        // Pest specific
+        pestType: [],
+        pestSeverity: '',
+        // Flood specific
+        floodDepth: '',
+        floodDuration: ''
+    });
+    const [pestOptions, setPestOptions] = useState([]);
+    const [isCustomPest, setIsCustomPest] = useState(false);
+    const [customPestName, setCustomPestName] = useState('');
+
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -43,7 +55,22 @@ export default function MixReport() {
             }
         };
         getLocation();
-    }, []);
+
+        const fetchOptions = async () => {
+            try {
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const response = await fetch(`${API_URL}/options`, { headers });
+                if (response.ok) {
+                    const data = await response.json();
+                    setPestOptions(data.pests || []);
+                }
+            } catch (e) {
+                console.error("Failed to load options", e);
+            }
+        };
+        fetchOptions();
+    }, [token]);
+
     const handlePhotoCapture = async (e) => {
         try {
             const file = e.target.files?.[0];
@@ -58,7 +85,8 @@ export default function MixReport() {
             setError('Failed to capture photo');
             console.error(err);
         }
-    };
+    };
+
     const handleRemovePhoto = () => {
         setPhotoPreview(null);
         setFormData(prev => ({ ...prev, photoBase64: null }));
@@ -71,6 +99,17 @@ export default function MixReport() {
                 ? prev.damageTypes.filter(t => t !== type)
                 : [...prev.damageTypes, type];
             return { ...prev, damageTypes: types };
+        });
+    };
+
+    const togglePest = (pestName) => {
+        setFormData(prev => {
+            const current = prev.pestType;
+            if (current.includes(pestName)) {
+                return { ...prev, pestType: current.filter(p => p !== pestName) };
+            } else {
+                return { ...prev, pestType: [...current, pestName] };
+            }
         });
     };
 
@@ -91,7 +130,19 @@ export default function MixReport() {
                 details: {
                     damageTypes: formData.damageTypes,
                     affectedArea: formData.affectedArea,
-                    description: formData.description
+                    description: formData.description,
+                    // Include specific fields if type is selected
+                    ...(formData.damageTypes.includes('Pest') ? {
+                        pestType: [
+                            ...formData.pestType,
+                            ...(isCustomPest && customPestName ? [customPestName] : [])
+                        ].join(', '),
+                        pestSeverity: formData.pestSeverity
+                    } : {}),
+                    ...(formData.damageTypes.includes('Flood') ? {
+                        floodDepth: formData.floodDepth,
+                        floodDuration: formData.floodDuration
+                    } : {})
                 },
                 latitude: formData.latitude,
                 longitude: formData.longitude,
@@ -127,48 +178,20 @@ export default function MixReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {}
+                    { }
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    {}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Photo Evidence</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            ref={fileInputRef}
-                            onChange={handlePhotoCapture}
-                            className="hidden"
-                        />
-                        {photoPreview ? (
-                            <div className="relative">
-                                <img
-                                    src={photoPreview}
-                                    alt="Evidence preview"
-                                    className="w-full h-48 object-cover rounded-lg"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleRemovePhoto}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-red-600"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-8 bg-gray-50 hover:bg-gray-100 rounded-lg flex flex-col items-center gap-2 transition-colors"
-                            >
-                                <span className="text-3xl">📷</span>
-                                <span className="text-sm text-gray-600">Tap to capture photo</span>
-                            </button>
-                        )}
-                    </div>
+                    { }
+                    {/* Unified Photo Upload */}
+                    <PhotoUpload
+                        photoBase64={formData.photoBase64}
+                        onPhotoChange={(base64) => {
+                            setFormData(prev => ({ ...prev, photoBase64: base64 }));
+                            setPhotoPreview(base64);
+                        }}
+                    />
 
                     <FarmSelector
                         selectedFarmId={formData.farmId}
@@ -184,14 +207,14 @@ export default function MixReport() {
                     <div>
                         <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Nature of Damage</label>
                         <div className="flex flex-wrap gap-2">
-                            {['Pest', 'Flood', 'Drought', 'Disease', 'Wind'].map(type => (
+                            {['Pest', 'Flood', 'Drought'].map(type => (
                                 <button
                                     key={type}
                                     type="button"
                                     onClick={() => handleDamageTypeChange(type)}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.damageTypes.includes(type)
-                                            ? 'bg-primary text-white'
-                                            : 'bg-gray-100 text-gray-600'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-600'
                                         }`}
                                 >
                                     {type}
@@ -199,6 +222,92 @@ export default function MixReport() {
                             ))}
                         </div>
                     </div>
+
+                    {formData.damageTypes.includes('Pest') && (
+                        <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                            <h3 className="font-bold text-sm text-primary uppercase">Pest Details</h3>
+
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Type of Pest</label>
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                    {pestOptions.map((p, idx) => (
+                                        <div
+                                            key={idx}
+                                            onClick={() => togglePest(p.name)}
+                                            className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${formData.pestType.includes(p.name)
+                                                ? 'bg-primary/10 border-primary text-primary font-bold'
+                                                : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                                }`}
+                                        >
+                                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.pestType.includes(p.name) ? 'bg-primary border-primary' : 'border-gray-300'
+                                                }`}>
+                                                {formData.pestType.includes(p.name) && <Check size={12} className="text-white" />}
+                                            </div>
+                                            <span className="text-sm">{p.name}</span>
+                                        </div>
+                                    ))}
+                                    <div
+                                        onClick={() => setIsCustomPest(!isCustomPest)}
+                                        className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${isCustomPest
+                                            ? 'bg-primary/10 border-primary text-primary font-bold'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                            }`}
+                                    >
+                                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${isCustomPest ? 'bg-primary border-primary' : 'border-gray-300'
+                                            }`}>
+                                            {isCustomPest && <Check size={12} className="text-white" />}
+                                        </div>
+                                        <span className="text-sm">Other</span>
+                                    </div>
+                                </div>
+
+                                {isCustomPest && (
+                                    <Input
+                                        placeholder="Specify other pest name..."
+                                        value={customPestName}
+                                        onChange={(e) => setCustomPestName(e.target.value)}
+                                    />
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Severity Level</label>
+                                <select
+                                    className="w-full p-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                    value={formData.pestSeverity}
+                                    onChange={(e) => setFormData({ ...formData, pestSeverity: e.target.value })}
+                                >
+                                    <option value="">Select Severity</option>
+                                    <option value="Low">Low (Minor visible damage)</option>
+                                    <option value="Medium">Medium (Noticeable patches)</option>
+                                    <option value="High">High (Widespread infestation)</option>
+                                    <option value="Critical">Critical (Total crop failure risk)</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.damageTypes.includes('Flood') && (
+                        <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                            <h3 className="font-bold text-sm text-blue-700 uppercase">Flood Details</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <Input
+                                    label="Flood Depth (meters)"
+                                    type="number"
+                                    placeholder="e.g. 0.5"
+                                    value={formData.floodDepth}
+                                    onChange={(e) => setFormData({ ...formData, floodDepth: e.target.value })}
+                                />
+                                <Input
+                                    label="Duration (days)"
+                                    type="number"
+                                    placeholder="e.g. 3"
+                                    value={formData.floodDuration}
+                                    onChange={(e) => setFormData({ ...formData, floodDuration: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <Input
                         label="Affected Area (ha)"
@@ -226,7 +335,7 @@ export default function MixReport() {
                     <Button
                         variant="secondary"
                         onClick={() => navigate(-1)}
-                        className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-none border-none py-3"
+                        className="flex-1 bg-gray-500 text-white hover:bg-gray-600 shadow-none border-none py-3"
                     >
                         CANCEL
                     </Button>

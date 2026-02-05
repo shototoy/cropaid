@@ -7,9 +7,10 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 
 export default function NotificationBell() {
-    const { token } = useAuth();
+    const { token, isMockMode } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
@@ -17,57 +18,150 @@ export default function NotificationBell() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (Capacitor.isNativePlatform()) {
-            LocalNotifications.requestPermissions();
-        } else if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+        const setupNotifications = async () => {
+            if (isMockMode) return;
+
+            if (Capacitor.isNativePlatform()) {
+                await LocalNotifications.requestPermissions();
+                await LocalNotifications.createChannel({
+                    id: 'default',
+                    name: 'General Notifications',
+                    importance: 5,
+                    visibility: 1,
+                    vibration: true,
+                    sound: 'beep.wav',
+                });
+            } else if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        };
+        setupNotifications();
+    }, [isMockMode]);
+
+    const fetchAllNotifications = async () => {
+        console.log('[NOTIF BELL] Starting fetch, isMockMode:', isMockMode);
+        console.log('[NOTIF BELL] Token:', token ? 'EXISTS' : 'MISSING');
+
+        setLoading(true);
+
+        if (isMockMode) {
+            const mockNotifs = [
+                {
+                    id: 1,
+                    type: 'new_report',
+                    title: 'New Report from Juan Dela Cruz',
+                    message: 'Juan Dela Cruz filed a pest report.',
+                    created_at: new Date().toISOString(),
+                    is_read: false,
+                    reference_id: 'mock-1'
+                },
+                {
+                    id: 2,
+                    type: 'new_report',
+                    title: 'New Report from Maria Santos',
+                    message: 'Maria Santos filed a flood report.',
+                    created_at: new Date(Date.now() - 3600000).toISOString(),
+                    is_read: true,
+                    reference_id: 'mock-2'
+                }
+            ];
+            console.log('[NOTIF BELL] Using mock data, count:', mockNotifs.length);
+            setNotifications(mockNotifs);
+            setUnreadCount(mockNotifs.filter(n => !n.is_read).length);
+            setLoading(false);
+            return mockNotifs;
         }
-    }, []);
+
+        try {
+            const url = `${API_URL}/notifications?limit=20`;
+            console.log('[NOTIF BELL] Fetching from:', url);
+
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            console.log('[NOTIF BELL] Response status:', response.status);
+            console.log('[NOTIF BELL] Response ok:', response.ok);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[NOTIF BELL] Raw response:', data);
+                console.log('[NOTIF BELL] Data type:', typeof data);
+
+                const notifs = Array.isArray(data) ? data : data.notifications || [];
+                console.log('[NOTIF BELL] Extracted notifications, count:', notifs.length);
+
+                setNotifications(notifs);
+                if (data.unreadCount !== undefined) {
+                    console.log('[NOTIF BELL] Setting unread count:', data.unreadCount);
+                    setUnreadCount(data.unreadCount);
+                }
+                return notifs;
+            } else {
+                const errorText = await response.text();
+                console.error('[NOTIF BELL] Error response:', errorText);
+            }
+        } catch (err) {
+            console.error('[NOTIF BELL] Failed to fetch notifications:', err);
+        } finally {
+            setLoading(false);
+            console.log('[NOTIF BELL] Fetch complete');
+        }
+        return [];
+    };
 
     useEffect(() => {
         if (token) {
-            const handleNewNotifications = async (data) => {
-                if (data.notifications && Array.isArray(data.notifications)) {
-                    setNotifications(prev => {
-                        const newIds = new Set(data.notifications.map(n => n.id));
-                        const filteredPrev = prev.filter(n => !newIds.has(n.id));
-                        return [...data.notifications, ...filteredPrev];
-                    });
+            const initializeNotifications = async () => {
+                // Fetch initial state without triggering push
+                const initialNotifs = await fetchAllNotifications();
+                const maxId = initialNotifs.length > 0 ? Math.max(...initialNotifs.map(n => n.id)) : 0;
 
-                    const newUnread = data.notifications.filter(n => !n.is_read).length;
-                    setUnreadCount(prev => prev + newUnread);
+                const handleNewNotifications = async (data) => {
+                    if (data.notifications && Array.isArray(data.notifications)) {
+                        setNotifications(prev => {
+                            const newIds = new Set(data.notifications.map(n => n.id));
+                            const filteredPrev = prev.filter(n => !newIds.has(n.id));
+                            return [...data.notifications, ...filteredPrev];
+                        });
 
-                    const unreadNotifications = data.notifications.filter(n => !n.is_read);
+                        const newUnread = data.notifications.filter(n => !n.is_read).length;
+                        setUnreadCount(prev => prev + newUnread);
 
-                    if (unreadNotifications.length > 0) {
-                        if (Capacitor.isNativePlatform()) {
-                            await LocalNotifications.schedule({
-                                notifications: unreadNotifications.map(n => ({
-                                    title: n.title || 'New Notification',
-                                    body: n.message,
-                                    id: typeof n.id === 'number' ? n.id : Math.floor(Math.random() * 100000),
-                                    schedule: { at: new Date(Date.now() + 100) },
-                                    sound: 'beep.wav',
-                                    smallIcon: 'ic_stat_icon_config_sample',
-                                    actionTypeId: '',
-                                    extra: {
-                                        reference_id: n.reference_id
-                                    }
-                                }))
-                            });
-                        } else if (Notification.permission === 'granted') {
-                            unreadNotifications.forEach(n => {
-                                new Notification(n.title || 'New Notification', {
-                                    body: n.message,
-                                    icon: '/icon.png'
+                        const unreadNotifications = data.notifications.filter(n => !n.is_read);
+
+                        if (unreadNotifications.length > 0) {
+                            if (Capacitor.isNativePlatform()) {
+                                await LocalNotifications.schedule({
+                                    notifications: unreadNotifications.map(n => ({
+                                        title: n.title || 'New Notification',
+                                        body: n.message,
+                                        id: typeof n.id === 'number' ? n.id : Math.floor(Math.random() * 100000),
+                                        schedule: { at: new Date(Date.now() + 100) },
+                                        sound: 'beep.wav',
+                                        actionTypeId: '',
+                                        channelId: 'default',
+                                        extra: {
+                                            reference_id: n.reference_id
+                                        }
+                                    }))
                                 });
-                            });
+                            } else if (Notification.permission === 'granted') {
+                                unreadNotifications.forEach(n => {
+                                    new Notification(n.title || 'New Notification', {
+                                        body: n.message,
+                                        icon: '/icon.png'
+                                    });
+                                });
+                            }
                         }
                     }
-                }
+                };
+
+                pollingRef.current = startNotificationPolling(token, handleNewNotifications, 10000, maxId);
             };
-            pollingRef.current = startNotificationPolling(token, handleNewNotifications, 10000);
-            pollingRef.current = startNotificationPolling(token, handleNewNotifications, 10000);
+
+            initializeNotifications();
         }
         return () => {
             if (pollingRef.current) {
@@ -75,6 +169,7 @@ export default function NotificationBell() {
             }
         };
     }, [token]);
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -85,23 +180,6 @@ export default function NotificationBell() {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
-
-    const fetchAllNotifications = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch(`${API_URL}/notifications?limit=20`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setNotifications(Array.isArray(data) ? data : data.notifications || []);
-            }
-        } catch (err) {
-            console.error('Failed to fetch notifications:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleToggle = () => {
         if (!isOpen) {

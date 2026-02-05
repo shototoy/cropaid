@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import FarmSelector from '../components/FarmSelector';
+import PhotoUpload from '../components/PhotoUpload';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
@@ -18,7 +19,8 @@ export default function DroughtReport() {
 
     const [formData, setFormData] = useState({
         farmId: null,
-        location: '',
+        location: '',
+
         affectedArea: '',
         crop: '',
         cropStage: '',
@@ -28,7 +30,8 @@ export default function DroughtReport() {
         latitude: null,
         longitude: null,
         photoBase64: null
-    });
+    });
+
     useEffect(() => {
         const getLocation = async () => {
             try {
@@ -45,7 +48,8 @@ export default function DroughtReport() {
             }
         };
         getLocation();
-    }, []);
+    }, []);
+
     const handlePhotoCapture = async (e) => {
         try {
             const file = e.target.files?.[0];
@@ -60,7 +64,8 @@ export default function DroughtReport() {
             setError('Failed to capture photo');
             console.error(err);
         }
-    };
+    };
+
     const handleRemovePhoto = () => {
         setPhotoPreview(null);
         setFormData(prev => ({ ...prev, photoBase64: null }));
@@ -84,7 +89,8 @@ export default function DroughtReport() {
                 details: {
                     cropType: formData.crop,
                     cropStage: formData.cropStage,
-                    affectedArea: formData.affectedArea,
+                    affectedArea: formData.affectedArea,
+
                     waterSource: formData.waterSource,
                     daysSinceRain: formData.daysSinceRain,
                     description: formData.description
@@ -123,48 +129,20 @@ export default function DroughtReport() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {}
+                    { }
                     <div className={`p-3 rounded-lg text-sm ${formData.latitude ? 'bg-primary text-white' : 'bg-yellow-50 text-yellow-700'}`}>
                         {geoStatus}
                     </div>
 
-                    {}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                        <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Photo Evidence</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            ref={fileInputRef}
-                            onChange={handlePhotoCapture}
-                            className="hidden"
-                        />
-                        {photoPreview ? (
-                            <div className="relative">
-                                <img
-                                    src={photoPreview}
-                                    alt="Evidence preview"
-                                    className="w-full h-48 object-cover rounded-lg"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleRemovePhoto}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-red-600"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-8 bg-gray-50 hover:bg-gray-100 rounded-lg flex flex-col items-center gap-2 transition-colors"
-                            >
-                                <span className="text-3xl">📷</span>
-                                <span className="text-sm text-gray-600">Tap to capture photo</span>
-                            </button>
-                        )}
-                    </div>
+                    { }
+                    {/* Unified Photo Upload */}
+                    <PhotoUpload
+                        photoBase64={formData.photoBase64}
+                        onPhotoChange={(base64) => {
+                            setFormData(prev => ({ ...prev, photoBase64: base64 }));
+                            setPhotoPreview(base64);
+                        }}
+                    />
 
                     <FarmSelector
                         selectedFarmId={formData.farmId}
@@ -241,7 +219,7 @@ export default function DroughtReport() {
                     <Button
                         variant="secondary"
                         onClick={() => navigate(-1)}
-                        className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-none border-none py-3"
+                        className="flex-1 bg-gray-500 text-white hover:bg-gray-600 shadow-none border-none py-3"
                     >
                         CANCEL
                     </Button>

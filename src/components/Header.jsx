@@ -15,7 +15,7 @@ export default function Header({ title, showBack = false, className = '', onBack
     };
 
     return (
-        <div className={`flex items-center p-4 bg-primary-bg border-b border-primary-light/20 ${className}`}>
+        <div className={`flex items-center p-4 pt-8 bg-primary-bg border-b border-primary-light/20 ${className}`}>
             {showBack && (
                 <button onClick={handleBack} className="mr-3 p-1 rounded-full hover:bg-black/5 border-none bg-transparent cursor-pointer flex items-center justify-center">
                     <ChevronLeft size={24} className="text-white" />

@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import FarmSelector from '../components/FarmSelector';
+import PhotoUpload from '../components/PhotoUpload';
 import { useAuth, API_URL } from '../context/AuthContext';
 import { getCurrentPosition, processFileInput } from '../services/api';
 
@@ -165,63 +166,13 @@ export default function PestReport() {
                         {geoStatus}
                     </div>
 
-                    { }
-                    <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                        <label className="block text-xs font-bold uppercase text-gray-500 mb-3">Photo Evidence</label>
-
-                        {photoPreview ? (
-                            <div className="relative">
-                                <img
-                                    src={photoPreview}
-                                    alt="Evidence preview"
-                                    className="w-full h-48 object-cover rounded-lg"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleRemovePhoto}
-                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold hover:bg-red-600 shadow-md"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-3">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    id="camera-input"
-                                    className="hidden"
-                                    onChange={handlePhotoCapture}
-                                />
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    id="gallery-input"
-                                    className="hidden"
-                                    onChange={handlePhotoCapture}
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() => document.getElementById('camera-input').click()}
-                                    className="flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 active:scale-95 transition-all text-primary"
-                                >
-                                    <Camera size={24} />
-                                    <span className="text-xs font-bold">Take Photo</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => document.getElementById('gallery-input').click()}
-                                    className="flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl p-4 hover:bg-gray-50 active:scale-95 transition-all text-gray-600"
-                                >
-                                    <Image size={24} />
-                                    <span className="text-xs font-bold">Upload File</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    {/* Unified Photo Upload */}
+                    <PhotoUpload
+                        photoBase64={formData.photoBase64}
+                        onPhotoChange={(base64) => {
+                            setFormData(prev => ({ ...prev, photoBase64: base64 }));
+                        }}
+                    />
 
                     <FarmSelector
                         selectedFarmId={formData.farmId}
@@ -250,8 +201,8 @@ export default function PestReport() {
                                     key={idx}
                                     onClick={() => togglePest(p.name)}
                                     className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${formData.pestType.includes(p.name)
-                                            ? 'bg-primary/10 border-primary text-primary font-bold'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                        ? 'bg-primary/10 border-primary text-primary font-bold'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
                                         }`}
                                 >
                                     <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.pestType.includes(p.name) ? 'bg-primary border-primary' : 'border-gray-300'
@@ -264,8 +215,8 @@ export default function PestReport() {
                             <div
                                 onClick={() => setIsCustomPest(!isCustomPest)}
                                 className={`p-3 rounded-lg border flex items-center gap-2 cursor-pointer transition-all ${isCustomPest
-                                        ? 'bg-primary/10 border-primary text-primary font-bold'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
+                                    ? 'bg-primary/10 border-primary text-primary font-bold'
+                                    : 'bg-white border-gray-200 text-gray-600 hover:border-primary/50'
                                     }`}
                             >
                                 <div className={`w-4 h-4 rounded border flex items-center justify-center ${isCustomPest ? 'bg-primary border-primary' : 'border-gray-300'
@@ -325,7 +276,7 @@ export default function PestReport() {
                     <Button
                         variant="secondary"
                         onClick={() => navigate(-1)}
-                        className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-none border-none py-3"
+                        className="flex-1 bg-gray-500 text-white hover:bg-gray-600 shadow-none border-none py-3"
                     >
                         CANCEL
                     </Button>
