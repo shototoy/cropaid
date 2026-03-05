@@ -90,11 +90,12 @@ npm run dev
 ```
 cropaid/
 ├── src/                      # Frontend source code
-│   ├── components/          # React components
+│   ├── components/          # All reusable components (flat, no ui/layout/map/report/status subfolders)
 │   ├── pages/              # Page components
-│   ├── services/           # API services
 │   ├── context/            # React context
-│   └── config/             # Configuration files
+│   ├── config/             # Configuration files
+│   ├── services/           # API services
+│   └── utils/              # Utility helpers
 ├── server/                  # Backend source code
 │   ├── index.js            # Main server file
 │   ├── db.js               # Database connection
