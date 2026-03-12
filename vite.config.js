@@ -3,10 +3,13 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
+const isElectron = process.env.VITE_ELECTRON === 'true'
+
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
+    !isElectron &&
+      VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       manifest: {
@@ -58,6 +61,6 @@ export default defineConfig({
         ]
       }
     })
-  ],
+  ].filter(Boolean),
   base: process.env.VITE_BASE_PATH || '/.',
 })

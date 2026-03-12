@@ -1,7 +1,7 @@
 
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import FarmerLayout from './components/FarmerLayout';
 import AdminLayout from './components/AdminLayout';
 import MockModeOverlay from './components/MockModeOverlay';
@@ -46,8 +46,11 @@ const LoadingFallback = () => (
 import ConnectionStatus from './components/ConnectionStatus';
 
 function App() {
+  const isElectron = import.meta.env.VITE_ELECTRON === 'true';
+  const Router = isElectron ? HashRouter : BrowserRouter;
+
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <Router basename={isElectron ? undefined : import.meta.env.BASE_URL}>
       <AuthProvider>
         <ConnectionStatus />
         <Suspense fallback={<LoadingFallback />}>
@@ -97,7 +100,7 @@ function App() {
         </Suspense>
         <MockModeOverlay />
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
 

@@ -16,7 +16,10 @@ node_modules
 dist
 dist-ssr
 build
+release
 *.local
+tools/nsis
+tools/nsis.zip
 
 # Environment files - NEVER commit these!
 .env

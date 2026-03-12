@@ -3,9 +3,17 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "icons:electron": "node scripts/generate-electron-icon.mjs",
+    "build:electron": "cross-env VITE_ELECTRON=true VITE_BASE_PATH=./ vite build",
+    "electron:dev": "npm run icons:electron && concurrently -k -n VITE,ELECTRON -c green,blue \"cross-env VITE_ELECTRON=true vite\" \"wait-on http://localhost:5173 && cross-env ELECTRON_START_URL=http://localhost:5173 electron .\"",
+    "dist:win": "npm run icons:electron && npm run build:electron && electron-builder --win",
+    "pack:win": "npm run icons:electron && npm run build:electron && electron-packager . CropAid --platform=win32 --arch=x64 --out=release --overwrite --asar --icon=./icon.ico --ignore=\"^/android($|/)\" --ignore=\"^/server($|/)\" --ignore=\"^/src($|/)\" --ignore=\"^/node_modules($|/)\" --ignore=\"^/\\.git($|/)\"",
+    "installer:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\\installer-win.ps1",
+    "landing:sync": "node scripts/sync-landing-downloads.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -30,6 +38,11 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12",
+    "@electron/packager": "^18.3.6",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -38,6 +51,29 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.14",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "wait-on": "^8.0.5"
+  },
+  "build": {
+    "appId": "com.cropaid.desktop",
+    "productName": "CropAid",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
